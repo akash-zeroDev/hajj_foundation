@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Cue Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300;9..144,0,400;9..144,0,500;9..144,1,300;9..144,1,400;9..144,1,500&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --electric:      #0000FF;
+      --bg:            #060606;
+      --card-bg:       #1c1c1e;
+      --card-img-bg:   #2a2a2c;
+      --text:          #f2f2ef;
+      --text-dim:      #8a8a82;
+      --text-dimmer:   #55554e;
+      --border:        rgba(255,255,255,0.08);
+      --danger:        #ff4d4d;
+      --font-serif:    'Fraunces', 'Instrument Serif', Georgia, serif;
+      --font-sans:     'Geist', -apple-system, sans-serif;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    a { text-decoration: none; color: inherit; }
+    button { background: none; border: none; cursor: pointer; font-family: inherit; }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      padding: 16px 24px;
+      background: rgba(6,6,6,0.85);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-left, .nav-right { display: flex; align-items: center; gap: 16px; }
+    .btn-ghost { padding: 6px 12px; border-radius: 3px; font-size: 13px; font-weight: 500; color: var(--text-dim); transition: color 0.2s; border: 1px solid transparent; }
+    .btn-ghost:hover { color: var(--text); border-color: var(--border); }
+    .logo { font-family: var(--font-serif); font-size: 24px; font-style: italic; }
+    .nav-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); font-weight: 600; }
+    
+    .nav-count { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); font-weight: 600; }
+    
+    /* Header */
+    .header {
+      padding: 60px 24px 40px; max-width: 1200px; margin: 0 auto;
+    }
+    .header h1 {
+      font-family: var(--font-serif); font-weight: 300; font-size: 64px;
+    }
+    .header h1 em { font-style: italic; }
+    .header p {
+      font-family: var(--font-serif); font-size: 20px; font-style: italic;
+      margin-top: 12px; color: var(--text-dim);
+    }
+    .header p em { color: var(--electric); font-style: italic; }
+
+    /* Admin Body */
+    .admin-body {
+      max-width: 1200px; margin: 0 auto;
+      padding: 20px 24px 120px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+    }
+    @media (max-width: 900px) { .admin-body { grid-template-columns: 1fr; } }
+    
+    /* Panel */
+    .panel {
+      background: var(--card-bg);
+      padding: 32px;
+      border: 1px solid var(--border);
+    }
+    .panel-title { font-family: var(--font-serif); font-size: 28px; font-weight: 400; font-style: italic; margin-bottom: 6px; }
+    .panel-desc  { font-size: 13px; color: var(--text-dim); margin-bottom: 28px; line-height: 1.5; }
+    
+    /* Form Fields */
+    .field { margin-bottom: 24px; }
+    .field label {
+      display: block; margin-bottom: 8px;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-dim); font-weight: 500;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 12px 14px;
+      background: #0e0e10; color: var(--text);
+      border: 1px solid var(--border); border-radius: 3px;
+      font-family: var(--font-sans); font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--electric); background: #0a0a0e;
+    }
+    .field textarea {
+      min-height: 140px; resize: vertical;
+      font-family: Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.6;
+    }
+    .field-hint { font-size: 11px; color: var(--text-dimmer); margin-top: 6px; }
+
+    .file-input-group { display: flex; gap: 12px; }
+    .file-input-group input { flex: 1; }
+    .btn-upload {
+      padding: 0 16px; border-radius: 3px; border: 1px solid var(--border); background: #1c1c1e; color: var(--text); font-size: 12px; font-weight: 500; transition: background 0.2s; white-space: nowrap;
+    }
+    .btn-upload:hover { background: #2a2a2c; }
+    
+    /* Tier Toggle */
+    .tier-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tier-option {
+      display: block; cursor: pointer;
+      padding: 14px 16px; border: 1px solid var(--border);
+      border-radius: 3px; background: #0e0e10;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .tier-option input { display: none; }
+    .tier-option:has(input:checked) {
+      border-color: var(--electric);
+      background: rgba(0,0,255,0.06);
+    }
+    .tier-label { display: flex; flex-direction: column; gap: 4px; }
+    .tier-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+    .tier-desc { font-size: 11px; color: var(--text-dim); }
+    .tier-badge { background: var(--electric); color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+    
+    /* Buttons */
+    .form-actions { display: flex; gap: 12px; margin-top: 32px; }
+    .btn-primary {
+      padding: 12px 24px; border-radius: 3px; background: var(--electric); color: #fff;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 6px 24px -8px rgba(0,0,255,0.5);
+      transition: transform 0.2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-form-ghost {
+      padding: 12px 24px; border-radius: 3px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; font-weight: 500; transition: color 0.2s;
+    }
+    .btn-form-ghost:hover { color: var(--text); }
+
+    /* CARD SHARED CSS */
+    .resource-card {
+      position: relative;
+      background: var(--card-bg);
+      border-radius: 0;
+      overflow: hidden;
+      transition:
+        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        background 0.35s ease,
+        opacity 0.6s ease;
+    }
+    .resource-card:hover { background: #232326; transform: translateY(-4px); }
+    .resource-visual {
+      position: relative; aspect-ratio: 16 / 10; background: var(--card-img-bg); overflow: hidden; margin: 4px 4px 0;
+    }
+    .resource-visual::after {
+      content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); pointer-events: none; z-index: 4;
+    }
+    .cover-image, .cover-video {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      transition: opacity 0.5s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
+    }
+    .cover-image { filter: brightness(0.95) saturate(0.98); }
+    .cover-video { opacity: 0; z-index: 2; }
+    .cover-video[data-video-status="playing"] { opacity: 1; }
+    .resource-card:hover .cover-image { transform: scale(1.04); filter: brightness(1) saturate(1); }
+    .resource-card:hover .cover-video { transform: scale(1.04); }
+    .tags-overlay { position: absolute; top: 12px; left: 12px; z-index: 3; display: flex; gap: 6px; }
+    .tag {
+      padding: 5px 9px; border-radius: 3px; font-family: var(--font-sans); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); border: 1px solid rgba(255,255,255,0.04);
+    }
+    .tag--dim { background: rgba(6,6,6,0.55); color: var(--text); }
+    .tag--electric { background: var(--electric); color: #fff; border-color: transparent; box-shadow: 0 4px 20px -6px rgba(0,0,255,0.5); }
+    .card-meta { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 5px; }
+    .card-title {
+      font-family: var(--font-serif); font-size: 20px; font-weight: 400; line-height: 1.2; letter-spacing: -0.012em; color: var(--text); transition: color 0.25s ease;
+    }
+    .resource-card:hover .card-title { color: #fff; }
+    .card-category { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-dim); }
+    .cover-placeholder {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(0,0,255,0.18), transparent 45%),
+        radial-gradient(circle at 70% 80%, rgba(0,0,255,0.10), transparent 45%),
+        linear-gradient(135deg, #1a1a1c 0%, #0d0d10 100%);
+      transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .cover-placeholder span {
+      font-family: var(--font-serif); font-size: clamp(24px, 3.2vw, 40px); font-style: italic; font-weight: 400; color: var(--text); text-align: center; line-height: 1.1; letter-spacing: -0.015em;
+    }
+    .resource-card:hover .cover-placeholder { transform: scale(1.04); }
+    .preview-empty {
+      aspect-ratio: 16/10; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif); font-size: 20px; font-style: italic; color: var(--text-dim);
+    }
+
+    /* Existing Section */
+    .existing-section {
+      max-width: 1200px; margin: 0 auto; padding: 0 24px 120px;
+    }
+    .existing-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
+    .existing-title { font-family: var(--font-serif); font-size: 24px; font-style: italic; font-weight: 400; }
+    .existing-count { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); font-weight: 600; }
+    
+    .existing-list { display: flex; flex-direction: column; gap: 8px; }
+    .existing-item {
+      display: grid; grid-template-columns: 80px 1fr auto auto; gap: 16px; padding: 14px 18px; align-items: center;
+      background: var(--card-bg); border: 1px solid var(--border); transition: all 0.2s ease;
+    }
+    .existing-item:hover { background: #232326; }
+    .existing-item.is-editing { outline: 1px solid var(--electric); background: rgba(0,0,255,0.04); border-color: transparent; }
+    
+    .existing-item__thumb {
+      width: 80px; height: 50px; object-fit: cover; background: var(--card-img-bg);
+    }
+    .existing-item__thumb-placeholder {
+      width: 80px; height: 50px; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a1a1c 0%, #0d0d10 100%);
+      font-family: var(--font-serif); font-size: 22px; font-style: italic; color: var(--text);
+    }
+    
+    .existing-item__meta { display: flex; flex-direction: column; gap: 4px; }
+    .existing-item__title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .tier-pill { background: rgba(0,0,255,0.15); color: var(--electric); padding: 2px 6px; border-radius: 3px; font-size: 9px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; }
+    .existing-item__sub { font-size: 12px; color: var(--text-dim); }
+    .existing-item__date { font-size: 12px; color: var(--text-dim); min-width: 80px; text-align: right; }
+    
+    .existing-item__actions { display: flex; gap: 8px; }
+    .existing-item__edit, .existing-item__delete {
+      padding: 6px 12px; border-radius: 3px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .existing-item__edit { color: var(--electric); border: 1px solid rgba(0,0,255,0.35); }
+    .existing-item__edit:hover { background: rgba(0,0,255,0.1); }
+    .existing-item__delete { color: var(--danger); border: 1px solid rgba(255,77,77,0.25); }
+    .existing-item__delete:hover { background: rgba(255,77,77,0.1); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+      padding: 12px 20px; background: var(--electric); color: #fff;
+      border-radius: 3px; font-size: 13px; font-weight: 500;
+      z-index: 1000; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 12px 40px -10px rgba(0,0,255,0.5);
+    }
+    .toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-left">
+      <a href="library.html" class="btn-ghost">← Library</a>
+      <span class="logo">CUE</span>
+      <span class="nav-eyebrow">ADMIN</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-count" id="navCount">0 resources</span>
+    </div>
+  </nav>
+
+  <header class="header">
+    <h1>Manage <em>Library</em></h1>
+    <p>Add a project · Same card format · <em>saved locally</em></p>
+  </header>
+
+  <main class="admin-body">
+    
+    <div class="panel">
+      <h2 class="panel-title">Resource editor</h2>
+      <p class="panel-desc">Fill details to add or edit a resource.</p>
+      
+      <form id="resourceForm">
+        
+        <div class="field">
+          <label>Title</label>
+          <input type="text" name="title" placeholder="e.g. Curved Scroll Wheel" required>
+        </div>
+        
+        <div class="field">
+          <label>Category</label>
+          <select name="category" required>
+            <option value="" disabled selected>Select category...</option>
+            <option value="Text Animations">Text Animations</option>
+            <option value="Visual Effects">Visual Effects</option>
+            <option value="Scroll Animations">Scroll Animations</option>
+            <option value="Sliders & Marquees">Sliders & Marquees</option>
+            <option value="Page Transitions">Page Transitions</option>
+            <option value="Navigation">Navigation</option>
+            <option value="Loaders">Loaders</option>
+            <option value="Gallery & Images">Gallery & Images</option>
+            <option value="Utilities & Scripts">Utilities & Scripts</option>
+            <option value="Sections & Layouts">Sections & Layouts</option>
+            <option value="Cursor Animations">Cursor Animations</option>
+            <option value="Video & Audio">Video & Audio</option>
+            <option value="Buttons">Buttons</option>
+            <option value="Gimmicks">Gimmicks</option>
+            <option value="Hover Interactions">Hover Interactions</option>
+            <option value="Filters & Sorting">Filters & Sorting</option>
+            <option value="Forms">Forms</option>
+            <option value="3D & WebGL">3D & WebGL</option>
+          </select>
+        </div>
+        
+        <div class="field">
+          <label>Thumbnail (optional — auto-generated if empty)</label>
+          <div class="file-input-group">
+            <input type="text" name="imageUrl" id="imageUrl" placeholder="URL or Base64">
+            <button type="button" class="btn-upload" id="btnUploadImage">Upload</button>
+          </div>
+          <input type="file" id="fileImage" accept="image/*" style="display:none;">
+          <div class="field-hint">empty = auto gradient with title</div>
+        </div>
+        
+        <div class="field">
+          <label>Hover video (optional)</label>
+          <div class="file-input-group">
+            <input type="text" name="videoUrl" id="videoUrl" placeholder="MP4/WebM URL">
+            <button type="button" class="btn-upload" id="btnUploadVideo">Upload</button>
+          </div>
+          <input type="file" id="fileVideo" accept="video/mp4,video/webm" style="display:none;">
+          <div class="field-hint">Autoplays on hover/scroll. URLs preferred. 4MB max for uploads.</div>
+        </div>
+        
+        <div class="field">
+          <label>Access tier</label>
+          <div class="tier-toggle">
+            <label class="tier-option">
+              <input type="radio" name="tier" value="free" checked>
+              <span class="tier-label">
+                <span class="tier-title">Free</span>
+                <span class="tier-desc">All users can view the prompt</span>
+              </span>
+            </label>
+            <label class="tier-option">
+              <input type="radio" name="tier" value="paid">
+              <span class="tier-label">
+                <span class="tier-title">Paid <span class="tier-badge">Cue+</span></span>
+                <span class="tier-desc">Locked to paid subscribers</span>
+              </span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="field">
+          <label>Prompt</label>
+          <textarea name="prompt" rows="8" placeholder="Paste the code snippet here..."></textarea>
+        </div>
+        
+        <div class="field">
+          <label>Link (optional)</label>
+          <input type="text" name="link" placeholder="External URL (reserved)">
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="btnSubmit">Add to library</button>
+          <button type="reset" class="btn-form-ghost" id="btnReset">Clear</button>
+        </div>
+        
+      </form>
+    </div>
+    
+    <div class="panel">
+      <h2 class="panel-title">Preview</h2>
+      <p class="panel-desc">Live rendering of the card format.</p>
+      <div id="previewContainer"></div>
+    </div>
+    
+  </main>
+
+  <section class="existing-section">
+    <div class="existing-header">
+      <h2 class="existing-title">Uploaded resources</h2>
+      <span class="existing-count" id="listCount">0 resources</span>
+    </div>
+    <div class="existing-list" id="existingList"></div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // --- Utilities ---
+    function loadResources() {
+      try { return JSON.parse(localStorage.getItem('cue_resources') || '[]'); }
+      catch { return []; }
+    }
+    function saveResources(list) {
+      try { localStorage.setItem('cue_resources', JSON.stringify(list)); return true; }
+      catch (e) { showToast('Storage full · use URLs not uploads'); return false; }
+    }
+    function formatAgo(iso) {
+      if (!iso) return '';
+      const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+      if (days === 0) return 'today';
+      if (days === 1) return '1 day ago';
+      if (days < 30) return `${days} days ago`;
+      const m = Math.floor(days / 30);
+      return m === 1 ? '1 month ago' : `${m} months ago`;
+    }
+    function escapeHtml(s) {
+      return (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+    }
+    
+    let toastTimeout;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('is-show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove('is-show'), 2000);
+    }
+
+    // --- DOM Elements ---
+    const form = document.getElementById('resourceForm');
+    const titleInput = form.querySelector('[name="title"]');
+    const categorySelect = form.querySelector('[name="category"]');
+    const imageUrlInput = document.getElementById('imageUrl');
+    const videoUrlInput = document.getElementById('videoUrl');
+    const promptTextarea = form.querySelector('[name="prompt"]');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const btnReset = document.getElementById('btnReset');
+    const previewContainer = document.getElementById('previewContainer');
+    const existingList = document.getElementById('existingList');
+    
+    // --- State ---
+    let resources = loadResources();
+    let editingId = null;
+
+    // --- Live Preview ---
+    function renderPreview() {
+      const title = titleInput.value.trim();
+      const category = categorySelect.value;
+      const imageUrl = imageUrlInput.value.trim();
+      const videoUrl = videoUrlInput.value.trim();
+      const tier = form.querySelector('[name="tier"]:checked').value;
+      
+      if (!title && !category && !imageUrl) {
+        previewContainer.innerHTML = `<div class="preview-empty">Fill the form to preview →</div>`;
+        return;
+      }
+      
+      const isNew = true; // For preview purposes
+      const createdAt = editingId ? (resources.find(r => r.id === editingId)?.createdAt || new Date().toISOString()) : new Date().toISOString();
+      const agoTag = `<span class="tag tag--dim">${formatAgo(createdAt)}</span>`;
+      
+      let highlightTag = '';
+      if (tier === 'paid') highlightTag = `<span class="tag tag--electric">Cue+</span>`;
+      else if (isNew) highlightTag = `<span class="tag tag--electric">New</span>`;
+      const tagsOverlay = `<div class="tags-overlay">${agoTag}${highlightTag}</div>`;
+      
+      let visualHtml = '';
+      if (imageUrl || videoUrl) {
+        if (imageUrl) visualHtml += `<img src="${imageUrl}" alt="" class="cover-image">`;
+        if (videoUrl) visualHtml += `<video src="${videoUrl}" muted loop autoplay playsinline webkit-playsinline class="cover-video" data-video-status="playing"></video>`;
+      } else {
+        visualHtml += `<div class="cover-placeholder"><span>${escapeHtml(title || 'Untitled')}</span></div>`;
+      }
+      
+      previewContainer.innerHTML = `
+        <div class="resource-card is-in">
+          <div class="resource-visual">
+            ${tagsOverlay}
+            ${visualHtml}
+          </div>
+          <div class="card-meta">
+            <h3 class="card-title">${escapeHtml(title || 'Untitled')}</h3>
+            <span class="card-category">${escapeHtml(category || 'CATEGORY')}</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    form.addEventListener('input', renderPreview);
+    form.addEventListener('change', renderPreview);
+
+    // --- File Uploads ---
+    document.getElementById('btnUploadImage').addEventListener('click', () => document.getElementById('fileImage').click());
+    document.getElementById('fileImage').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { imageUrlInput.value = reader.result; renderPreview(); };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('btnUploadVideo').addEventListener('click', () => document.getElementById('fileVideo').click());
+    document.getElementById('fileVideo').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 4 * 1024 * 1024) {
+        showToast('Video too big · use URL instead');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => { videoUrlInput.value = reader.result; renderPreview(); showToast('Video attached ✓'); };
+      reader.readAsDataURL(file);
+    });
+
+    // --- Form Submit & Validation ---
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const title = titleInput.value.trim();
+      const category = categorySelect.value;
+      const prompt = promptTextarea.value.trim();
+      
+      if (!title) { showToast('Add a title'); titleInput.focus(); return; }
+      if (!category) { showToast('Pick a category'); categorySelect.focus(); return; }
+      if (!prompt) { showToast('Add the prompt / code'); promptTextarea.focus(); return; }
+      
+      const newObj = {
+        id: editingId ? editingId : 'r-' + Date.now(),
+        title: title,
+        category: category,
+        imageUrl: imageUrlInput.value.trim() || null,
+        videoUrl: videoUrlInput.value.trim() || null,
+        prompt: prompt,
+        tier: form.querySelector('[name="tier"]:checked').value,
+        link: form.querySelector('[name="link"]').value.trim() || null,
+        isNew: true
+      };
+      
+      if (editingId) {
+        const idx = resources.findIndex(r => r.id === editingId);
+        if (idx !== -1) {
+          newObj.createdAt = resources[idx].createdAt;
+          newObj.isNew = resources[idx].isNew;
+          newObj.updatedAt = new Date().toISOString();
+          resources[idx] = newObj;
+        }
+      } else {
+        newObj.createdAt = new Date().toISOString();
+        resources.unshift(newObj); // Add to beginning
+      }
+      
+      if (saveResources(resources)) {
+        showToast(editingId ? 'Changes saved' : 'Added to library');
+        cancelEdit(); // resets form & state
+      }
+    });
+    
+    // --- Edit / Delete ---
+    window.beginEdit = function(id) {
+      const r = resources.find(x => x.id === id);
+      if (!r) return;
+      editingId = id;
+      
+      titleInput.value = r.title || '';
+      categorySelect.value = r.category || '';
+      imageUrlInput.value = r.imageUrl || '';
+      videoUrlInput.value = r.videoUrl || '';
+      promptTextarea.value = r.prompt || '';
+      form.querySelector('[name="link"]').value = r.link || '';
+      form.querySelector(`[name="tier"][value="${r.tier || 'free'}"]`).checked = true;
+      
+      btnSubmit.textContent = 'Save changes';
+      btnReset.textContent = 'Cancel edit';
+      
+      renderPreview();
+      renderExisting();
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast('Editing: ' + r.title);
+    };
+    
+    function cancelEdit() {
+      editingId = null;
+      form.reset();
+      imageUrlInput.value = '';
+      videoUrlInput.value = '';
+      btnSubmit.textContent = 'Add to library';
+      btnReset.textContent = 'Clear';
+      renderPreview();
+      renderExisting();
+    }
+    
+    btnReset.addEventListener('click', (e) => {
+      if (editingId) { e.preventDefault(); cancelEdit(); }
+    });
+    
+    window.deleteResource = function(id) {
+      if (confirm('Delete this resource?')) {
+        resources = resources.filter(x => x.id !== id);
+        saveResources(resources);
+        if (editingId === id) cancelEdit();
+        else renderExisting();
+        showToast('Resource deleted');
+      }
+    };
+    
+    // --- Render Existing List ---
+    function renderExisting() {
+      document.getElementById('navCount').textContent = `${resources.length} resources`;
+      document.getElementById('listCount').textContent = `${resources.length} resources`;
+      
+      if (resources.length === 0) {
+        existingList.innerHTML = `<div style="padding: 20px; color: var(--text-dim);">No resources uploaded yet.</div>`;
+        return;
+      }
+      
+      // Sort by creation date desc
+      const sorted = [...resources].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      existingList.innerHTML = sorted.map(r => {
+        let thumbHtml = '';
+        if (r.imageUrl) thumbHtml = `<img src="${r.imageUrl}" class="existing-item__thumb">`;
+        else {
+          const letter = (r.title || '?').charAt(0).toUpperCase();
+          thumbHtml = `<div class="existing-item__thumb-placeholder">${letter}</div>`;
+        }
+        
+        const lockPill = r.tier === 'paid' ? `<span class="tier-pill">🔒 Cue+</span>` : '';
+        const isEditingClass = editingId === r.id ? 'is-editing' : '';
+        const promptLen = (r.prompt || '').length;
+        
+        return `
+          <div class="existing-item ${isEditingClass}">
+            ${thumbHtml}
+            <div class="existing-item__meta">
+              <span class="existing-item__title">${escapeHtml(r.title)} ${lockPill}</span>
+              <span class="existing-item__sub">${escapeHtml(r.category)} · ${promptLen} chars prompt</span>
+            </div>
+            <span class="existing-item__date">${formatAgo(r.createdAt)}</span>
+            <div class="existing-item__actions">
+              <button class="existing-item__edit" onclick="beginEdit('${r.id}')">Edit</button>
+              <button class="existing-item__delete" onclick="deleteResource('${r.id}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // --- Init ---
+    renderPreview();
+    renderExisting();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cue — Editorial UI Collection</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300;9..144,0,400;9..144,0,500;9..144,1,300;9..144,1,400;9..144,1,500&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --electric:      #0000FF;
+      --bg:            #060606;
+      --card-img-bg:   #1a1a1c;
+      --text:          #f2f2ef;
+      --text-dim:      #8a8a82;
+      --text-dimmer:   #5a5a55;
+      --border:        rgba(255,255,255,0.08);
+      --font-serif:    'Fraunces', 'Instrument Serif', Georgia, serif;
+      --font-sans:     'Geist', -apple-system, sans-serif;
+    }
+
+    /* Focus Accessibility */
+    *:focus-visible { outline: 2px solid var(--electric); outline-offset: 4px; border-radius: 2px; cursor: auto; }
+    *:focus-visible ~ .cursor { display: none; }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body, html {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      cursor: none;
+    }
+    
+    a, button { text-decoration: none; color: inherit; cursor: none; outline: none; }
+    button { background: none; border: none; font-family: inherit; }
+
+    /* Noise Overlay */
+    .noise-overlay {
+      position: fixed; inset: 0; z-index: 8000; pointer-events: none; opacity: 0.03;
+      background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)"/%3E%3C/svg%3E');
+    }
+
+    /* Ambient Glow */
+    .ambient-glow {
+      position: fixed; top: 0; left: 0; width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(0,0,255,0.06) 0%, rgba(0,0,255,0) 60%);
+      border-radius: 50%; pointer-events: none; z-index: 0;
+      transform: translate(-50%, -50%); filter: blur(40px); will-change: transform;
+    }
+
+    /* Custom Cursor */
+    .cursor {
+      position: fixed; top: 0; left: 0; width: 8px; height: 8px;
+      background: var(--text); border-radius: 50%; pointer-events: none; z-index: 10000;
+      transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, border 0.3s ease, margin 0.3s ease;
+      mix-blend-mode: difference;
+      will-change: transform;
+    }
+    .cursor.hover {
+      width: 48px; height: 48px; background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      mix-blend-mode: normal; border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* Preloader */
+    .preloader {
+      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 40px; will-change: transform;
+    }
+    .preloader-text {
+      font-family: var(--font-serif); font-style: italic; font-size: clamp(24px, 4vw, 40px); color: var(--text-dim);
+    }
+    .preloader-counter {
+      font-family: var(--font-sans); font-size: clamp(80px, 15vw, 240px); font-weight: 300;
+      line-height: 0.8; letter-spacing: -0.05em; color: var(--text); text-align: right;
+    }
+
+    /* Navbar */
+    .nav {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+      padding: 24px 40px; background: rgba(6,6,6,0.6);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      display: flex; justify-content: space-between; align-items: center;
+      transition: padding 0.4s ease;
+    }
+    .nav-left, .nav-center, .nav-right { display: flex; align-items: center; gap: 32px; }
+    .nav-center { position: absolute; left: 50%; transform: translateX(-50%); }
+    .logo { font-family: var(--font-serif); font-size: 24px; font-style: italic; font-weight: 300; }
+    .nav-link { font-size: 13px; font-weight: 500; color: var(--text-dim); transition: color 0.3s ease; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-link:hover { color: var(--text); }
+    .nav-mobile-btn { display: none; }
+    .btn-menu { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; z-index: 101; position: relative; }
+    .btn-menu span { display: block; width: 14px; height: 1px; background: var(--text); transition: all 0.4s cubic-bezier(0.77, 0, 0.175, 1); }
+    
+    .btn-primary {
+      padding: 10px 20px; border-radius: 3px; background: var(--electric); color: #fff;
+      font-size: 13px; font-weight: 500; box-shadow: 0 6px 24px -8px rgba(0,0,255,0.6);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px -6px rgba(0,0,255,0.7); }
+    
+    .btn-secondary {
+      padding: 10px 20px; border-radius: 3px; background: transparent; color: var(--text-dim);
+      border: 1px solid var(--border); font-size: 13px; font-weight: 500;
+      transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.03); }
+
+    /* Mobile Menu */
+    .mobile-menu {
+      position: fixed; inset: 0; background: var(--bg); z-index: 90;
+      display: flex; flex-direction: column; justify-content: center; padding: 40px;
+      clip-path: inset(0 0 100% 0); transition: clip-path 0.7s cubic-bezier(0.77, 0, 0.175, 1);
+    }
+    .mobile-menu.is-open { clip-path: inset(0 0 0 0); }
+    .mobile-menu-inner { display: flex; flex-direction: column; gap: 24px; }
+    .mobile-link { font-family: var(--font-serif); font-size: 32px; font-style: italic; color: var(--text); transform: translateY(20px); opacity: 0; transition: all 0.4s ease; }
+    .mobile-link.electric { color: var(--electric); }
+    .mobile-menu.is-open .mobile-link { transform: translateY(0); opacity: 1; }
+    .mobile-menu.is-open .mobile-link:nth-child(1) { transition-delay: 0.2s; }
+    .mobile-menu.is-open .mobile-link:nth-child(2) { transition-delay: 0.3s; }
+    .mobile-menu.is-open .mobile-link:nth-child(3) { transition-delay: 0.4s; }
+    .btn-menu.is-active span:nth-child(1) { transform: translateY(2.5px) rotate(45deg); }
+    .btn-menu.is-active span:nth-child(2) { transform: translateY(-2.5px) rotate(-45deg); }
+
+    /* Hero Section */
+    .hero {
+      position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; padding-top: 80px; z-index: 1;
+    }
+    .hero-content {
+      position: relative; z-index: 2; width: 100%; max-width: 1600px; padding: 0 8vw; margin: 0 auto;
+    }
+    
+    .hero-eyebrow {
+      overflow: hidden; margin-bottom: 24px;
+    }
+    .eyebrow-text {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-dim);
+    }
+    
+    .hero-title {
+      font-family: var(--font-serif); font-size: clamp(64px, 12vw, 220px);
+      line-height: 0.85; font-weight: 300; letter-spacing: -0.03em;
+    }
+    .title-line { display: block; overflow: hidden; padding-bottom: 2vw; margin-bottom: -2vw; }
+    .title-line:nth-child(2) { margin-left: 15vw; }
+    .title-line em { font-style: italic; font-weight: 300; color: var(--text); }
+    
+    .hero-desc {
+      font-family: var(--font-sans); font-size: 14px; color: var(--text-dim);
+      max-width: 440px; line-height: 1.6; margin-top: 40px; margin-bottom: 40px; margin-left: 15vw;
+    }
+    
+    .hero-actions { display: flex; gap: 16px; margin-left: 15vw; }
+
+    /* Floating Parallax Elements */
+    .floating-element {
+      position: absolute; overflow: hidden; z-index: 1; background: var(--card-img-bg);
+    }
+    .floating-element::after {
+      content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); pointer-events: none; z-index: 2;
+    }
+    .floating-img-inner {
+      width: 100%; height: 100%; transform: scale(1.15); transform-origin: center; transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .floating-element:hover .floating-img-inner { transform: scale(1); }
+    .floating-element img {
+      width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6) saturate(0.8); transition: filter 1.2s ease;
+    }
+    .floating-element:hover img { filter: brightness(1) saturate(1); }
+    
+    .el-1 { width: 20vw; height: 28vw; top: 12%; right: 8%; }
+    .el-2 { width: 14vw; height: 20vw; bottom: 8%; left: 6%; }
+    .el-3 { width: 10vw; height: 14vw; bottom: 20%; right: 35%; }
+
+    /* Scroll Indicator */
+    .scroll-indicator {
+      position: absolute; bottom: 40px; left: 40px; display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 10;
+    }
+    .scroll-text {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.3em; color: var(--text-dim); writing-mode: vertical-rl; transform: rotate(180deg);
+    }
+    .scroll-line {
+      width: 1px; height: 40px; background: var(--border); position: relative; overflow: hidden;
+    }
+    .scroll-line::after {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%; background: var(--electric); animation: scrollDown 2s infinite cubic-bezier(0.64, 0.04, 0.35, 1);
+    }
+    @keyframes scrollDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(200%); } }
+
+    /* Cinematic Scroll Sequence */
+    .scroll-sequence {
+      height: 450vh; position: relative; background: var(--bg); z-index: 2;
+    }
+    .seq-sticky {
+      position: sticky; top: 0; width: 100%; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    }
+    .seq-text-block {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 3; width: 100%; pointer-events: none;
+    }
+    .seq-line { overflow: hidden; display: block; padding-bottom: 0.2em; margin-bottom: -0.2em; }
+    .seq-line span {
+      display: inline-block; font-family: var(--font-serif); font-size: clamp(40px, 8vw, 140px); line-height: 0.9; font-weight: 300; letter-spacing: -0.02em; will-change: transform, opacity;
+    }
+    .seq-line em { font-style: italic; color: var(--electric); }
+    
+    .seq-portal-wrap {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; display: flex; align-items: center; justify-content: center;
+    }
+    .seq-portal {
+      width: 100%; height: 100%; clip-path: inset(50% 49.8% 50% 49.8% round 20px); will-change: clip-path; position: relative;
+    }
+    .seq-portal-bg { position: absolute; inset: 0; background: #060606; }
+    .seq-portal-img {
+      width: 100%; height: 100%; object-fit: cover; filter: brightness(0.3) saturate(0.2); transform: scale(1.3); will-change: transform;
+    }
+    .seq-portal-overlay {
+      position: absolute; inset: 0; background: radial-gradient(circle at center, transparent 0%, var(--bg) 100%); opacity: 0.9;
+    }
+    .seq-portal-content {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2;
+    }
+    
+    @media (max-width: 768px) {
+      .seq-line span { font-size: 14vw; }
+      .scroll-sequence { height: 350vh; }
+      .seq-portal { clip-path: inset(50% 49% 50% 49% round 12px); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .nav-center, .nav-right { display: none; }
+      .nav-mobile-btn { display: block; }
+      .nav { padding: 16px 24px; }
+      .title-line:nth-child(2) { margin-left: 10vw; }
+      .hero-desc, .hero-actions { margin-left: 10vw; }
+      .el-3 { display: none; }
+    }
+    @media (max-width: 768px) {
+      .hero-content { padding: 0 24px; }
+      .title-line:nth-child(2) { margin-left: 0; }
+      .hero-desc, .hero-actions { margin-left: 0; }
+      .floating-element { display: none; }
+      .scroll-indicator { left: 24px; bottom: 24px; }
+      .preloader { padding: 24px; }
+    }
+    @media (max-width: 480px) {
+      .hero-title { font-size: 16vw; }
+      .hero-actions { flex-direction: column; width: 100%; }
+      .btn-primary, .btn-secondary { width: 100%; }
+      .scroll-indicator { align-items: flex-start; }
+      .scroll-text { writing-mode: horizontal-tb; transform: none; margin-bottom: 8px; }
+      .scroll-line { height: 1px; width: 40px; }
+      .scroll-line::after { width: 50%; height: 100%; animation: scrollRight 2s infinite cubic-bezier(0.64, 0.04, 0.35, 1); }
+      @keyframes scrollRight { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+    }
+
+    /* Design Doctrine Section */
+    .doctrine {
+      position: relative; background: var(--bg); padding: 160px 0 0; z-index: 5;
+    }
+    .doctrine-container { max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
+    
+    .doc-header { margin-bottom: 120px; }
+    .doc-eyebrow {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--electric); margin-bottom: 32px;
+    }
+    .doc-title {
+      font-family: var(--font-serif); font-size: clamp(64px, 12vw, 180px); line-height: 0.9; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 60px;
+    }
+    .doc-title-line { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+    .doc-title-line:nth-child(2) { margin-left: 12vw; }
+    .doc-title-line em { font-style: italic; color: var(--text-dim); }
+    
+    .doc-statement {
+      font-family: var(--font-sans); font-size: clamp(20px, 2.5vw, 32px); color: var(--text); max-width: 600px; line-height: 1.4; font-weight: 400; margin-left: 12vw;
+    }
+    
+    .doc-manifesto { margin-left: 30vw; max-width: 700px; margin-bottom: 180px; }
+    .manifesto-text {
+      font-family: var(--font-serif); font-size: clamp(24px, 3.5vw, 48px); line-height: 1.35; font-style: italic; color: var(--text); font-weight: 300;
+    }
+    
+    .doc-principles { display: flex; flex-direction: column; gap: 80px; margin-bottom: 180px; }
+    .principle {
+      display: flex; align-items: flex-start; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 40px;
+    }
+    .principle-num {
+      font-family: var(--font-sans); font-size: 14vw; font-weight: 300; color: rgba(255,255,255,0.03); line-height: 0.75; letter-spacing: -0.05em; width: 40%; will-change: transform;
+    }
+    .principle-content { width: 50%; display: flex; flex-direction: column; }
+    .principle-name {
+      font-family: var(--font-serif); font-size: clamp(32px, 4vw, 56px); font-style: italic; margin-bottom: 24px; color: var(--text);
+    }
+    .principle-desc {
+      font-size: clamp(14px, 1.2vw, 18px); color: var(--text-dim); line-height: 1.6; max-width: 420px;
+    }
+    
+    .doc-visual {
+      position: relative; width: 100%; height: 90vh; margin-bottom: 160px; overflow: hidden;
+    }
+    .doc-visual-inner {
+      width: 100%; height: 100%; overflow: hidden; clip-path: inset(0 0 0 0 round 4px);
+    }
+    .doc-img {
+      width: 100%; height: 120%; object-fit: cover; filter: grayscale(100%) contrast(1.1) brightness(0.7); will-change: transform;
+    }
+    .doc-visual-label {
+      position: absolute; bottom: 24px; left: 24px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); background: rgba(0,0,0,0.5); padding: 8px 16px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 2px;
+    }
+    
+    .doc-transition {
+      height: 80vh; position: relative; display: flex; align-items: center; justify-content: center; background: var(--bg); overflow: hidden; border-top: 1px solid var(--border);
+    }
+    .transition-text {
+      font-family: var(--font-serif); font-size: clamp(80px, 20vw, 320px); font-weight: 300; font-style: italic; color: rgba(255,255,255,0.03); white-space: nowrap; position: absolute; left: 100%; will-change: transform;
+    }
+    .transition-prompt {
+      display: flex; align-items: center; gap: 12px; z-index: 2; border: 1px solid rgba(255,255,255,0.1); padding: 16px 32px; border-radius: 40px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255,255,255,0.02);
+    }
+    .prompt-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--electric); box-shadow: 0 0 10px var(--electric); animation: pulse 2s infinite;
+    }
+    .prompt-text {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; color: var(--text);
+    }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+    
+    @media (max-width: 1024px) {
+      .doc-manifesto { margin-left: 10vw; max-width: 90%; }
+    }
+    @media (max-width: 768px) {
+      .doctrine { padding: 100px 0 0; }
+      .doc-title-line:nth-child(2) { margin-left: 0; }
+      .doc-statement { margin-left: 0; margin-top: 32px; }
+      .doc-manifesto { margin-left: 0; margin-bottom: 120px; }
+      .principle { flex-direction: column; gap: 24px; padding-top: 32px; }
+      .principle-num { width: 100%; font-size: 24vw; }
+      .principle-content { width: 100%; }
+      .doc-visual { height: 60vh; margin-bottom: 100px; }
+    }
+
+    /* Featured Collections Section */
+    .featured-collections {
+      position: relative; background: var(--bg); padding: 120px 0 0; z-index: 5;
+    }
+    .fc-container { max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
+    .fc-header { margin-bottom: 100px; max-width: 800px; }
+    .fc-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--electric); margin-bottom: 24px; }
+    .fc-title { font-family: var(--font-serif); font-size: clamp(56px, 10vw, 160px); line-height: 0.9; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 40px; }
+    .title-wrap-fc { overflow: hidden; display: block; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+    .title-wrap-fc span, .title-wrap-fc em { display: inline-block; will-change: transform, opacity; }
+    .title-wrap-fc:nth-child(2) { margin-left: 10vw; }
+    .title-wrap-fc em { font-style: italic; color: var(--text-dim); }
+    .fc-desc { font-family: var(--font-sans); font-size: clamp(16px, 1.5vw, 20px); color: var(--text-dim); line-height: 1.6; max-width: 520px; margin-left: 10vw; will-change: transform, opacity; }
+    
+    .fc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 120px; }
+    
+    .resource-card {
+      position: relative; background: #111113; overflow: hidden; display: block; cursor: none; border-radius: 0;
+      transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease, opacity 0.6s ease;
+      will-change: transform; border: 1px solid rgba(255,255,255,0.02);
+    }
+    .resource-card:hover { background: #161618; transform: translateY(-8px); border-color: rgba(255,255,255,0.05); }
+    .resource-visual { position: relative; aspect-ratio: 16 / 10; background: #18181a; overflow: hidden; margin: 4px 4px 0; }
+    .resource-visual::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); pointer-events: none; z-index: 4; }
+    .cover-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8) saturate(0.8); transition: opacity 0.5s ease, transform 1s cubic-bezier(0.22, 1, 0.36, 1), filter 0.8s ease; }
+    .resource-card:hover .cover-image { transform: scale(1.05); filter: brightness(1) saturate(1.1); }
+    
+    .tags-overlay { position: absolute; top: 12px; left: 12px; z-index: 3; display: flex; gap: 6px; }
+    .tag { padding: 5px 9px; border-radius: 3px; font-family: var(--font-sans); font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); border: 1px solid rgba(255,255,255,0.04); }
+    .tag--dim { background: rgba(6,6,6,0.55); color: var(--text); }
+    .tag--electric { background: var(--electric); color: #fff; border-color: transparent; box-shadow: 0 4px 20px -6px rgba(0,0,255,0.5); }
+    
+    .card-meta { padding: 24px 20px 28px; display: flex; flex-direction: column; gap: 6px; }
+    .card-title { font-family: var(--font-serif); font-size: 24px; font-weight: 400; line-height: 1.2; letter-spacing: -0.012em; color: var(--text); transition: color 0.3s ease; }
+    .resource-card:hover .card-title { color: #fff; }
+    .card-category { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-dim); }
+    
+    .fc-footer { display: flex; justify-content: center; padding-top: 40px; border-top: 1px solid var(--border); }
+    .fc-btn { padding: 14px 28px; font-size: 13px; letter-spacing: 0.05em; border-radius: 4px; text-transform: uppercase; display: inline-flex; }
+    
+    .pricing-transition { position: relative; height: 30vh; display: flex; align-items: flex-end; justify-content: center; background: linear-gradient(to bottom, transparent, rgba(0,0,255,0.02)); overflow: hidden; margin-top: 100px; }
+    .pt-line { width: 1px; height: 100px; background: linear-gradient(to bottom, transparent, var(--border)); }
+    .pt-glow { position: absolute; bottom: 0; left: 50%; width: 600px; height: 300px; background: radial-gradient(ellipse at bottom, rgba(0,0,255,0.12) 0%, transparent 60%); transform: translateX(-50%); pointer-events: none; }
+    
+    @media (max-width: 1024px) {
+      .fc-grid { grid-template-columns: repeat(2, 1fr); }
+      .fc-grid .resource-card:nth-child(3) { display: none; }
+    }
+    @media (max-width: 768px) {
+      .fc-grid { grid-template-columns: 1fr; }
+      .fc-grid .resource-card:nth-child(3) { display: block; }
+      .fc-desc, .title-wrap-fc:nth-child(2) { margin-left: 0; }
+    }
+
+    /* Pricing Section */
+    .pricing { position: relative; background: var(--bg); padding: 120px 0 0; z-index: 5; }
+    .pricing-container { max-width: 1200px; margin: 0 auto; padding: 0 6vw; }
+    .pricing-header { margin-bottom: 60px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .pricing-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--electric); margin-bottom: 24px; }
+    .pricing-title { font-family: var(--font-serif); font-size: clamp(48px, 8vw, 120px); line-height: 0.9; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 32px; display: flex; flex-direction: column; align-items: center; }
+    .pricing-desc { font-family: var(--font-sans); font-size: clamp(16px, 1.5vw, 18px); color: var(--text-dim); line-height: 1.6; max-width: 480px; text-align: center; will-change: transform, opacity; }
+    
+    .billing-toggle-wrap { display: flex; justify-content: center; margin-bottom: 80px; will-change: transform, opacity; }
+    .billing-toggle { position: relative; display: flex; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 40px; padding: 4px; }
+    .toggle-indicator { position: absolute; top: 4px; left: 4px; height: calc(100% - 8px); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), width 0.5s cubic-bezier(0.22, 1, 0.36, 1); pointer-events: none; }
+    .toggle-btn { position: relative; z-index: 2; padding: 12px 24px; font-size: 13px; font-weight: 500; color: var(--text-dim); transition: color 0.3s ease; display: flex; align-items: center; gap: 8px; border-radius: 30px; width: 140px; justify-content: center; }
+    .toggle-btn:hover { color: var(--text); }
+    .toggle-btn.is-active { color: var(--text); }
+    .toggle-badge { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(0,0,255,0.2); color: var(--electric); padding: 2px 6px; border-radius: 12px; font-weight: 600; }
+    
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 120px; }
+    .pricing-card { position: relative; background: #0c0c0e; border: 1px solid rgba(255,255,255,0.04); border-radius: 2px; padding: 40px; display: flex; flex-direction: column; overflow: hidden; transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.4s ease; will-change: transform; }
+    .pricing-card:hover { transform: translateY(-8px); border-color: rgba(255,255,255,0.1); }
+    .card-glow { position: absolute; top: 0; left: 50%; width: 300px; height: 300px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%); pointer-events: none; opacity: 0; transition: opacity 0.6s ease; }
+    .pricing-card:hover .card-glow { opacity: 1; }
+    
+    .pc-featured { background: #0f0f12; border-color: rgba(0,0,255,0.3); box-shadow: 0 20px 60px -20px rgba(0,0,255,0.15); }
+    .pc-featured:hover { border-color: var(--electric); }
+    .pc-featured .card-glow { background: radial-gradient(circle, rgba(0,0,255,0.15) 0%, transparent 70%); opacity: 1; }
+    
+    .pc-badge { position: absolute; top: 0; left: 0; width: 100%; text-align: center; font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; padding: 6px 0; background: var(--electric); color: #fff; font-weight: 600; }
+    .pc-featured .pc-header { margin-top: 16px; }
+    
+    .pc-name { font-family: var(--font-serif); font-size: 28px; font-style: italic; font-weight: 300; margin-bottom: 12px; color: var(--text); }
+    .pc-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; min-height: 40px; }
+    
+    .pc-price-wrap { display: flex; align-items: baseline; margin: 32px 0 40px; }
+    .pc-currency { font-size: 20px; color: var(--text-dim); margin-right: 4px; }
+    .pc-amount { font-family: var(--font-sans); font-size: 56px; font-weight: 300; letter-spacing: -0.04em; color: var(--text); will-change: transform, opacity; display: inline-block; }
+    .pc-period { font-size: 13px; color: var(--text-dim); margin-left: 8px; }
+    
+    .pc-cta { width: 100%; margin-bottom: 40px; }
+    
+    .pc-features { display: flex; flex-direction: column; gap: 16px; flex: 1; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 40px; }
+    .pc-feature { font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 12px; will-change: transform, opacity; }
+    .pc-feature::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--electric); box-shadow: 0 0 8px var(--electric); }
+    .pc-feature.dim { color: var(--text-dimmer); text-decoration: line-through; }
+    .pc-feature.dim::before { background: rgba(255,255,255,0.1); box-shadow: none; }
+    
+    .pricing-compare { margin-bottom: 120px; }
+    .compare-title { font-family: var(--font-serif); font-size: 32px; font-style: italic; margin-bottom: 48px; text-align: center; color: var(--text); }
+    .compare-table { display: flex; flex-direction: column; }
+    .compare-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.3s ease; will-change: transform, opacity; }
+    .compare-row:hover:not(.compare-header-row) { background: rgba(255,255,255,0.02); }
+    .compare-header-row { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 24px; }
+    .compare-col { font-size: 13px; color: var(--text-dim); text-align: center; display: flex; align-items: center; justify-content: center; }
+    .compare-col.label-col { justify-content: flex-start; color: var(--text); font-weight: 500; }
+    .compare-header-row .compare-col { font-family: var(--font-serif); font-style: italic; font-size: 18px; color: var(--text); font-weight: 300; }
+    .icon-check { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--electric); box-shadow: 0 0 10px var(--electric); }
+    .icon-dash { display: inline-block; width: 12px; height: 1px; background: rgba(255,255,255,0.2); }
+    
+    .trust-indicators { display: flex; justify-content: center; gap: 64px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 60px; }
+    .trust-item { display: flex; flex-direction: column; align-items: center; gap: 12px; will-change: transform, opacity; }
+    .trust-icon { font-family: var(--font-serif); font-size: 24px; color: var(--electric); font-style: italic; }
+    .trust-text { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
+    
+    .testimonials-transition { position: relative; height: 200px; display: flex; align-items: flex-end; justify-content: center; margin-top: 100px; padding-bottom: 40px; overflow: hidden; }
+    .tt-gradient { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.02)); pointer-events: none; }
+    .tt-label { font-family: var(--font-serif); font-size: 14px; font-style: italic; color: var(--text-dim); letter-spacing: 0.05em; z-index: 2; }
+    
+    @media (max-width: 1024px) {
+      .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid .pricing-card:nth-child(3) { grid-column: 1 / -1; }
+      .compare-row { grid-template-columns: 1.5fr 1fr 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .pricing-grid { grid-template-columns: 1fr; }
+      .pricing-grid .pricing-card:nth-child(3) { grid-column: auto; }
+      .compare-row { grid-template-columns: 2fr 1fr 1fr; }
+      .compare-col:last-child { display: none; }
+      .trust-indicators { flex-direction: column; gap: 32px; }
+      .toggle-btn { width: 110px; font-size: 11px; }
+      .toggle-badge { display: none; }
+    }
+
+    /* Social Proof Section */
+    .social-proof { position: relative; background: var(--bg); padding: 120px 0 0; z-index: 5; }
+    .sp-container { max-width: 1200px; margin: 0 auto; padding: 0 6vw; }
+    .sp-header { margin-bottom: 80px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .sp-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--electric); margin-bottom: 24px; }
+    .sp-title { font-family: var(--font-serif); font-size: clamp(48px, 8vw, 120px); line-height: 0.9; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 32px; display: flex; flex-direction: column; align-items: center; }
+    .sp-desc { font-family: var(--font-sans); font-size: clamp(16px, 1.5vw, 18px); color: var(--text-dim); line-height: 1.6; max-width: 480px; text-align: center; will-change: transform, opacity; }
+    
+    .metrics-grid { display: flex; justify-content: space-around; margin-bottom: 120px; padding: 40px 0; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); will-change: transform, opacity; }
+    .metric-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .metric-val { font-family: var(--font-sans); font-size: clamp(40px, 5vw, 72px); font-weight: 300; letter-spacing: -0.04em; color: var(--text); }
+    .metric-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); font-weight: 500; }
+    
+    .testimonials-editorial { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; margin-bottom: 120px; align-items: center; }
+    .test-feature { padding-right: 40px; will-change: transform, opacity; }
+    .quote-mark { font-family: var(--font-serif); font-size: 80px; color: var(--electric); line-height: 0.5; margin-bottom: 24px; opacity: 0.5; }
+    .test-quote-large { font-family: var(--font-serif); font-size: clamp(24px, 3vw, 40px); font-style: italic; line-height: 1.2; color: var(--text); margin-bottom: 40px; }
+    
+    .test-author { display: flex; align-items: center; gap: 16px; }
+    .author-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; filter: grayscale(100%); transition: filter 0.4s ease; }
+    .test-author:hover .author-img { filter: grayscale(0%); }
+    .author-meta { display: flex; flex-direction: column; gap: 4px; }
+    .author-name { font-size: 14px; font-weight: 500; color: var(--text); }
+    .author-role { font-size: 12px; color: var(--text-dim); }
+    
+    .test-cards-grid { display: flex; flex-direction: column; gap: 24px; }
+    .test-card { background: #0a0a0c; border: 1px solid rgba(255,255,255,0.04); padding: 32px; border-radius: 2px; transition: transform 0.4s ease, border-color 0.4s ease; will-change: transform, opacity; cursor: none; }
+    .test-card:hover { transform: translateX(-8px); border-color: rgba(255,255,255,0.1); }
+    .test-quote { font-size: 15px; color: var(--text-dim); line-height: 1.6; margin-bottom: 24px; font-style: italic; }
+    
+    .trusted-by { text-align: center; margin-bottom: 120px; }
+    .trusted-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 32px; }
+    .logo-grid { display: flex; justify-content: center; align-items: center; gap: clamp(40px, 6vw, 80px); flex-wrap: wrap; }
+    .logo-item { font-family: var(--font-sans); font-size: 20px; font-weight: 600; color: var(--text-dimmer); letter-spacing: -0.02em; transition: color 0.4s ease, transform 0.4s ease; cursor: default; will-change: transform, opacity; }
+    .logo-item:hover { color: var(--text); transform: scale(1.05); }
+    
+    .community-highlights { background: radial-gradient(ellipse at top, rgba(0,0,255,0.05) 0%, transparent 60%), #060606; border: 1px solid rgba(255,255,255,0.04); padding: 60px; text-align: center; position: relative; overflow: hidden; will-change: transform, opacity; }
+    .community-highlights::before { content: ''; position: absolute; inset: 0; background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJ0cmFuc3BhcmVudCIvPgo8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMC41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+Cjwvc3ZnPg==') repeat; opacity: 0.5; pointer-events: none; }
+    .ch-box { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 32px; }
+    .ch-title { font-family: var(--font-serif); font-size: 28px; font-style: italic; color: var(--text); }
+    .ch-desc { font-size: 14px; color: var(--text-dim); max-width: 400px; line-height: 1.6; }
+    .ch-cta { display: inline-block; padding: 12px 24px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.3s ease, color 0.3s ease; cursor: none; }
+    .ch-cta:hover { background: var(--text); color: var(--bg); }
+    
+    .footer-transition { position: relative; height: 150px; display: flex; align-items: center; justify-content: center; margin-top: 100px; }
+    .ft-line { width: 1px; height: 100%; background: linear-gradient(to bottom, var(--border), transparent); }
+    
+    @media (max-width: 1024px) {
+      .testimonials-editorial { grid-template-columns: 1fr; gap: 40px; }
+      .test-feature { padding-right: 0; }
+    }
+    @media (max-width: 768px) {
+      .metrics-grid { flex-direction: column; gap: 40px; }
+      .logo-grid { gap: 32px; }
+      .community-highlights { padding: 40px 20px; }
+    }
+
+    /* Footer Experience Section */
+    .footer-experience { position: relative; background: #000; padding: 200px 0 60px; overflow: hidden; z-index: 5; }
+    .fx-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: radial-gradient(circle at center, rgba(0,0,255,0.06) 0%, transparent 70%); opacity: 0; transition: opacity 2s ease; will-change: transform, opacity; }
+    .footer-experience.is-visible .fx-bg { opacity: 1; }
+    
+    .fx-container { position: relative; max-width: 1400px; margin: 0 auto; padding: 0 6vw; z-index: 2; }
+    
+    .fx-hero { text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 200px; }
+    .fx-title { font-family: var(--font-serif); font-size: clamp(60px, 12vw, 200px); line-height: 0.85; font-weight: 300; letter-spacing: -0.03em; margin-bottom: 48px; color: #fff; }
+    .fx-title em { font-style: italic; color: rgba(255,255,255,0.4); }
+    .fx-desc { font-family: var(--font-sans); font-size: clamp(16px, 1.8vw, 22px); color: var(--text-dim); line-height: 1.6; max-width: 600px; margin-bottom: 64px; will-change: transform, opacity; }
+    
+    .fx-actions { display: flex; align-items: center; gap: 24px; will-change: transform, opacity; }
+    .fx-cta { padding: 18px 40px; font-size: 13px; letter-spacing: 0.05em; border-radius: 4px; text-transform: uppercase; background: #fff !important; color: #000 !important; box-shadow: 0 10px 40px rgba(255,255,255,0.15); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, background 0.4s ease; cursor: none; display: inline-flex; font-weight: 600; }
+    .fx-cta:hover { transform: translateY(-4px); box-shadow: 0 15px 50px rgba(255,255,255,0.3); background: #f0f0f0 !important; }
+    .fx-secondary { padding: 18px 40px; font-size: 13px; letter-spacing: 0.05em; border-radius: 4px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); transition: color 0.4s ease, border-color 0.4s ease; cursor: none; display: inline-flex; font-weight: 600; }
+    .fx-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+    
+    .fx-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 80px; margin-bottom: 120px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 80px; }
+    
+    .fx-brand { display: flex; flex-direction: column; gap: 24px; will-change: transform, opacity; }
+    .fx-logo { font-family: var(--font-serif); font-size: 32px; font-style: italic; color: #fff; line-height: 1; }
+    .fx-tagline { font-size: 13px; color: var(--text-dim); max-width: 240px; line-height: 1.6; }
+    
+    .fx-newsletter { margin-top: 24px; }
+    .fx-nl-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dimmer); margin-bottom: 16px; }
+    .fx-nl-form { display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); transition: border-color 0.4s ease; }
+    .fx-nl-form:focus-within { border-color: var(--electric); }
+    .fx-nl-input { background: none; border: none; padding: 12px 0; color: #fff; font-size: 14px; width: 100%; font-family: var(--font-sans); }
+    .fx-nl-input:focus { outline: none; }
+    .fx-nl-input::placeholder { color: rgba(255,255,255,0.2); }
+    .fx-nl-submit { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: none; transition: color 0.4s ease, transform 0.4s ease; padding: 0 8px; }
+    .fx-nl-submit:hover { color: var(--electric); transform: translateX(4px); }
+    
+    .fx-nav-groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+    .fx-nav-col { display: flex; flex-direction: column; gap: 16px; will-change: transform, opacity; }
+    .fx-nav-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dimmer); margin-bottom: 8px; }
+    .fx-nav-link { font-size: 13px; color: var(--text-dim); transition: color 0.3s ease; position: relative; width: fit-content; cursor: none; }
+    .fx-nav-link:hover { color: #fff; }
+    .fx-nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1px; background: #fff; transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+    .fx-nav-link:hover::after { width: 100%; }
+    .fx-social { display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; }
+    .fx-social::after { display: none; }
+    .fx-arr { font-size: 10px; color: var(--text-dimmer); transition: transform 0.3s ease, color 0.3s ease; }
+    .fx-social:hover .fx-arr { transform: translate(2px, -2px); color: var(--electric); }
+    
+    .fx-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.05); will-change: transform, opacity; }
+    .fx-legal, .fx-legal-links a { font-size: 11px; color: var(--text-dimmer); cursor: none; }
+    .fx-legal-links { display: flex; gap: 24px; }
+    .fx-legal-links a:hover { color: var(--text-dim); }
+    
+    @media (max-width: 1024px) {
+      .fx-grid { grid-template-columns: 1fr; gap: 60px; }
+      .fx-brand { max-width: 400px; }
+    }
+    @media (max-width: 768px) {
+      .footer-experience { padding-top: 120px; }
+      .fx-hero { margin-bottom: 120px; }
+      .fx-actions { flex-direction: column; width: 100%; gap: 16px; }
+      .fx-cta, .fx-secondary { width: 100%; text-align: center; justify-content: center; }
+      .fx-nav-groups { grid-template-columns: 1fr 1fr; gap: 40px; }
+      .fx-bottom { flex-direction: column-reverse; gap: 24px; align-items: flex-start; }
+    }
+    @media (max-width: 480px) {
+      .fx-nav-groups { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="noise-overlay"></div>
+  <div class="ambient-glow"></div>
+  <div class="cursor"></div>
+
+  <div class="preloader">
+    <div class="preloader-text">CUE</div>
+    <div class="preloader-counter">00</div>
+  </div>
+
+  <nav class="nav" id="navbar">
+    <div class="nav-left">
+      <a href="/" class="logo magnetic">CUE</a>
+    </div>
+    <div class="nav-center">
+      <a href="#" class="nav-link magnetic">Showcase</a>
+      <a href="#" class="nav-link magnetic">Philosophy</a>
+      <a href="#" class="nav-link magnetic">Pricing</a>
+    </div>
+    <div class="nav-right">
+      <a href="library.html" class="nav-link magnetic">Sign in</a>
+      <a href="library.html" class="btn-primary magnetic">Get Cue</a>
+    </div>
+    <div class="nav-mobile-btn">
+      <button class="btn-menu magnetic" aria-label="Menu" aria-expanded="false" id="menuBtn">
+        <span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-inner">
+      <a href="#" class="mobile-link">Showcase</a>
+      <a href="#" class="mobile-link">Philosophy</a>
+      <a href="library.html" class="mobile-link electric">Get Cue</a>
+    </div>
+  </div>
+
+  <main id="smooth-wrapper">
+    <div id="smooth-content">
+      <section class="hero">
+        
+        <div class="floating-element el-1 magnetic-loose" data-parallax="0.08">
+          <div class="floating-img-inner">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop" alt="Architecture">
+          </div>
+        </div>
+        <div class="floating-element el-2 magnetic-loose" data-parallax="-0.05">
+          <div class="floating-img-inner">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop" alt="Interior">
+          </div>
+        </div>
+        <div class="floating-element el-3 magnetic-loose" data-parallax="0.12">
+          <div class="floating-img-inner">
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop" alt="Minimal">
+          </div>
+        </div>
+
+        <div class="hero-content">
+          <div class="hero-eyebrow">
+            <div class="eyebrow-text">An Editorial UI Collection</div>
+          </div>
+          <h1 class="hero-title">
+            <span class="title-line">Editorial</span>
+            <span class="title-line"><em>Interactions.</em></span>
+          </h1>
+          <div class="hero-desc">
+            <p>A curated library of interactions, copy-paste components, and visual effects designed for modern teams. Strictly un-frameworked.</p>
+          </div>
+          <div class="hero-actions">
+            <a href="library.html" class="btn-primary magnetic">Explore Library</a>
+            <a href="#" class="btn-secondary magnetic">Watch Showreel</a>
+          </div>
+        </div>
+        
+        <div class="scroll-indicator">
+          <div class="scroll-text">Scroll</div>
+          <div class="scroll-line"></div>
+        </div>
+      </section>
+
+      <section class="scroll-sequence" id="sequence">
+        <div class="seq-sticky">
+          
+          <div class="seq-text-block" id="seq-text-1">
+            <div class="seq-line"><span>Stop building</span></div>
+            <div class="seq-line"><span>from <em>scratch.</em></span></div>
+          </div>
+          
+          <div class="seq-text-block" id="seq-text-2">
+            <div class="seq-line"><span>Start</span></div>
+            <div class="seq-line"><span><em>crafting.</em></span></div>
+          </div>
+
+          <div class="seq-portal-wrap">
+            <div class="seq-portal">
+              <div class="seq-portal-bg">
+                 <img src="https://images.unsplash.com/photo-1600607688969-a5bfcd646154?q=80&w=1600&auto=format&fit=crop" alt="Premium Architecture" class="seq-portal-img">
+                 <div class="seq-portal-overlay"></div>
+              </div>
+              <div class="seq-portal-content">
+                 <div class="seq-text-block" id="seq-text-3">
+                   <div class="seq-line"><span>Welcome to</span></div>
+                   <div class="seq-line"><span>the <em>Collection.</em></span></div>
+                 </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+
+      <!-- Design Doctrine Section -->
+      <section class="doctrine" id="doctrine">
+        <div class="doctrine-container">
+          <div class="doc-header">
+             <div class="doc-eyebrow" data-animate="fade-up">Design Doctrine</div>
+             <h2 class="doc-title">
+               <span class="doc-title-line">Precision.</span>
+               <span class="doc-title-line"><em>Uncompromised.</em></span>
+             </h2>
+             <div class="doc-statement" data-animate="fade-up">
+               We reject the disposable nature of modern web development.
+             </div>
+          </div>
+          
+          <div class="doc-manifesto">
+            <p class="manifesto-text">
+              Great interfaces are not merely assembled; they are authored. Every micro-interaction, every bezier curve, and every frame of motion must serve a singular purpose: to elevate the human experience. We do not build templates. We architect digital heirlooms designed to outlast the very frameworks they are built upon.
+            </p>
+          </div>
+
+          <div class="doc-principles">
+            <div class="principle">
+              <div class="principle-num">01</div>
+              <div class="principle-content">
+                <div class="principle-name" data-animate="fade-up">Intentionality</div>
+                <div class="principle-desc" data-animate="fade-up">Motion must inform, never distract. Every interaction is calculated to reduce friction and build momentum.</div>
+              </div>
+            </div>
+            <div class="principle">
+              <div class="principle-num">02</div>
+              <div class="principle-content">
+                <div class="principle-name" data-animate="fade-up">Craftsmanship</div>
+                <div class="principle-desc" data-animate="fade-up">Details are not the design; they are the product. We obsess over the invisible margins that separate good from great.</div>
+              </div>
+            </div>
+            <div class="principle">
+              <div class="principle-num">03</div>
+              <div class="principle-content">
+                <div class="principle-name" data-animate="fade-up">Timelessness</div>
+                <div class="principle-desc" data-animate="fade-up">Chasing trends guarantees obsolescence. Our aesthetics are rooted in structural discipline and architectural rigor.</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="doc-visual">
+             <div class="doc-visual-inner">
+               <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000&auto=format&fit=crop" class="doc-img" alt="Abstract Art">
+             </div>
+             <div class="doc-visual-label magnetic-loose">Fig. 1 — Pure execution</div>
+          </div>
+          
+        </div>
+        
+        <!-- Transition to Next Phase -->
+        <div class="doc-transition">
+           <div class="transition-text">The Archives</div>
+           <div class="transition-prompt magnetic">
+             <span class="prompt-dot"></span>
+             <span class="prompt-text">Scroll to uncover</span>
+           </div>
+        </div>
+      </section>
+
+      <!-- Featured Collections Section -->
+      <section class="featured-collections" id="collections">
+        <div class="fc-container">
+          <div class="fc-header">
+            <div class="fc-eyebrow" data-animate="fade-up">Curated Archive</div>
+            <h2 class="fc-title">
+              <div class="title-wrap-fc"><span data-animate="fade-up">Selected</span></div>
+              <div class="title-wrap-fc"><em data-animate="fade-up" style="transition-delay:0.1s">Works.</em></div>
+            </h2>
+            <p class="fc-desc" data-animate="fade-up" style="transition-delay:0.2s">A pristine preview of the Cue ecosystem. Explore premium interactions and architectural layouts designed for top-tier platforms.</p>
+          </div>
+          
+          <div class="fc-grid">
+            <!-- Card 1 -->
+            <a href="library.html" class="resource-card">
+              <div class="resource-visual">
+                <div class="tags-overlay">
+                  <span class="tag tag--electric">Cue+</span>
+                  <span class="tag tag--dim">Featured</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=800&auto=format&fit=crop" alt="Architecture UI" class="cover-image">
+              </div>
+              <div class="card-meta">
+                <h3 class="card-title">Spatial Navigation</h3>
+                <span class="card-category">Menu Systems</span>
+              </div>
+            </a>
+            
+            <!-- Card 2 -->
+            <a href="library.html" class="resource-card">
+              <div class="resource-visual">
+                <div class="tags-overlay">
+                  <span class="tag tag--dim">Popular</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1618221118493-9cfa1a1c00da?q=80&w=800&auto=format&fit=crop" alt="Abstract Layout" class="cover-image">
+              </div>
+              <div class="card-meta">
+                <h3 class="card-title">Editorial Grids</h3>
+                <span class="card-category">Layouts</span>
+              </div>
+            </a>
+            
+            <!-- Card 3 -->
+            <a href="library.html" class="resource-card">
+              <div class="resource-visual">
+                <div class="tags-overlay">
+                  <span class="tag tag--dim">New</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop" alt="Minimal Interface" class="cover-image">
+              </div>
+              <div class="card-meta">
+                <h3 class="card-title">Cinematic Scroll</h3>
+                <span class="card-category">Motion</span>
+              </div>
+            </a>
+          </div>
+
+          <div class="fc-footer" data-animate="fade-up">
+            <a href="library.html" class="btn-primary fc-btn magnetic">
+              Explore the Complete Library
+            </a>
+          </div>
+        </div>
+        
+        <!-- Transition into Pricing -->
+        <div class="pricing-transition">
+          <div class="pt-line"></div>
+          <div class="pt-glow"></div>
+        </div>
+      </section>
+
+      <!-- Pricing Section -->
+      <section class="pricing" id="pricing">
+        <div class="pricing-container">
+          <div class="pricing-header">
+            <div class="pricing-eyebrow">Acquisition</div>
+            <h2 class="pricing-title">
+              <div class="title-wrap-fc"><span>The</span></div>
+              <div class="title-wrap-fc"><em>Investment.</em></div>
+            </h2>
+            <p class="pricing-desc">Access the definitive library of digital craftsmanship. Elevate your interface with architectural precision.</p>
+          </div>
+          
+          <div class="billing-toggle-wrap">
+            <div class="billing-toggle">
+              <div class="toggle-indicator"></div>
+              <button class="toggle-btn is-active" data-cycle="monthly">Monthly</button>
+              <button class="toggle-btn" data-cycle="quarterly">Quarterly <span class="toggle-badge">Save 15%</span></button>
+              <button class="toggle-btn" data-cycle="yearly">Yearly <span class="toggle-badge">Save 30%</span></button>
+            </div>
+          </div>
+          
+          <div class="pricing-grid">
+            <!-- Plan 1 -->
+            <div class="pricing-card">
+              <div class="card-glow"></div>
+              <div class="pc-header">
+                <h3 class="pc-name">Initiate</h3>
+                <p class="pc-desc">For independent designers building their foundation.</p>
+              </div>
+              <div class="pc-price-wrap">
+                <span class="pc-currency">$</span>
+                <span class="pc-amount" data-monthly="19" data-quarterly="16" data-yearly="13">19</span>
+                <span class="pc-period">/ mo</span>
+              </div>
+              <a href="#" class="btn-secondary pc-cta">Begin Journey</a>
+              <div class="pc-features">
+                <div class="pc-feature">Core Interaction Library</div>
+                <div class="pc-feature">Component Archive</div>
+                <div class="pc-feature dim">Premium Motion Support</div>
+                <div class="pc-feature dim">Private Design Community</div>
+              </div>
+            </div>
+            
+            <!-- Plan 2 -->
+            <div class="pricing-card pc-featured">
+              <div class="card-glow"></div>
+              <div class="pc-badge">Professional Standard</div>
+              <div class="pc-header">
+                <h3 class="pc-name">Architect</h3>
+                <p class="pc-desc">For studios and professionals demanding uncompromised quality.</p>
+              </div>
+              <div class="pc-price-wrap">
+                <span class="pc-currency">$</span>
+                <span class="pc-amount" data-monthly="49" data-quarterly="41" data-yearly="34">49</span>
+                <span class="pc-period">/ mo</span>
+              </div>
+              <a href="#" class="btn-primary pc-cta magnetic">Acquire License</a>
+              <div class="pc-features">
+                <div class="pc-feature">Everything in Initiate</div>
+                <div class="pc-feature">Premium Motion Support</div>
+                <div class="pc-feature">Private Design Community</div>
+                <div class="pc-feature">Commercial Usage Rights</div>
+              </div>
+            </div>
+            
+            <!-- Plan 3 -->
+            <div class="pricing-card">
+              <div class="card-glow"></div>
+              <div class="pc-header">
+                <h3 class="pc-name">Syndicate</h3>
+                <p class="pc-desc">For enterprise teams deploying design systems at scale.</p>
+              </div>
+              <div class="pc-price-wrap">
+                <span class="pc-currency">$</span>
+                <span class="pc-amount" data-monthly="99" data-quarterly="84" data-yearly="69">99</span>
+                <span class="pc-period">/ mo</span>
+              </div>
+              <a href="#" class="btn-secondary pc-cta">Contact Partners</a>
+              <div class="pc-features">
+                <div class="pc-feature">Everything in Architect</div>
+                <div class="pc-feature">Unlimited Team Seats</div>
+                <div class="pc-feature">Custom Component Requests</div>
+                <div class="pc-feature">Dedicated Engineering Support</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="pricing-compare">
+            <h3 class="compare-title">Architectural Breakdown</h3>
+            <div class="compare-table">
+              <div class="compare-row compare-header-row">
+                <div class="compare-col label-col">Capability</div>
+                <div class="compare-col">Initiate</div>
+                <div class="compare-col">Architect</div>
+                <div class="compare-col">Syndicate</div>
+              </div>
+              <div class="compare-row">
+                <div class="compare-col label-col">Paste-ready Prompts</div>
+                <div class="compare-col">Core only</div>
+                <div class="compare-col">Unlimited</div>
+                <div class="compare-col">Unlimited</div>
+              </div>
+              <div class="compare-row">
+                <div class="compare-col label-col">Figma Source Files</div>
+                <div class="compare-col"><span class="icon-dash"></span></div>
+                <div class="compare-col"><span class="icon-check"></span></div>
+                <div class="compare-col"><span class="icon-check"></span></div>
+              </div>
+              <div class="compare-row">
+                <div class="compare-col label-col">Early Access Drops</div>
+                <div class="compare-col"><span class="icon-dash"></span></div>
+                <div class="compare-col"><span class="icon-dash"></span></div>
+                <div class="compare-col"><span class="icon-check"></span></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="trust-indicators">
+            <div class="trust-item">
+              <div class="trust-icon">⚲</div>
+              <div class="trust-text">Secure 256-bit encryption</div>
+            </div>
+            <div class="trust-item">
+              <div class="trust-icon">∞</div>
+              <div class="trust-text">Lifetime updates included</div>
+            </div>
+            <div class="trust-item">
+              <div class="trust-icon">↺</div>
+              <div class="trust-text">14-day absolute guarantee</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Transition to Testimonials -->
+        <div class="testimonials-transition">
+           <div class="tt-gradient"></div>
+           <div class="tt-label">Voices of the Industry</div>
+        </div>
+      </section>
+
+      <!-- Social Proof Section -->
+      <section class="social-proof" id="trust">
+        <div class="sp-container">
+          <div class="sp-header">
+            <div class="sp-eyebrow">Validation</div>
+            <h2 class="sp-title">
+              <div class="title-wrap-fc"><span>Industry</span></div>
+              <div class="title-wrap-fc"><em>Consensus.</em></div>
+            </h2>
+            <p class="sp-desc">Adopted by the world's most meticulous product teams and independent designers.</p>
+          </div>
+          
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <div class="metric-val"><span class="count-up" data-target="240">0</span>+</div>
+              <div class="metric-label">Premium Components</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-val"><span class="count-up" data-target="15">0</span>k</div>
+              <div class="metric-label">Designers Inspired</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-val"><span class="count-up" data-target="99">0</span>%</div>
+              <div class="metric-label">Client Satisfaction</div>
+            </div>
+          </div>
+          
+          <div class="testimonials-editorial">
+            <div class="test-feature">
+              <div class="quote-mark">“</div>
+              <p class="test-quote-large">Cue has fundamentally changed how we prototype. The level of craft in these interactions saves us weeks of engineering iteration.</p>
+              <div class="test-author">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="Profile" class="author-img">
+                <div class="author-meta">
+                  <div class="author-name">David Chen</div>
+                  <div class="author-role">Design Director, Studio Output</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="test-cards-grid">
+              <div class="test-card">
+                <p class="test-quote">"The architectural precision of these components is unmatched. It feels like cheating."</p>
+                <div class="test-author">
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" alt="Profile" class="author-img">
+                  <div class="author-meta">
+                    <div class="author-name">Sarah Jenkins</div>
+                    <div class="author-role">Independent Product Designer</div>
+                  </div>
+                </div>
+              </div>
+              <div class="test-card">
+                <p class="test-quote">"Finally, a library that understands motion design principles and easing curves properly."</p>
+                <div class="test-author">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="Profile" class="author-img">
+                  <div class="author-meta">
+                    <div class="author-name">Marcus Torrey</div>
+                    <div class="author-role">Frontend Architect</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="trusted-by">
+            <div class="trusted-label">Trusted by teams at</div>
+            <div class="logo-grid">
+              <div class="logo-item">Vercel</div>
+              <div class="logo-item">Framer</div>
+              <div class="logo-item">Linear</div>
+              <div class="logo-item">Raycast</div>
+              <div class="logo-item">Stripe</div>
+            </div>
+          </div>
+          
+          <div class="community-highlights">
+            <div class="ch-box">
+              <div class="ch-content">
+                <h3 class="ch-title">Private Archive Access</h3>
+                <p class="ch-desc">Join the syndicate. Get weekly exclusive drops, motion source files, and direct feedback from the community.</p>
+              </div>
+              <a href="#" class="btn-ghost ch-cta">Explore the Archive</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Transition to Footer -->
+        <div class="footer-transition">
+           <div class="ft-line"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer Experience Section -->
+  <footer class="footer-experience" id="end">
+    <div class="fx-bg"></div>
+    <div class="fx-container">
+      
+      <div class="fx-hero">
+        <h2 class="fx-title">
+          <div class="title-wrap-fc"><span>Every Pixel</span></div>
+          <div class="title-wrap-fc"><em>Has Purpose.</em></div>
+        </h2>
+        <p class="fx-desc">The definitive interaction library for those who refuse to compromise on craft. Build interfaces that matter.</p>
+        
+        <div class="fx-actions">
+          <a href="library.html" class="btn-primary fx-cta magnetic">Explore the Library</a>
+          <a href="#collections" class="btn-ghost fx-secondary">Preview Collections</a>
+        </div>
+      </div>
+      
+      <div class="fx-grid">
+        <div class="fx-brand">
+          <div class="fx-logo">CUE</div>
+          <p class="fx-tagline">Architectural precision for modern web interfaces.</p>
+          
+          <div class="fx-newsletter">
+            <span class="fx-nl-label">The Weekly Drop</span>
+            <form class="fx-nl-form" onsubmit="event.preventDefault();">
+              <input type="email" placeholder="Email address" class="fx-nl-input">
+              <button type="submit" class="fx-nl-submit" aria-label="Subscribe">→</button>
+            </form>
+          </div>
+        </div>
+        
+        <div class="fx-nav-groups">
+          <div class="fx-nav-col">
+            <h4 class="fx-nav-title">Platform</h4>
+            <a href="library.html" class="fx-nav-link">Collections</a>
+            <a href="library.html" class="fx-nav-link">Components</a>
+            <a href="library.html" class="fx-nav-link">Interactions</a>
+            <a href="#pricing" class="fx-nav-link">Pricing</a>
+          </div>
+          
+          <div class="fx-nav-col">
+            <h4 class="fx-nav-title">Ecosystem</h4>
+            <a href="#" class="fx-nav-link">Documentation</a>
+            <a href="#doctrine" class="fx-nav-link">Manifesto</a>
+            <a href="#trust" class="fx-nav-link">Community</a>
+            <a href="#" class="fx-nav-link">Support</a>
+          </div>
+          
+          <div class="fx-nav-col">
+            <h4 class="fx-nav-title">Social</h4>
+            <a href="#" class="fx-nav-link fx-social">Twitter / X <span class="fx-arr">↗</span></a>
+            <a href="#" class="fx-nav-link fx-social">Instagram <span class="fx-arr">↗</span></a>
+            <a href="#" class="fx-nav-link fx-social">Awwwards <span class="fx-arr">↗</span></a>
+            <a href="#" class="fx-nav-link fx-social">Dribbble <span class="fx-arr">↗</span></a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="fx-bottom">
+        <div class="fx-legal">© 2026 Cue Library. All rights reserved.</div>
+        <div class="fx-legal-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+      
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.0.45/dist/lenis.min.js"></script>
+  <script src="https://unpkg.com/split-type"></script>
+  <script>
+    // Initialize Lenis for Smooth Scrolling
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      direction: 'vertical',
+      gestureDirection: 'vertical',
+      smooth: true,
+      mouseMultiplier: 1,
+      smoothTouch: false,
+    });
+
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0);
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Custom Cursor & Ambient Glow Tracking
+    const cursor = document.querySelector('.cursor');
+    const glow = document.querySelector('.ambient-glow');
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let cursorX = mouseX;
+    let cursorY = mouseY;
+    let glowX = mouseX;
+    let glowY = mouseY;
+
+    gsap.set(cursor, { xPercent: -50, yPercent: -50, force3D: true });
+    gsap.set(glow, { xPercent: -50, yPercent: -50, force3D: true });
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    gsap.ticker.add(() => {
+      // Lerp cursor (fast)
+      cursorX += (mouseX - cursorX) * 0.15;
+      cursorY += (mouseY - cursorY) * 0.15;
+      gsap.set(cursor, { x: cursorX, y: cursorY });
+      
+      // Lerp glow (slow ambient tracking)
+      glowX += (mouseX - glowX) * 0.03;
+      glowY += (mouseY - glowY) * 0.03;
+      gsap.set(glow, { x: glowX, y: glowY });
+    });
+
+    // Global Event Delegation for Interactive Elements
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('a, button, .resource-card, .pricing-card, .test-card, .ch-cta, .magnetic');
+      if (target) cursor.classList.add('hover');
+    });
+    document.addEventListener('mouseout', (e) => {
+      const target = e.target.closest('a, button, .resource-card, .pricing-card, .test-card, .ch-cta, .magnetic');
+      if (target) cursor.classList.remove('hover');
+    });
+
+    // Magnetic Interactions
+    const magnets = document.querySelectorAll('.magnetic');
+    magnets.forEach(mag => {
+      mag.addEventListener('mousemove', (e) => {
+        const rect = mag.getBoundingClientRect();
+        const x = (e.clientX - rect.left - rect.width / 2) * 0.3;
+        const y = (e.clientY - rect.top - rect.height / 2) * 0.3;
+        gsap.to(mag, { x: x, y: y, duration: 0.6, ease: "power3.out" });
+      });
+      mag.addEventListener('mouseleave', () => {
+        gsap.to(mag, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1, 0.4)" });
+      });
+    });
+
+    // Loose Magnetic for Floating Images
+    const looseMagnets = document.querySelectorAll('.magnetic-loose');
+    looseMagnets.forEach(mag => {
+      mag.addEventListener('mousemove', (e) => {
+        const rect = mag.getBoundingClientRect();
+        const x = (e.clientX - rect.left - rect.width / 2) * 0.1;
+        const y = (e.clientY - rect.top - rect.height / 2) * 0.1;
+        gsap.to(mag, { x: x, y: y, duration: 1, ease: "power3.out" });
+      });
+      mag.addEventListener('mouseleave', () => {
+        gsap.to(mag, { x: 0, y: 0, duration: 1, ease: "power3.out" });
+      });
+    });
+
+    // Navbar Scroll Behavior
+    const navbar = document.getElementById('navbar');
+    let lastScrollY = window.scrollY;
+    
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > 50) {
+        navbar.style.padding = '16px 40px';
+        if (window.innerWidth <= 1024) navbar.style.padding = '12px 24px';
+        
+        if (currentScrollY > lastScrollY && currentScrollY > 200) {
+          gsap.to(navbar, { yPercent: -100, duration: 0.4, ease: "power2.out" });
+        } else {
+          gsap.to(navbar, { yPercent: 0, duration: 0.4, ease: "power2.out" });
+        }
+      } else {
+        navbar.style.padding = window.innerWidth <= 1024 ? '16px 24px' : '24px 40px';
+        gsap.to(navbar, { yPercent: 0, duration: 0.4, ease: "power2.out" });
+      }
+      lastScrollY = currentScrollY;
+    });
+
+    // Mobile Menu Toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn.addEventListener('click', () => {
+      const isActive = menuBtn.classList.toggle('is-active');
+      mobileMenu.classList.toggle('is-open');
+      menuBtn.setAttribute('aria-expanded', isActive);
+    });
+
+    // Setup Text Split
+    const titleLines = document.querySelectorAll('.title-line');
+    let splitChars = [];
+    titleLines.forEach(line => {
+      const split = new SplitType(line, { types: 'chars' });
+      splitChars = splitChars.concat(split.chars);
+    });
+    gsap.set(splitChars, { yPercent: 110 }); // Hide initially
+
+    // Preloader Sequence
+    let count = 0;
+    const counterEl = document.querySelector('.preloader-counter');
+    
+    const interval = setInterval(() => {
+      count += Math.floor(Math.random() * 10) + 4;
+      if (count >= 100) {
+        count = 100;
+        clearInterval(interval);
+        setTimeout(revealHero, 300);
+      }
+      counterEl.textContent = count.toString().padStart(2, '0');
+    }, 60);
+
+    function revealHero() {
+      const tl = gsap.timeline();
+      
+      tl.to('.preloader', {
+        yPercent: -100,
+        duration: 1.2,
+        ease: "power4.inOut"
+      })
+      .from('.eyebrow-text', {
+        yPercent: 100,
+        opacity: 0,
+        duration: 1,
+        ease: "power4.out"
+      }, "-=0.6")
+      .to(splitChars, {
+        yPercent: 0,
+        duration: 1.2,
+        stagger: 0.03,
+        ease: "power4.out"
+      }, "-=0.8")
+      .from('.hero-desc p', {
+        y: 20,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+      }, "-=0.8")
+      .from('.hero-actions .btn-primary, .hero-actions .btn-secondary', {
+        y: 20,
+        opacity: 0,
+        duration: 1,
+        stagger: 0.1,
+        ease: "power3.out"
+      }, "-=0.9")
+      .from('.floating-element', {
+        y: 60,
+        scale: 0.95,
+        opacity: 0,
+        duration: 1.5,
+        stagger: 0.15,
+        ease: "power3.out"
+      }, "-=1.2")
+      .from('.nav', {
+        y: -40,
+        opacity: 0,
+        duration: 1.2,
+        ease: "power3.out"
+      }, "-=1.4")
+      .from('.scroll-indicator', {
+        opacity: 0,
+        duration: 1
+      }, "-=0.6");
+    }
+
+    // Scroll Animations (Exit Hero)
+    gsap.to('.hero-content', {
+      scrollTrigger: {
+        trigger: '.hero',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true
+      },
+      y: 150,
+      opacity: 0,
+      ease: 'none'
+    });
+
+    const floatingElements = document.querySelectorAll('.floating-element');
+    floatingElements.forEach(el => {
+      const speed = parseFloat(el.dataset.parallax);
+      gsap.to(el, {
+        scrollTrigger: {
+          trigger: '.hero',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true
+        },
+        y: -150 * speed * 10,
+        opacity: 0,
+        ease: 'none'
+      });
+    });
+
+    gsap.to('.scroll-indicator', {
+      scrollTrigger: {
+        trigger: '.hero',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true
+      },
+      y: 50,
+      opacity: 0,
+      ease: 'none'
+    });
+
+    // Cinematic Scroll Sequence Timeline
+    gsap.set('#seq-text-1 .seq-line span', { yPercent: 110 });
+    gsap.set('#seq-text-2 .seq-line span', { yPercent: 110 });
+    gsap.set('#seq-text-3 .seq-line span', { yPercent: 110 });
+
+    const seqTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#sequence',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1.2
+      }
+    });
+
+    const isMobile = window.innerWidth <= 768;
+    const slitClip = isMobile ? 'inset(10% 49% 10% 49% round 12px)' : 'inset(10% 49.8% 10% 49.8% round 20px)';
+
+    seqTl
+      // 1. Reveal Text 1
+      .to('#seq-text-1 .seq-line span', { yPercent: 0, duration: 1, stagger: 0.1, ease: 'power3.out' })
+      .to('#seq-text-1 .seq-line span', { yPercent: 0, duration: 0.5 }) // pause
+      .to('#seq-text-1 .seq-line span', { yPercent: -110, opacity: 0, duration: 1, stagger: 0.1, ease: 'power3.in' })
+      
+      // 2. Reveal Text 2
+      .to('#seq-text-2 .seq-line span', { yPercent: 0, duration: 1, stagger: 0.1, ease: 'power3.out' }, "-=0.2")
+      .to('#seq-text-2 .seq-line span', { yPercent: 0, duration: 0.5 }) // pause
+      
+      // 3. Text 2 scales up massively and fades out (depth effect)
+      .to('#seq-text-2', { scale: 3, opacity: 0, duration: 1.5, ease: 'power3.in' })
+
+      // 4. Portal opens vertically into a slit
+      .to('.seq-portal', { clipPath: slitClip, duration: 1, ease: 'power4.inOut' }, "-=1.2")
+      
+      // 5. Portal opens horizontally to fill screen
+      .to('.seq-portal', { clipPath: 'inset(0% 0% 0% 0% round 0px)', duration: 1.5, ease: 'power4.inOut' })
+      // Animate background image inside portal simultaneously
+      .to('.seq-portal-img', { scale: 1, duration: 2.5, ease: 'power3.out' }, "-=2.5")
+
+      // 6. Text 3 reveals inside portal
+      .to('#seq-text-3 .seq-line span', { yPercent: 0, duration: 1, stagger: 0.1, ease: 'power3.out' }, "-=0.5")
+      
+      // 7. Final linger before next section
+      .to('#seq-text-3 .seq-line span', { yPercent: 0, duration: 1 });
+
+    // Design Doctrine Animations
+    gsap.utils.toArray('[data-animate="fade-up"]').forEach(el => {
+      gsap.from(el, {
+        scrollTrigger: { trigger: el, start: 'top 85%' },
+        y: 40, opacity: 0, duration: 1.2, ease: 'power3.out'
+      });
+    });
+
+    const docTitleLines = document.querySelectorAll('.doc-title-line');
+    let docChars = [];
+    docTitleLines.forEach(line => {
+      const split = new SplitType(line, { types: 'chars' });
+      docChars = docChars.concat(split.chars);
+    });
+    gsap.from(docChars, {
+      scrollTrigger: { trigger: '.doc-title', start: 'top 80%' },
+      yPercent: 110, duration: 1.2, stagger: 0.02, ease: 'power4.out'
+    });
+
+    const manifesto = new SplitType('.manifesto-text', { types: 'lines' });
+    manifesto.lines.forEach(line => {
+      const wrap = document.createElement('div');
+      wrap.style.overflow = 'hidden';
+      wrap.style.paddingBottom = '0.1em';
+      wrap.style.marginBottom = '-0.1em';
+      line.parentNode.insertBefore(wrap, line);
+      wrap.appendChild(line);
+    });
+    gsap.from(manifesto.lines, {
+      scrollTrigger: { trigger: '.doc-manifesto', start: 'top 80%' },
+      yPercent: 110, opacity: 0, duration: 1.5, stagger: 0.1, ease: 'power3.out'
+    });
+
+    gsap.utils.toArray('.principle').forEach(principle => {
+      const num = principle.querySelector('.principle-num');
+      
+      const tl = gsap.timeline({ scrollTrigger: { trigger: principle, start: 'top 85%' } });
+      tl.from(num, { x: -40, opacity: 0, duration: 1.5, ease: 'power3.out' });
+        
+      gsap.to(num, {
+        scrollTrigger: { trigger: principle, start: 'top bottom', end: 'bottom top', scrub: true },
+        y: -100, ease: 'none'
+      });
+    });
+
+    gsap.from('.doc-visual-inner', {
+      scrollTrigger: { trigger: '.doc-visual', start: 'top 85%' },
+      clipPath: 'inset(100% 0 0 0 round 4px)', duration: 1.8, ease: 'power4.inOut'
+    });
+    
+    gsap.fromTo('.doc-img', 
+      { yPercent: -10 },
+      { scrollTrigger: { trigger: '.doc-visual', start: 'top bottom', end: 'bottom top', scrub: true }, yPercent: 10, ease: 'none' }
+    );
+
+    gsap.to('.transition-text', {
+      scrollTrigger: { trigger: '.doc-transition', start: 'top bottom', end: 'bottom top', scrub: true },
+      xPercent: -50, ease: 'none'
+    });
+
+    // Magnetic effects for .doc-transition are handled by global delegation
+
+    // Featured Collections Animations
+    gsap.from('.title-wrap-fc > *', {
+      scrollTrigger: { trigger: '.fc-title', start: 'top 85%' },
+      yPercent: 110, duration: 1.2, stagger: 0.1, ease: 'power4.out'
+    });
+
+    const fcCards = gsap.utils.toArray('.fc-grid .resource-card');
+    gsap.from(fcCards, {
+      scrollTrigger: { trigger: '.fc-grid', start: 'top 80%' },
+      y: 60, opacity: 0, duration: 1.4, stagger: 0.15, ease: 'power3.out'
+    });
+
+    // Subtly evolve background color for the section
+    gsap.to('.featured-collections', {
+      scrollTrigger: {
+        trigger: '.featured-collections',
+        start: 'top 50%',
+        end: 'bottom 20%',
+        toggleActions: 'play reverse play reverse'
+      },
+      backgroundColor: '#020205',
+      duration: 1.5,
+      ease: 'power2.inOut'
+    });
+
+    // Pricing Transition Line
+    gsap.from('.pt-line', {
+      scrollTrigger: { trigger: '.pricing-transition', start: 'top 90%' },
+      scaleY: 0, transformOrigin: 'bottom', duration: 1.5, ease: 'power3.out'
+    });
+
+    // Cursor interactions handled globally via event delegation
+    
+    // Magnetic logic for the FC CTA is handled by global delegation
+
+    // Pricing Animations & Logic
+    const toggleIndicator = document.querySelector('.toggle-indicator');
+    const toggleBtns = document.querySelectorAll('.toggle-btn');
+    const pcAmounts = document.querySelectorAll('.pc-amount');
+    
+    const initToggle = () => {
+      const activeBtn = document.querySelector('.toggle-btn.is-active');
+      if (activeBtn && toggleIndicator) {
+        toggleIndicator.style.transform = `translateX(${activeBtn.offsetLeft - 4}px)`;
+        toggleIndicator.style.width = `${activeBtn.offsetWidth}px`;
+      }
+    };
+    initToggle();
+    window.addEventListener('resize', initToggle);
+    
+    toggleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleBtns.forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        initToggle();
+        
+        const cycle = btn.dataset.cycle;
+        pcAmounts.forEach(amount => {
+          const targetValue = amount.dataset[cycle];
+          gsap.to(amount, {
+            opacity: 0, y: -10, duration: 0.2, ease: 'power2.in',
+            onComplete: () => {
+              amount.textContent = targetValue;
+              gsap.fromTo(amount, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+            }
+          });
+        });
+      });
+    });
+
+    // Scroll Reveals
+    gsap.from('.pricing-eyebrow, .pricing-desc, .billing-toggle-wrap', {
+      scrollTrigger: { trigger: '.pricing-header', start: 'top 85%' },
+      y: 40, opacity: 0, duration: 1.2, stagger: 0.1, ease: 'power3.out'
+    });
+
+    gsap.from('.pricing-title .title-wrap-fc > *', {
+      scrollTrigger: { trigger: '.pricing-title', start: 'top 85%' },
+      yPercent: 110, duration: 1.2, stagger: 0.1, ease: 'power4.out'
+    });
+
+    const pCards = gsap.utils.toArray('.pricing-grid .pricing-card');
+    gsap.from(pCards, {
+      scrollTrigger: { trigger: '.pricing-grid', start: 'top 80%' },
+      y: 60, opacity: 0, duration: 1.4, stagger: 0.15, ease: 'power3.out'
+    });
+    
+    pCards.forEach(card => {
+      const features = card.querySelectorAll('.pc-feature');
+      gsap.from(features, {
+        scrollTrigger: { trigger: card, start: 'top 75%' },
+        x: -10, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'power3.out'
+      });
+    });
+
+    const compareRows = gsap.utils.toArray('.compare-row');
+    gsap.from(compareRows, {
+      scrollTrigger: { trigger: '.compare-table', start: 'top 85%' },
+      y: 20, opacity: 0, duration: 1, stagger: 0.05, ease: 'power3.out'
+    });
+
+    const trustItems = gsap.utils.toArray('.trust-item');
+    gsap.from(trustItems, {
+      scrollTrigger: { trigger: '.trust-indicators', start: 'top 90%' },
+      y: 30, opacity: 0, duration: 1.2, stagger: 0.1, ease: 'power3.out'
+    });
+
+    // Cursor interactions handled globally via event delegation
+
+    // Social Proof Animations & Logic
+    const countElements = document.querySelectorAll('.count-up');
+    countElements.forEach(el => {
+      const target = parseInt(el.getAttribute('data-target'), 10);
+      gsap.to(el, {
+        innerHTML: target,
+        duration: 2.5,
+        ease: 'power3.out',
+        snap: { innerHTML: 1 },
+        scrollTrigger: { trigger: el, start: 'top 90%' }
+      });
+    });
+
+    gsap.from('.sp-eyebrow, .sp-desc, .metrics-grid', {
+      scrollTrigger: { trigger: '.sp-header', start: 'top 85%' },
+      y: 40, opacity: 0, duration: 1.2, stagger: 0.1, ease: 'power3.out'
+    });
+    
+    gsap.from('.sp-title .title-wrap-fc > *', {
+      scrollTrigger: { trigger: '.sp-title', start: 'top 85%' },
+      yPercent: 110, duration: 1.2, stagger: 0.1, ease: 'power4.out'
+    });
+    
+    gsap.from('.test-feature', {
+      scrollTrigger: { trigger: '.testimonials-editorial', start: 'top 80%' },
+      x: -40, opacity: 0, duration: 1.2, ease: 'power3.out'
+    });
+    
+    gsap.from('.test-card', {
+      scrollTrigger: { trigger: '.test-cards-grid', start: 'top 85%' },
+      x: 40, opacity: 0, duration: 1.2, stagger: 0.15, ease: 'power3.out'
+    });
+    
+    gsap.from('.logo-item', {
+      scrollTrigger: { trigger: '.trusted-by', start: 'top 85%' },
+      y: 20, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'power2.out'
+    });
+    
+    gsap.from('.community-highlights', {
+      scrollTrigger: { trigger: '.community-highlights', start: 'top 85%' },
+      scale: 0.95, opacity: 0, duration: 1.2, ease: 'power3.out'
+    });
+
+    gsap.from('.ft-line', {
+      scrollTrigger: { trigger: '.footer-transition', start: 'top 90%' },
+      scaleY: 0, transformOrigin: 'top', duration: 1.5, ease: 'power3.out'
+    });
+
+    // Cursor interactions handled globally via event delegation
+
+    // Footer Cinematic Animation
+    gsap.to('.footer-experience', {
+      scrollTrigger: {
+        trigger: '.footer-experience',
+        start: 'top 60%',
+        toggleClass: 'is-visible'
+      }
+    });
+    
+    gsap.to('.fx-bg', {
+      scrollTrigger: {
+        trigger: '.footer-experience',
+        start: 'top bottom',
+        end: 'bottom bottom',
+        scrub: true
+      },
+      y: 100,
+      scale: 1.1,
+      ease: 'none'
+    });
+
+    gsap.from('.fx-title .title-wrap-fc > *', {
+      scrollTrigger: { trigger: '.fx-hero', start: 'top 80%' },
+      yPercent: 120, duration: 1.6, stagger: 0.15, ease: 'power4.out'
+    });
+    
+    gsap.from('.fx-desc', {
+      scrollTrigger: { trigger: '.fx-hero', start: 'top 75%' },
+      y: 40, opacity: 0, duration: 1.4, ease: 'power3.out'
+    });
+    
+    gsap.from('.fx-actions > *', {
+      scrollTrigger: { trigger: '.fx-hero', start: 'top 70%' },
+      y: 30, opacity: 0, duration: 1.2, stagger: 0.15, ease: 'power3.out'
+    });
+    
+    gsap.from('.fx-brand > *, .fx-nav-col', {
+      scrollTrigger: { trigger: '.fx-grid', start: 'top 85%' },
+      y: 40, opacity: 0, duration: 1.2, stagger: 0.1, ease: 'power3.out'
+    });
+    
+    gsap.from('.fx-bottom', {
+      scrollTrigger: { trigger: '.fx-bottom', start: 'top 95%' },
+      opacity: 0, duration: 1.5, ease: 'power2.inOut'
+    });
+
+    // Magnetic CTA inside Footer is handled by global delegation
+
+    // Cursor interactions handled globally via event delegation
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cue Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,300;9..144,0,400;9..144,0,500;9..144,1,300;9..144,1,400;9..144,1,500&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --electric:      #0000FF;
+      --bg:            #060606;
+      --card-bg:       #1c1c1e;
+      --card-img-bg:   #2a2a2c;
+      --text:          #f2f2ef;
+      --text-dim:      #8a8a82;
+      --text-dimmer:   #55554e;
+      --border:        rgba(255,255,255,0.08);
+      --danger:        #ff4d4d;
+      --font-serif:    'Fraunces', 'Instrument Serif', Georgia, serif;
+      --font-sans:     'Geist', -apple-system, sans-serif;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    a { text-decoration: none; color: inherit; }
+    button { background: none; border: none; cursor: pointer; font-family: inherit; }
+
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      padding: 16px 24px;
+      background: rgba(6,6,6,0.85);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-left, .nav-right { display: flex; align-items: center; gap: 16px; }
+    .btn-menu { width: 32px; height: 32px; border-radius: 3px; background: #1c1c1e; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
+    .btn-menu span { display: block; width: 14px; height: 1px; background: var(--text); }
+    .logo { font-family: var(--font-serif); font-size: 24px; font-style: italic; }
+    
+    .nav-count {
+      font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 8px;
+    }
+    .nav-count-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--electric);
+      box-shadow: 0 0 8px var(--electric);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+    
+    .btn-tier {
+      padding: 6px 12px; border-radius: 3px; font-size: 13px; font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .nav-link { font-size: 13px; color: var(--text-dim); transition: color 0.2s ease; }
+    .nav-link:hover { color: var(--text); }
+    
+    .btn-primary {
+      padding: 8px 16px; border-radius: 3px; background: var(--electric); color: #fff;
+      font-size: 13px; font-weight: 500;
+      box-shadow: 0 6px 24px -8px rgba(0,0,255,0.6);
+      transition: transform 0.2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); }
+
+    /* Hero */
+    .hero {
+      padding: 100px 32px 60px; overflow: hidden; position: relative; text-align: center;
+    }
+    .hero::before {
+      content: ''; position: absolute; left: 0; right: 0; top: calc(50% + 80px); height: 1px; background: rgba(255,255,255,0.06); z-index: -1;
+    }
+    .hero::after {
+      content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(255,255,255,0.06); z-index: -1;
+    }
+    .hero-title-wrap { display: inline-flex; align-items: flex-start; justify-content: center; }
+    .hero-title {
+      font-family: var(--font-serif); font-weight: 300; font-style: italic;
+      font-size: clamp(76px, 13vw, 200px);
+      letter-spacing: -0.035em; line-height: 0.9;
+    }
+    .hero-sup {
+      font-family: var(--font-serif); font-style: italic; font-size: 22px;
+      margin-top: 24px; color: var(--text-dim);
+    }
+    .hero-sub {
+      font-family: var(--font-serif); font-size: 26px; font-style: italic;
+      margin-top: 24px; color: var(--text);
+    }
+    .hero-sub em { color: var(--electric); }
+    .hero-desc {
+      margin: 80px auto 0; max-width: 520px; font-size: 13px; color: var(--text-dim); line-height: 1.55;
+    }
+
+    /* Grid */
+    .grid-container {
+      padding: 20px 20px 120px;
+    }
+    .grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+      max-width: 1600px; margin: 0 auto;
+    }
+    @media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .hero { padding: 60px 20px 40px; } }
+
+    /* Card */
+    .resource-card {
+      position: relative;
+      background: var(--card-bg);
+      border-radius: 0;
+      overflow: hidden;
+      cursor: pointer;
+      transition:
+        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        background 0.35s ease,
+        opacity 0.6s ease;
+    }
+    .resource-card.will-reveal { opacity: 0; transform: translateY(20px); }
+    .resource-card.is-in       { opacity: 1; transform: translateY(0); }
+    .resource-card:hover {
+      background: #232326;
+      transform: translateY(-4px);
+    }
+
+    .resource-visual {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      background: var(--card-img-bg);
+      overflow: hidden;
+      margin: 4px 4px 0;
+    }
+    .resource-visual::after {
+      content: '';
+      position: absolute; inset: 0;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+      pointer-events: none; z-index: 4;
+    }
+
+    .cover-image, .cover-video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition:
+        opacity 0.5s ease,
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 0.5s ease;
+    }
+    .cover-image { filter: brightness(0.95) saturate(0.98); }
+    .cover-video { opacity: 0; z-index: 2; }
+    .cover-video[data-video-status="playing"] { opacity: 1; }
+    .resource-card:hover .cover-image {
+      transform: scale(1.04);
+      filter: brightness(1) saturate(1);
+    }
+    .resource-card:hover .cover-video { transform: scale(1.04); }
+
+    .tags-overlay {
+      position: absolute; top: 12px; left: 12px; z-index: 3;
+      display: flex; gap: 6px;
+    }
+    .tag {
+      padding: 5px 9px;
+      border-radius: 3px;
+      font-family: var(--font-sans);
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .tag--dim      { background: rgba(6,6,6,0.55); color: var(--text); }
+    .tag--electric {
+      background: var(--electric); color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 20px -6px rgba(0,0,255,0.5);
+    }
+
+    .card-meta { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 5px; }
+    .card-title {
+      font-family: var(--font-serif);
+      font-size: 20px; font-weight: 400;
+      line-height: 1.2; letter-spacing: -0.012em;
+      color: var(--text);
+      transition: color 0.25s ease;
+    }
+    .resource-card:hover .card-title { color: #fff; }
+    .card-category {
+      font-family: var(--font-sans);
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .cover-placeholder {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(0,0,255,0.18), transparent 45%),
+        radial-gradient(circle at 70% 80%, rgba(0,0,255,0.10), transparent 45%),
+        linear-gradient(135deg, #1a1a1c 0%, #0d0d10 100%);
+      transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .cover-placeholder span {
+      font-family: var(--font-serif);
+      font-size: clamp(24px, 3.2vw, 40px);
+      font-style: italic; font-weight: 400;
+      color: var(--text); text-align: center;
+      line-height: 1.1; letter-spacing: -0.015em;
+    }
+    .resource-card:hover .cover-placeholder { transform: scale(1.04); }
+
+    /* Empty State */
+    .empty-state {
+      grid-column: 1 / -1;
+      display: flex; justify-content: center;
+      padding: 80px 20px;
+    }
+    .empty-state__inner {
+      max-width: 520px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
+    }
+    .empty-state__eyebrow {
+      font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dim);
+    }
+    .empty-state__title {
+      font-family: var(--font-serif); font-size: 44px; font-weight: 400;
+    }
+    .empty-state__title em { font-style: italic; color: var(--electric); }
+    .empty-state__desc { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+    .empty-state__cta {
+      display: inline-block; padding: 10px 20px; border-radius: 3px;
+      background: var(--electric); color: #fff; font-size: 13px; font-weight: 500;
+      box-shadow: 0 6px 24px -8px rgba(0,0,255,0.6); margin-top: 10px;
+    }
+    .empty-state__cta--ghost {
+      background: transparent; border: 1px solid var(--border); box-shadow: none; margin-top: 0; color: var(--text-dim);
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      padding: 32px;
+      opacity: 0; transition: opacity 0.25s ease;
+    }
+    @media (max-width: 640px) { .modal { padding: 16px; } }
+    .modal.is-open { display: flex; opacity: 1; }
+    .modal-panel {
+      max-width: 820px; width: 100%;
+      max-height: 85vh;
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 0;
+      display: flex; flex-direction: column;
+      transform: translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .modal.is-open .modal-panel { transform: translateY(0); }
+
+    .modal-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .modal-title { font-family: var(--font-serif); font-size: 22px; font-style: italic; margin-bottom: 4px; }
+    .modal-cat { font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-dim); font-weight: 500; }
+    .modal-close {
+      font-size: 24px; line-height: 1; color: var(--text-dim); transition: color 0.2s ease;
+    }
+    .modal-close:hover { color: var(--text); }
+    
+    .modal-body { overflow-y: auto; flex: 1; }
+    
+    .modal-preview { position: relative; aspect-ratio: 16 / 10; background: var(--card-img-bg); }
+    .modal-preview__img, .modal-preview__vid {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+    .modal-preview__vid { z-index: 2; }
+    
+    .modal-prompt-wrap, .modal-locked { padding: 24px; border-top: 1px solid var(--border); }
+    .modal-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; color: var(--text-dim); margin-bottom: 12px; }
+    
+    .prompt-block {
+      background: #050505; border: 1px solid var(--border); border-radius: 3px;
+      padding: 18px 20px; font-family: Menlo, Consolas, monospace; font-size: 12.5px;
+      line-height: 1.6; color: #e8e8e2; white-space: pre-wrap; word-break: break-word;
+      max-height: 36vh; overflow-y: auto;
+    }
+
+    .modal-locked { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 48px 24px; }
+    .modal-locked__icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(0,0,255,0.15); border: 1px solid rgba(0,0,255,0.4); color: var(--electric);
+      display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px;
+    }
+    .modal-locked__title { font-family: var(--font-serif); font-size: 28px; margin-bottom: 12px; }
+    .modal-locked__title em { font-style: italic; color: var(--electric); }
+    .modal-locked__desc { font-size: 13px; color: var(--text-dim); max-width: 400px; line-height: 1.55; }
+
+    .modal-actions {
+      padding: 16px 24px; border-top: 1px solid var(--border); background: var(--bg);
+      display: flex; justify-content: flex-end; gap: 12px;
+    }
+    .btn-ghost { padding: 8px 16px; border-radius: 3px; border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    .btn-ghost:hover { color: var(--text); }
+
+    /* Footer */
+    .footer {
+      padding: 60px 24px; border-top: 1px solid var(--border); text-align: center;
+      font-family: var(--font-serif); font-style: italic; font-size: 14px; color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-left">
+      <button class="btn-menu" aria-label="Menu">
+        <span></span><span></span>
+      </button>
+      <a href="/" class="logo">CUE</a>
+    </div>
+    <div class="nav-right">
+      <div class="nav-count">
+        <span class="nav-count-dot"></span>
+        <span id="resourceCount">0 resources</span>
+      </div>
+      <button id="tierToggle" class="btn-tier">View: Free</button>
+      <a href="admin.html" class="nav-link">Admin</a>
+      <a href="#" class="btn-primary">Join Cue</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-title-wrap">
+      <h1 class="hero-title">Collection</h1>
+      <sup class="hero-sup" id="heroCount">0</sup>
+    </div>
+    <div class="hero-sub" id="heroSub"></div>
+    <p class="hero-desc">An editorial library of interactions, copy-paste components, and effects designed for Bolt, v0, and Cursor. Strictly un-frameworked.</p>
+  </header>
+
+  <section class="grid-container">
+    <div class="grid" id="grid">
+      <!-- Cards rendered here -->
+    </div>
+  </section>
+
+  <footer class="footer">
+    Cue Library · Awwwards-tier interactions for Bolt · v0 · Cursor
+  </footer>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-title" id="modalTitle">—</div>
+          <div class="modal-cat" id="modalCat">—</div>
+        </div>
+        <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- populated dynamically -->
+      </div>
+      <div class="modal-actions" id="modalActions">
+        <!-- populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Utilities ---
+    function loadResources() {
+      try { return JSON.parse(localStorage.getItem('cue_resources') || '[]'); }
+      catch { return []; }
+    }
+    function getUserTier() { return localStorage.getItem('cue_user_tier') || 'free'; }
+    function setUserTier(t) { localStorage.setItem('cue_user_tier', t); }
+
+    function formatAgo(iso) {
+      if (!iso) return '';
+      const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+      if (days === 0) return 'today';
+      if (days === 1) return '1 day ago';
+      if (days < 30) return `${days} days ago`;
+      const m = Math.floor(days / 30);
+      return m === 1 ? '1 month ago' : `${m} months ago`;
+    }
+
+    function escapeHtml(s) {
+      return (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+    }
+
+    // --- State ---
+    const resources = loadResources().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const userTier = getUserTier();
+
+    // --- UI Init ---
+    const tierToggleBtn = document.getElementById('tierToggle');
+    function updateTierBtn() {
+      tierToggleBtn.textContent = userTier === 'paid' ? 'View: Cue+' : 'View: Free';
+      tierToggleBtn.style.background = userTier === 'paid' ? 'rgba(0,0,255,0.15)' : 'var(--card-bg)';
+      tierToggleBtn.style.color = userTier === 'paid' ? 'var(--electric)' : 'var(--text)';
+    }
+    tierToggleBtn.addEventListener('click', () => {
+      setUserTier(userTier === 'free' ? 'paid' : 'free');
+      location.reload();
+    });
+    updateTierBtn();
+
+    document.getElementById('resourceCount').textContent = `${resources.length} resources`;
+    document.getElementById('heroCount').textContent = resources.length;
+
+    const heroSub = document.getElementById('heroSub');
+    if (resources.length > 0 && resources[0].createdAt) {
+      heroSub.innerHTML = `New drop <em>${formatAgo(resources[0].createdAt)}</em>`;
+    }
+
+    // --- Render Grid ---
+    const grid = document.getElementById('grid');
+
+    if (resources.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state__inner">
+            <div class="empty-state__eyebrow">Empty library</div>
+            <h3 class="empty-state__title"><em>Add your first resource</em></h3>
+            <p class="empty-state__desc">Your library is empty. Head to the admin panel to add projects, screenshots, or videos — they'll render as cards in this exact format.</p>
+            <a href="admin.html" class="empty-state__cta">Open admin →</a>
+            <button class="empty-state__cta empty-state__cta--ghost" onclick="seedDemo()">Load 7 demo cards</button>
+          </div>
+        </div>
+      `;
+    } else {
+      resources.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'resource-card will-reveal';
+        card.dataset.id = r.id;
+
+        const agoTag = `<span class="tag tag--dim">${formatAgo(r.createdAt)}</span>`;
+        let highlightTag = '';
+        if (r.tier === 'paid') highlightTag = `<span class="tag tag--electric">Cue+</span>`;
+        else if (r.isNew) {
+           const days = Math.max(0, Math.floor((Date.now() - new Date(r.createdAt).getTime()) / 86400000));
+           if (days < 30) highlightTag = `<span class="tag tag--electric">New</span>`;
+        }
+
+        const tagsOverlay = (agoTag || highlightTag) ? `<div class="tags-overlay">${agoTag}${highlightTag}</div>` : '';
+
+        let visualHtml = '';
+        if (r.imageUrl || r.videoUrl) {
+          if (r.imageUrl) {
+            visualHtml += `<img src="${r.imageUrl}" alt="" class="cover-image" loading="lazy">`;
+          }
+          if (r.videoUrl) {
+            visualHtml += `<video muted loop playsinline webkit-playsinline data-video-src="${r.videoUrl}" data-video-status="not-loaded" class="cover-video"></video>`;
+          }
+        } else {
+          visualHtml += `<div class="cover-placeholder"><span>${escapeHtml(r.title)}</span></div>`;
+        }
+
+        card.innerHTML = `
+          <div class="resource-visual">
+            ${tagsOverlay}
+            ${visualHtml}
+          </div>
+          <div class="card-meta">
+            <h3 class="card-title">${escapeHtml(r.title)}</h3>
+            <span class="card-category">${escapeHtml(r.category)}</span>
+          </div>
+        `;
+        
+        card.addEventListener('click', () => openModal(r));
+        grid.appendChild(card);
+      });
+    }
+
+    // --- Observers ---
+    if (resources.length > 0) {
+      const allCards = document.querySelectorAll('.resource-card');
+      
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const card = entry.target;
+            const idx = [...card.parentElement.children].indexOf(card);
+            const delay = Math.min(idx % 6, 5) * 70;
+            setTimeout(() => card.classList.add('is-in'), delay);
+            revealObserver.unobserve(card);
+          }
+        });
+      }, { threshold: 0.01, rootMargin: '0px 0px 100px 0px' });
+      allCards.forEach(c => revealObserver.observe(c));
+      setTimeout(() => allCards.forEach(c => c.classList.add('is-in')), 1500);
+
+      const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const video = entry.target.querySelector('.cover-video');
+          if (!video) return;
+          if (entry.isIntersecting) {
+            if (!video.src && video.dataset.videoSrc) video.src = video.dataset.videoSrc;
+            const p = video.play();
+            if (p && p.then) p.then(() => { video.dataset.videoStatus = 'playing'; }).catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      }, { threshold: 0.25 });
+      allCards.forEach(card => {
+        if (card.querySelector('.cover-video')) videoObserver.observe(card);
+      });
+    }
+
+    // --- Modal Logic ---
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalCat = document.getElementById('modalCat');
+    const modalBody = document.getElementById('modalBody');
+    const modalActions = document.getElementById('modalActions');
+    const modalClose = document.getElementById('modalClose');
+
+    function closeModal() {
+      modal.classList.remove('is-open');
+      const vid = modalBody.querySelector('video');
+      if (vid) vid.pause();
+    }
+    
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    function openModal(r) {
+      modalTitle.textContent = r.title;
+      modalCat.textContent = r.category;
+      
+      let previewHtml = '';
+      if (r.imageUrl || r.videoUrl) {
+         previewHtml = `<div class="modal-preview">`;
+         if (r.imageUrl) previewHtml += `<img src="${r.imageUrl}" class="modal-preview__img">`;
+         if (r.videoUrl) previewHtml += `<video src="${r.videoUrl}" muted loop autoplay playsinline class="modal-preview__vid"></video>`;
+         previewHtml += `</div>`;
+      }
+
+      const promptLocked = r.tier === 'paid' && userTier === 'free';
+
+      if (promptLocked) {
+        modalBody.innerHTML = `
+          ${previewHtml}
+          <div class="modal-locked">
+            <div class="modal-locked__icon">🔒</div>
+            <div class="modal-locked__title">Prompt locked for <em>Cue+</em></div>
+            <div class="modal-locked__desc">You can browse the design freely. To copy the paste-ready prompt into Bolt, v0 or Cursor, upgrade to Cue+.</div>
+          </div>
+        `;
+        modalActions.innerHTML = `
+          <button class="btn-ghost" id="modalNotNow">Not now</button>
+          <button class="btn-primary" id="modalUpgrade">Upgrade to Cue+</button>
+        `;
+        document.getElementById('modalNotNow').addEventListener('click', closeModal);
+        document.getElementById('modalUpgrade').addEventListener('click', () => {
+          setUserTier('paid'); location.reload();
+        });
+      } else {
+        modalBody.innerHTML = `
+          ${previewHtml}
+          <div class="modal-prompt-wrap">
+            <div class="modal-section-label">Paste-ready prompt</div>
+            <pre class="prompt-block">${escapeHtml(r.prompt)}</pre>
+          </div>
+        `;
+        modalActions.innerHTML = `
+          <button class="btn-ghost" id="modalCancel">Close</button>
+          <button class="btn-primary" id="modalCopy">Copy prompt</button>
+        `;
+        document.getElementById('modalCancel').addEventListener('click', closeModal);
+        document.getElementById('modalCopy').addEventListener('click', async (e) => {
+          try {
+            await navigator.clipboard.writeText(r.prompt);
+            e.target.textContent = 'Copied ✓';
+            setTimeout(() => { if (e.target) e.target.textContent = 'Copy prompt'; }, 1500);
+          } catch(err) { console.error(err); }
+        });
+      }
+
+      modal.classList.add('is-open');
+    }
+
+    // --- Demo Seed ---
+    function seedDemo() {
+      const DEMO_CARDS = [
+        {
+          id: 'r-demo-1',
+          title: 'What is Cue?',
+          category: 'Text Animations',
+          imageUrl: 'https://wsrv.nl/?url=' + encodeURIComponent('https://i.pinimg.com/736x/2b/05/80/2b0580d548248a24d6e4f84bc413a142.jpg'),
+          videoUrl: null,
+          prompt: '// Intro text reveal — animates each character on scroll\n<h1 class="hero-title" data-split>Every effect a Cue</h1>\n\n<style>\n  .hero-title { font-family: "Fraunces", serif; font-style: italic; font-size: 12vw; }\n  .hero-title .char { display: inline-block; transform: translateY(100%); }\n  .hero-title .char.is-in { transform: translateY(0); transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }\n</style>',
+          tier: 'free',
+          link: null,
+          createdAt: new Date(Date.now() -  1 * 86400000).toISOString(),
+          isNew: true
+        },
+        {
+          id: 'r-demo-2',
+          title: 'Awwwards-tier craft',
+          category: 'Visual Effects',
+          imageUrl: 'https://wsrv.nl/?url=' + encodeURIComponent('https://i.pinimg.com/736x/26/32/5b/26325bfd9131880dc4d695cd229508cc.jpg'),
+          videoUrl: null,
+          prompt: '// WebGL warped grid — cursor-reactive fluid distortion\n<canvas id="warp"></canvas>\n\n<script type="module">\n  // Shader: parabolic X pinch + Y lag driven by pointer velocity\n  // Full shader source with u_mouse, u_time, u_resolution uniforms\n<\/script>',
+          tier: 'paid',
+          link: null,
+          createdAt: new Date(Date.now() -  2 * 86400000).toISOString(),
+          isNew: true
+        },
+        {
+          id: 'r-demo-3',
+          title: 'Paste-ready prompts',
+          category: 'Utilities & Scripts',
+          imageUrl: 'https://wsrv.nl/?url=' + encodeURIComponent('https://i.pinimg.com/736x/2e/0a/74/2e0a74bd4db9a61a4f6061feb620b607.jpg'),
+          videoUrl: null,
+          prompt: '// Copy-to-clipboard button with tactile feedback\n<button id="copy-btn">Copy prompt</button>\n\n<script>\n  document.getElementById("copy-btn").addEventListener("click", async (e) => {\n    await navigator.clipboard.writeText(e.target.dataset.content);\n    e.target.textContent = "Copied ✓";\n    setTimeout(() => e.target.textContent = "Copy prompt", 1500);\n  });\n<\/script>',
+          tier: 'free',
+          link: null,
+          createdAt: new Date(Date.now() -  4 * 86400000).toISOString(),
+          isNew: true
+        },
+        {
+          id: 'r-demo-4',
+          title: 'Working code always',
+          category: 'Buttons',
+          imageUrl: 'https://wsrv.nl/?url=' + encodeURIComponent('https://i.pinimg.com/736x/2a/4e/30/2a4e308d142e5c38b1d7c83025566e47.jpg'),
+          videoUrl: null,
+          prompt: '// Magnetic hover button — cursor pulls the button toward it\n<button class="magnetic" data-magnetic data-distance="14">Get Cue</button>\n\n<script>\n  // Listen mousemove, compute normalized offset from center,\n  // translate button by offset * distance px with spring smoothing\n<\/script>',
+          tier: 'free',
+          link: null,
+          createdAt: new Date(Date.now() -  6 * 86400000).toISOString(),
+          isNew: true
+        },
+        {
+          id: 'r-demo-5',
+          title: '240+ components',
+          category: 'Gallery & Images',
+          imageUrl: 'https://wsrv.nl/?url=' + encodeURIComponent('https://i.pinimg.com/1200x/74/a8/a8/74a8a8540eeedc3870a1ab979a2c242a.jpg'),
+          videoUrl: null,
+          prompt: '// Infinite draggable masonry grid — pointer drag + inertia\n<div class="masonry" id="grid"></div>\n\n<script>\n  // Wrap items in absolutely-positioned tiles, translate parent on drag,\n  // add momentum via decaying velocity on pointerup\n<\/script>',
+          tier: 'paid',
+          link: null,
+          createdAt: new Date(Date.now() -  9 * 86400000).toISOString(),
+          isNew: true
+        },
+        {
+          id: 'r-demo-6',
+          title: 'For Bolt & v0',
+          category: 'Loaders',
+          imageUrl: 'https://wsrv.nl/?url=' + encodeURIComponent('https://i.pinimg.com/1200x/0e/bb/84/0ebb8414f9c7e419c2732dc8a5af3ea2.jpg'),
+          videoUrl: null,
+          prompt: '// Dropping-cards loader — 3 cards fall in with stagger, spring bounce\n<div class="loader-cards"></div>\n\n<style>\n  .card { transform: translateY(-100vh); animation: drop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }\n  .card:nth-child(2) { animation-delay: 0.12s; }\n  .card:nth-child(3) { animation-delay: 0.24s; }\n  @keyframes drop { to { transform: translateY(0); } }\n</style>',
+          tier: 'free',
+          link: null,
+          createdAt: new Date(Date.now() - 12 * 86400000).toISOString(),
+          isNew: true
+        },
+        {
+          id: 'r-demo-7',
+          title: 'Ship this weekend',
+          category: 'Page Transitions',
+          imageUrl: 'https://wsrv.nl/?url=' + encodeURIComponent('https://i.pinimg.com/1200x/77/bd/d8/77bdd84c56688618569a4dc812112c7a.jpg'),
+          videoUrl: null,
+          prompt: '// Masked window page transition — image slides up, reveals next page\n<div class="page-mask"></div>\n\n<script>\n  // On link click, animate mask up covering the viewport,\n  // navigate, then animate mask down revealing new page\n<\/script>',
+          tier: 'paid',
+          link: null,
+          createdAt: new Date(Date.now() - 20 * 86400000).toISOString(),
+          isNew: false
+        }
+      ];
+      localStorage.setItem('cue_resources', JSON.stringify(DEMO_CARDS));
+      location.reload();
+    }
+  </script>
+</body>
+</html>
