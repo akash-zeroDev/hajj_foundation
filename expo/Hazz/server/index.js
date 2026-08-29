@@ -3,18 +3,19 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-const authRoutes = require('./routes/authRoutes');
+const { clerkMiddleware } = require('@clerk/express');
+const organisationRoutes = require('./routes/organisationRoutes');
 
 const app = express();
 
-
 app.use(cors());
 app.use(express.json());
+// Add Clerk middleware to parse incoming auth tokens from React
+app.use(clerkMiddleware());
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', require('./routes/userRoutes'));
-
+// (Old custom auth routes removed since we now use Clerk)
+app.use('/api/organisations', organisationRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/rbac_db';
