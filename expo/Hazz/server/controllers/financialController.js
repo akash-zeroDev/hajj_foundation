@@ -1,5 +1,6 @@
 const Transaction = require('../models/Transaction');
 const Organisation = require('../models/Organisation');
+const Employee = require('../models/Employee');
 
 exports.getGlobalTransactions = async (req, res) => {
   try {
@@ -60,5 +61,23 @@ exports.getGlobalStats = async (req, res) => {
   } catch (error) {
     console.error('Fetch stats error:', error);
     res.status(500).json({ message: 'Server error fetching financial stats' });
+  }
+};
+
+exports.getEmployeeTransactions = async (req, res) => {
+  try {
+    const clerkUserId = req.auth.userId; // Securely pulled from token
+    const employee = await Employee.findOne({ clerkUserId });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+    
+    const transactions = await Transaction.find({ payerId: employee._id })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data: transactions });
+  } catch (error) {
+    console.error('Fetch employee transactions error:', error);
+    res.status(500).json({ message: 'Server error fetching employee transactions' });
   }
 };

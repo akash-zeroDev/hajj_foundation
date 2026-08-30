@@ -38,6 +38,8 @@ export const EmployeeDashboard = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [transactions, setTransactions] = useState([]);
+  const [isLoadingTx, setIsLoadingTx] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleSetupSubscription = async () => {
@@ -81,6 +83,20 @@ export const EmployeeDashboard = () => {
         const data = await res.json();
         if (data.success) {
           setEmployeeData(data.data);
+          // Fetch transactions
+          try {
+            const txRes = await fetch('http://localhost:5000/api/financials/my-transactions', {
+              headers: { Authorization: `Bearer ${await getToken()}` }
+            });
+            const txData = await txRes.json();
+            if (txData.success) {
+              setTransactions(txData.data);
+            }
+          } catch(e) {
+            console.error('Failed to fetch transactions', e);
+          } finally {
+            setIsLoadingTx(false);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -247,9 +263,60 @@ export const EmployeeDashboard = () => {
           </div>
         </div>
 
-        <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
-          <h3 className="text-lg font-bold text-slate-800 mb-2">No Transactions Yet</h3>
-          <p className="text-slate-500">Your first payroll deduction will appear here soon.</p>
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+            <h3 className="text-lg font-bold text-slate-800">Payment History</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-slate-500 font-medium border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-3">Date</th>
+                  <th className="px-6 py-3">Description</th>
+                  <th className="px-6 py-3">Amount</th>
+                  <th className="px-6 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {isLoadingTx ? (
+                   <tr><td colSpan="4" className="px-6 py-8 text-center text-slate-500">Loading transactions...</td></tr>
+                ) : transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-12 text-center">
+                      <h3 className="text-base font-bold text-slate-800 mb-1">No Transactions Yet</h3>
+                      <p className="text-slate-500">Your first payroll deduction will appear here soon.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  transactions.map((tx) => (
+                    <tr key={tx._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {new Date(tx.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
+                        Monthly Contribution
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-900">
+                        £{tx.amount.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {tx.status === 'succeeded' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Paid
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                            {tx.status}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </OldLayout>
