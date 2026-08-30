@@ -1,3 +1,4 @@
+const Employee = require('../models/Employee');
 const cloudinary = require('cloudinary').v2;
 const { createClerkClient } = require('@clerk/clerk-sdk-node');
 const Organisation = require('../models/Organisation');
@@ -248,5 +249,24 @@ exports.acceptAgreement = async (req, res) => {
   } catch (error) {
     console.error('Error accepting agreement:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.getEmployeeAgreements = async (req, res) => {
+  try {
+    const clerkOrgId = req.params.clerkOrgId;
+    const org = await Organisation.findOne({ clerkOrganizationId: clerkOrgId });
+    if (!org) {
+      return res.status(404).json({ message: 'Organisation not found in database.' });
+    }
+
+    const employees = await Employee.find({ organisationId: org._id })
+      .select('firstName lastName agreementStatus updatedAt clerkUserId email')
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json({ success: true, data: employees });
+  } catch (error) {
+    console.error('Error fetching employee agreements:', error);
+    res.status(500).json({ message: 'Server error fetching agreements' });
   }
 };

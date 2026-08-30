@@ -13,7 +13,7 @@ exports.getEmployeeProfile = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing Clerk IDs' });
     }
 
-    let employee = await Employee.findOne({ clerkUserId: clerkId }).populate('organisationId');
+    let employee = await Employee.findOne({ clerkUserId: clerkId }).populate('organisationId').populate('signedDocumentId');
 
     if (!employee) {
 
@@ -32,7 +32,7 @@ exports.getEmployeeProfile = async (req, res) => {
       await employee.save();
       
       
-      employee = await Employee.findById(employee._id).populate('organisationId');
+      employee = await Employee.findById(employee._id).populate('organisationId').populate('signedDocumentId');
     }
 
     res.status(200).json({ success: true, data: employee });
@@ -46,7 +46,7 @@ exports.getEmployeeProfile = async (req, res) => {
 exports.completeOnboarding = async (req, res) => {
   try {
     const { id } = req.params; 
-    const { monthlyContribution, firstName, lastName, phone } = req.body;
+    const { monthlyContribution, firstName, lastName, phone, signedDocumentId } = req.body;
 
     if (!monthlyContribution || monthlyContribution < 10) {
       return res.status(400).json({ success: false, message: 'Minimum contribution is £10' });
@@ -61,6 +61,7 @@ exports.completeOnboarding = async (req, res) => {
       id,
       { 
         agreementStatus: 'signed',
+        signedDocumentId: signedDocumentId || undefined,
         monthlyContribution: Number(monthlyContribution),
         firstName,
         lastName,
@@ -92,3 +93,4 @@ exports.completeOnboarding = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+  

@@ -1,3 +1,4 @@
+const { getAuth } = require('@clerk/express');
 const Transaction = require('../models/Transaction');
 const Organisation = require('../models/Organisation');
 const Employee = require('../models/Employee');
@@ -66,7 +67,7 @@ exports.getGlobalStats = async (req, res) => {
 
 exports.getEmployeeTransactions = async (req, res) => {
   try {
-    const clerkUserId = req.auth.userId; // Securely pulled from token
+    const clerkUserId = getAuth(req).userId; // Securely pulled from token
     const employee = await Employee.findOne({ clerkUserId });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });

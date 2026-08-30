@@ -9,6 +9,11 @@ const employeeRoutes = require('./routes/employeeRoutes');
 const userRoutes = require('./routes/userRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const financialRoutes = require('./routes/financialRoutes');
+const awardRoutes = require('./routes/awardRoutes');
+const bankRoutes = require('./routes/bankRoutes');
+const documentRoutes = require('./routes/documentRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 
 const app = express();
 
@@ -33,6 +38,11 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/financials', financialRoutes);
+app.use('/api/awards', awardRoutes);
+app.use('/api/banks', bankRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/rbac_db';

@@ -14,6 +14,10 @@ const employeeSchema = new mongoose.Schema({
   firstName: { type: String },
   lastName: { type: String },
   phone: { type: String },
+  signedDocumentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'GlobalDocument'
+  },
   agreementStatus: {
     type: String,
     enum: ['pending', 'signed'],

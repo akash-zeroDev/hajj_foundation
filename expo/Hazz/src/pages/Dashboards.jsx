@@ -32,6 +32,7 @@ export const EmployeeDashboard = () => {
   const { user, isLoaded: userLoaded } = useUser();
   const { organization, isLoaded: orgLoaded } = useOrganization();
   const [employeeData, setEmployeeData] = useState(null);
+  const [activeDocument, setActiveDocument] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
     const [contribution, setContribution] = useState('');
@@ -41,6 +42,47 @@ export const EmployeeDashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [isLoadingTx, setIsLoadingTx] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+    const downloadStatement = () => {
+    if (!employeeData) return;
+    
+    try {
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(22);
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.text("Savings Statement", 14, 20);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(100, 116, 139); // slate-500
+      doc.text(`Account Holder: ${employeeData.firstName} ${employeeData.lastName}`, 14, 30);
+      doc.text(`Organisation: ${organization?.name || 'N/A'}`, 14, 36);
+      doc.text(`Statement Date: ${new Date().toLocaleDateString()}`, 14, 42);
+      doc.text(`Current Balance: £${employeeData.balance.toLocaleString()}`, 14, 48);
+
+      // Financials Table
+      const txRows = transactions.map(tx => [
+        new Date(tx.createdAt).toLocaleDateString(),
+        `£${tx.amount.toLocaleString()}`,
+        tx.status
+      ]);
+
+      doc.autoTable({
+        startY: 55,
+        head: [['Date', 'Contribution', 'Status']],
+        body: txRows,
+        theme: 'striped',
+        headStyles: { fillColor: [5, 150, 105] }, // emerald-600
+        styles: { fontSize: 11, cellPadding: 6 }
+      });
+      
+      doc.save(`Hajj_Savings_Statement_${employeeData.firstName}_${employeeData.lastName}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF statement.');
+    }
+  };
 
   const handleSetupSubscription = async () => {
     setIsRedirecting(true);
@@ -118,7 +160,7 @@ export const EmployeeDashboard = () => {
       const res = await fetch(`http://localhost:5000/api/employees/${employeeData._id}/complete-onboarding`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ monthlyContribution: Number(contribution), firstName, lastName, phone })
+        body: JSON.stringify({ monthlyContribution: Number(contribution), firstName, lastName, phone, signedDocumentId: activeDocument?._id })
       });
       const data = await res.json();
       if (data.success) {
@@ -178,8 +220,12 @@ export const EmployeeDashboard = () => {
               <hr className="border-slate-700 mb-6" />
               <h2 className="text-xl font-bold text-white mb-2">2. Employee Agreement</h2>
               <p className="text-sm text-emerald-400 mb-4">Please read the document below carefully.</p>
-              <div className="h-64 bg-slate-100 rounded-lg overflow-hidden border border-slate-600">
-                <iframe src="https://res.cloudinary.com/demo/image/upload/v1612450893/sample.pdf" className="w-full h-full" title="Employee Agreement"></iframe>
+              <div className="h-64 bg-slate-100 rounded-lg overflow-hidden border border-slate-600 flex items-center justify-center">
+                {activeDocument ? (
+                  <iframe src={activeDocument.fileUrl} className="w-full h-full" title="Employee Agreement"></iframe>
+                ) : (
+                  <p className="text-slate-500">No active agreement document found. Please contact your administrator.</p>
+                )}
               </div>
             </div>
             
@@ -222,7 +268,38 @@ export const EmployeeDashboard = () => {
 
   return (
     <OldLayout title="Employee Portal" description="Manage your contributions, view balances, and download statements.">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+      
+      {employeeData?.awardStatus === 'won' && (
+        <div className="mb-6 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-xl shadow-lg border border-amber-300 p-6 flex flex-col sm:flex-row items-center gap-6 transform hover:scale-[1.01] transition-transform">
+          <div className="flex-shrink-0 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner">
+            <span className="text-3xl">🎉</span>
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-amber-900 mb-1">Congratulations! You have been selected!</h2>
+            <p className="text-amber-800 font-medium text-lg">You are a winner in the latest Hajj Awards draw. A member of our team will contact you shortly.</p>
+          </div>
+        </div>
+      )}
+
+      {employeeData?.subscriptionStatus === 'past_due' && (
+        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Action Required: Payment Failed</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>Your last monthly contribution failed to process. You are currently <strong>disqualified</strong> from the Hajj Awards draw until the outstanding balance is paid.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
@@ -257,9 +334,15 @@ export const EmployeeDashboard = () => {
           </div>
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 flex flex-col justify-center">
             <p className="text-sm text-slate-500 font-medium mb-2">Hajj Award Status</p>
-            <span className="px-3 py-1 bg-slate-200 text-slate-700 text-sm font-bold rounded-full w-max">
-              Not Selected Yet
-            </span>
+            {employeeData?.awardStatus === 'won' ? (
+              <span className="px-3 py-1 bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-900 text-sm font-black rounded-full w-max shadow-sm border border-amber-300 uppercase tracking-wide">
+                🏆 Award Winner
+              </span>
+            ) : (
+              <span className="px-3 py-1 bg-slate-200 text-slate-700 text-sm font-bold rounded-full w-max">
+                Not Selected Yet
+              </span>
+            )}
           </div>
         </div>
 
@@ -612,6 +695,56 @@ export const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+        {/* Document Center Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full lg:col-span-3">
+          <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+               <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+               Document Center
+            </h2>
+          </div>
+          <div className="p-6 flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 p-5 border border-slate-200 rounded-xl flex items-start gap-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition">
+              <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Savings Statement</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-3">Download a formal PDF statement of your account balance and historical contributions.</p>
+                <button 
+                  onClick={downloadStatement}
+                  className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition"
+                >
+                  Download PDF
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 p-5 border border-slate-200 rounded-xl flex items-start gap-4 hover:border-blue-200 hover:bg-blue-50/50 transition">
+              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">My Signed Agreement</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-3">View the specific version of the Shariah Master Agreement that you digitally signed.</p>
+                {employeeData?.signedDocumentId ? (
+                   <a 
+                     href={employeeData.signedDocumentId.fileUrl} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition inline-block"
+                   >
+                     View Contract
+                   </a>
+                ) : (
+                   <span className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full">No Contract Found</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
     </SidebarLayout>
   );
 };

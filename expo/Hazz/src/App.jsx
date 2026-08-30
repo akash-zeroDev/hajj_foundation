@@ -8,7 +8,13 @@ import { OrganisationDetails } from './pages/superadmin/OrganisationDetails';
 import { UsersList } from './pages/superadmin/UsersList';
 import { AdminEmployees } from './pages/admin/AdminEmployees';
 import { PaymentsList } from './pages/superadmin/PaymentsList';
+import { AwardsManagement } from './pages/superadmin/AwardsManagement';
+import { BankAccounts } from './pages/superadmin/BankAccounts';
+import { DocumentManagement } from './pages/superadmin/DocumentManagement';
+import { Reports } from './pages/superadmin/Reports';
+import { AuditLogs } from './pages/superadmin/AuditLogs';
 import { AdminPayments } from './pages/admin/AdminPayments';
+import { AgreementsTracking } from './pages/admin/AgreementsTracking';
 import { RequireRole } from './components/RequireRole';
 
 const ProtectedRoute = ({ children }) => (
@@ -77,6 +83,46 @@ function App() {
               </RequireRole>
             } 
           />
+          <Route 
+            path="/superadmin/awards" 
+            element={
+              <RequireRole role="superadmin">
+                <AwardsManagement />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/superadmin/banks" 
+            element={
+              <RequireRole role="superadmin">
+                <BankAccounts />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/superadmin/documents" 
+            element={
+              <RequireRole role="superadmin">
+                <DocumentManagement />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/superadmin/reports" 
+            element={
+              <RequireRole role="superadmin">
+                <Reports />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/superadmin/audit" 
+            element={
+              <RequireRole role="superadmin">
+                <AuditLogs />
+              </RequireRole>
+            } 
+          />
 
           {/* Org Admin Routes */}
           <Route 
@@ -100,6 +146,14 @@ function App() {
             element={
               <RequireRole role="org:admin">
                 <AdminPayments />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/admin/agreements" 
+            element={
+              <RequireRole role="org:admin">
+                <AgreementsTracking />
               </RequireRole>
             } 
           />
