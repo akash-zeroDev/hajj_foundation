@@ -3,11 +3,11 @@ const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 const Employee = require('../models/Employee');
 const Organisation = require('../models/Organisation');
 
-// Get employee by Clerk ID (create if doesn't exist)
+
 exports.getEmployeeProfile = async (req, res) => {
   try {
     const { clerkId } = req.params;
-    const { clerkOrgId } = req.query; // Passed from frontend useOrganization
+    const { clerkOrgId } = req.query; 
 
     if (!clerkId || !clerkOrgId) {
       return res.status(400).json({ success: false, message: 'Missing Clerk IDs' });
@@ -16,13 +16,13 @@ exports.getEmployeeProfile = async (req, res) => {
     let employee = await Employee.findOne({ clerkUserId: clerkId }).populate('organisationId');
 
     if (!employee) {
-      // Find the Mongo Organisation ID using the Clerk Org ID
+
       const org = await Organisation.findOne({ clerkOrganizationId: clerkOrgId });
       if (!org) {
         return res.status(404).json({ success: false, message: 'Organisation not found in database' });
       }
 
-      // Create a fresh financial profile for the new employee
+
       employee = new Employee({
         clerkUserId: clerkId,
         organisationId: org._id,
@@ -31,7 +31,7 @@ exports.getEmployeeProfile = async (req, res) => {
       });
       await employee.save();
       
-      // Populate org details before sending
+      
       employee = await Employee.findById(employee._id).populate('organisationId');
     }
 
@@ -42,10 +42,10 @@ exports.getEmployeeProfile = async (req, res) => {
   }
 };
 
-// Complete Onboarding (Sign Agreement & Set Contribution)
+
 exports.completeOnboarding = async (req, res) => {
   try {
-    const { id } = req.params; // Mongo Employee ID
+    const { id } = req.params; 
     const { monthlyContribution, firstName, lastName, phone } = req.body;
 
     if (!monthlyContribution || monthlyContribution < 10) {
@@ -70,7 +70,7 @@ exports.completeOnboarding = async (req, res) => {
     );
 
     if (employee) {
-      // Sync the newly collected names back up to Clerk so they appear globally in navbars and admin lists!
+
       try {
         await clerk.users.updateUser(employee.clerkUserId, {
           firstName,

@@ -4,7 +4,7 @@ export const superAdminNavigation = [
   { name: 'Dashboard Overview', href: '/superadmin' },
   { name: 'Organisations', href: '/superadmin/organisations' },
   { name: 'Users', href: '/superadmin/users' },
-  { name: 'Payments', href: '/superadmin/payments' },
+  { name: 'Payments & Revenues', href: '/superadmin/payments' },
   { name: 'Awards', href: '/superadmin/awards' },
   { name: 'Documents', href: '/superadmin/documents' },
   { name: 'Bank Accounts', href: '/superadmin/banks' },
@@ -15,7 +15,7 @@ export const orgAdminNavigation = [
   { name: 'Overview', href: '/admin' },
   { name: 'Employees', href: '/admin/employees' },
   { name: 'Agreements', href: '/admin/agreements' },
-  { name: 'Contributions', href: '/admin/contributions' },
+  { name: 'Employee Payments', href: '/admin/payments' },
 ];
 
 export const employeeNavigation = [

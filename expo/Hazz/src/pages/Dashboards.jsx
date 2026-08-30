@@ -38,11 +38,45 @@ export const EmployeeDashboard = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const handleSetupSubscription = async () => {
+    setIsRedirecting(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/payments/create-employee-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await getToken()}`
+        },
+        body: JSON.stringify({ employeeId: employeeData._id })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error(data.message);
+        setIsRedirecting(false);
+      }
+    } catch (err) {
+      console.error('Subscription Error:', err);
+      setIsRedirecting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
       if (!userLoaded || !orgLoaded || !user || !organization) return;
       try {
+        const token = await getToken();
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('session_id');
+        if (sessionId) {
+          await fetch(`http://localhost:5000/api/payments/verify-employee-subscription?session_id=${sessionId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }).catch(console.error);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
         const res = await fetch(`http://localhost:5000/api/employees/clerk/${user.id}?clerkOrgId=${organization.id}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
         const data = await res.json();
         if (data.success) {
@@ -180,8 +214,30 @@ export const EmployeeDashboard = () => {
             <p className="text-4xl font-extrabold text-emerald-600">£{employeeData?.balance?.toLocaleString()}</p>
           </div>
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-            <p className="text-sm text-slate-500 font-medium mb-1">Monthly Contribution</p>
+            <div className="flex justify-between items-start mb-1">
+              <p className="text-sm text-slate-500 font-medium">Monthly Contribution</p>
+              {employeeData?.subscriptionStatus === 'active' ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Active
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Action Required
+                </span>
+              )}
+            </div>
             <p className="text-4xl font-extrabold text-slate-800">£{employeeData?.monthlyContribution?.toLocaleString()}</p>
+            {employeeData?.subscriptionStatus !== 'active' && (
+              <button 
+                onClick={handleSetupSubscription}
+                disabled={isRedirecting}
+                className="mt-4 w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition shadow-sm disabled:bg-emerald-400 flex justify-center items-center gap-2"
+              >
+                {isRedirecting ? 'Connecting...' : 'Set up Direct Debit'}
+              </button>
+            )}
           </div>
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 flex flex-col justify-center">
             <p className="text-sm text-slate-500 font-medium mb-2">Hajj Award Status</p>
@@ -236,7 +292,25 @@ export const AdminDashboard = () => {
 
   useEffect(() => {
     if (orgLoaded && organization) {
-      getToken().then(token => fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}`, { headers: { Authorization: `Bearer ${token}` } })).then(res => {
+      const verifyPaymentIfNeeded = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('session_id');
+        if (sessionId) {
+          try {
+            const token = await getToken();
+            await fetch(`http://localhost:5000/api/payments/verify-annual-fee?session_id=${sessionId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            // Clear URL so it doesn't verify again on refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (err) {
+            console.error('Failed to verify payment', err);
+          }
+        }
+      };
+
+      verifyPaymentIfNeeded().then(() => {
+        getToken().then(token => fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}`, { headers: { Authorization: `Bearer ${token}` } })).then(res => {
           if (!res.ok) throw new Error('Not found');
           return res.json();
         })
@@ -248,6 +322,8 @@ export const AdminDashboard = () => {
           console.error(err);
           setIsLoadingBackend(false);
         });
+
+      });
 
       organization.getMemberships().then(m => {
         setEmpCount(m?.data?.length || 0);

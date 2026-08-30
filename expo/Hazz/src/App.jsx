@@ -7,6 +7,8 @@ import { OrganisationsList } from './pages/superadmin/OrganisationsList';
 import { OrganisationDetails } from './pages/superadmin/OrganisationDetails';
 import { UsersList } from './pages/superadmin/UsersList';
 import { AdminEmployees } from './pages/admin/AdminEmployees';
+import { PaymentsList } from './pages/superadmin/PaymentsList';
+import { AdminPayments } from './pages/admin/AdminPayments';
 import { RequireRole } from './components/RequireRole';
 
 const ProtectedRoute = ({ children }) => (
@@ -67,6 +69,14 @@ function App() {
               </RequireRole>
             } 
           />
+          <Route 
+            path="/superadmin/payments" 
+            element={
+              <RequireRole role="superadmin">
+                <PaymentsList />
+              </RequireRole>
+            } 
+          />
 
           {/* Org Admin Routes */}
           <Route 
@@ -82,6 +92,14 @@ function App() {
             element={
               <RequireRole role="org:admin">
                 <AdminEmployees />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/admin/payments" 
+            element={
+              <RequireRole role="org:admin">
+                <AdminPayments />
               </RequireRole>
             } 
           />

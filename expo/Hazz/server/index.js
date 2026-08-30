@@ -8,6 +8,7 @@ const organisationRoutes = require('./routes/organisationRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const userRoutes = require('./routes/userRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const financialRoutes = require('./routes/financialRoutes');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/organisations', organisationRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/financials', financialRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/rbac_db';
