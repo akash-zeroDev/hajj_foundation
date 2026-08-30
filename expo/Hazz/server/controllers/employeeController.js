@@ -94,3 +94,35 @@ exports.completeOnboarding = async (req, res) => {
   }
 };
   
+
+exports.updateEmployeeProfile = async (req, res) => {
+  try {
+    const { clerkId } = req.params;
+    const { firstName, lastName, phone } = req.body;
+
+    const employee = await Employee.findOneAndUpdate(
+      { clerkUserId: clerkId },
+      { firstName, lastName, phone },
+      { new: true }
+    );
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    // Sync with Clerk
+    try {
+      await clerk.users.updateUser(clerkId, {
+        firstName,
+        lastName
+      });
+    } catch (clerkErr) {
+      console.error('Failed to sync name to Clerk during update:', clerkErr);
+    }
+
+    res.status(200).json({ success: true, data: employee });
+  } catch (error) {
+    console.error('Error updating employee profile:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

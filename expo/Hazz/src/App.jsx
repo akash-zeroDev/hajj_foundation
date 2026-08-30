@@ -3,6 +3,7 @@ import { Show, RedirectToSignIn } from '@clerk/react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import { EmployeeDashboard, AdminDashboard, SuperAdminDashboard, Unauthorized } from './pages/Dashboards';
+import { EmployeeSettings } from './pages/employee/Settings';
 import { OrganisationsList } from './pages/superadmin/OrganisationsList';
 import { OrganisationDetails } from './pages/superadmin/OrganisationDetails';
 import { UsersList } from './pages/superadmin/UsersList';
@@ -15,6 +16,7 @@ import { Reports } from './pages/superadmin/Reports';
 import { AuditLogs } from './pages/superadmin/AuditLogs';
 import { AdminPayments } from './pages/admin/AdminPayments';
 import { AgreementsTracking } from './pages/admin/AgreementsTracking';
+import { Settings } from './pages/admin/Settings';
 import { RequireRole } from './components/RequireRole';
 
 const ProtectedRoute = ({ children }) => (

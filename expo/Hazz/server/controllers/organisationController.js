@@ -270,3 +270,27 @@ exports.getEmployeeAgreements = async (req, res) => {
     res.status(500).json({ message: 'Server error fetching agreements' });
   }
 };
+
+
+exports.updateOrganisationDetails = async (req, res) => {
+  try {
+    const { clerkOrgId } = req.params;
+    const { name, registeredAddress } = req.body;
+    
+    // We only allow name and registeredAddress to be updated
+    const org = await Organisation.findOneAndUpdate(
+      { clerkOrganizationId: clerkOrgId },
+      { name, registeredAddress },
+      { new: true }
+    );
+    
+    if (!org) {
+      return res.status(404).json({ success: false, message: 'Organisation not found' });
+    }
+    
+    res.status(200).json({ success: true, data: org });
+  } catch (error) {
+    console.error('Error updating organisation details:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
