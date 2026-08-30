@@ -1,0 +1,37 @@
+const mongoose = require('mongoose');
+
+const employeeSchema = new mongoose.Schema({
+  clerkUserId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  organisationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organisation',
+    required: true
+  },
+  firstName: { type: String },
+  lastName: { type: String },
+  phone: { type: String },
+  agreementStatus: {
+    type: String,
+    enum: ['pending', 'signed'],
+    default: 'pending'
+  },
+  monthlyContribution: {
+    type: Number,
+    default: 0
+  },
+  balance: {
+    type: Number,
+    default: 0
+  },
+  awardStatus: {
+    type: String,
+    enum: ['none', 'won', 'claimed'],
+    default: 'none'
+  }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Employee', employeeSchema);

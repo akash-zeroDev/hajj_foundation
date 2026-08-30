@@ -1,0 +1,218 @@
+import { useAuth } from '@clerk/react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import SidebarLayout from '../../layouts/SidebarLayout';
+import SearchFilterBar from '../../components/SearchFilterBar';
+import { superAdminNavigation } from '../../config/navigation';
+
+export const OrganisationsList = () => {
+  const { getToken } = useAuth(); // OrganisationsList
+  const navigate = useNavigate();
+  const [organisations, setOrganisations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrgs, setTotalOrgs] = useState(0);
+
+  // Filters & Sort
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [feeFilter, setFeeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchOrganisations();
+    }, 300);
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, searchQuery, statusFilter, feeFilter, sortBy]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, feeFilter, sortBy]);
+
+  const fetchOrganisations = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: 10,
+        sort: sortBy,
+        ...(searchQuery && { search: searchQuery }),
+        ...(statusFilter !== 'all' && { agreementStatus: statusFilter }),
+        ...(feeFilter !== 'all' && { feeStatus: feeFilter })
+      });
+
+      const res = await fetch(`http://localhost:5000/api/organisations?${params.toString()}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed');
+      setOrganisations(data.organisations || []);
+      setTotalPages(data.totalPages || 1);
+      setTotalOrgs(data.totalOrganisations || 0);
+    } catch (error) {
+      console.error("Failed to fetch organisations", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderBadge = (status) => {
+    const colors = {
+      pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      signed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      overdue: 'bg-red-50 text-red-700 border-red-200',
+      expired: 'bg-slate-50 text-slate-700 border-slate-200'
+    };
+    const activeColor = colors[status] || 'bg-slate-50 text-slate-700 border-slate-200';
+    return (
+      <span className={`px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${activeColor}`}>
+        {status}
+      </span>
+    );
+  };
+
+  return (
+    <SidebarLayout navigation={superAdminNavigation} title="Participating Organisations">
+      
+      <div className="flex justify-end mb-6">
+        <button 
+          onClick={() => navigate('/superadmin?onboard=true')}
+          className="flex items-center gap-1.5 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Onboard Organisation
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
+        <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row gap-4 justify-between items-center">
+          <div className="relative w-full sm:w-64">
+            <input 
+              type="text" 
+              placeholder="Search by name or ID..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500" 
+            />
+            <svg className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          
+          <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)} 
+              className="text-sm border border-slate-300 rounded-lg py-2 pl-3 pr-8 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+            >
+              <option value="all">All Agreements</option>
+              <option value="pending">Pending</option>
+              <option value="signed">Signed</option>
+            </select>
+            
+            <select 
+              value={feeFilter} 
+              onChange={(e) => setFeeFilter(e.target.value)} 
+              className="text-sm border border-slate-300 rounded-lg py-2 pl-3 pr-8 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+            >
+              <option value="all">All Fees</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="overdue">Overdue</option>
+            </select>
+            
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)} 
+              className="text-sm border border-slate-300 rounded-lg py-2 pl-3 pr-8 focus:ring-emerald-500 focus:border-emerald-500 bg-white font-medium text-slate-700"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="fee-high">Fee (High to Low)</option>
+              <option value="fee-low">Fee (Low to High)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 text-sm text-slate-500 bg-white">
+                <th className="px-6 py-4 font-medium">Organisation</th>
+                <th className="px-6 py-4 font-medium">Location</th>
+                <th className="px-6 py-4 font-medium">Annual Fee (£)</th>
+                <th className="px-6 py-4 font-medium">Fee Status</th>
+                <th className="px-6 py-4 font-medium">Agreement</th>
+                <th className="px-6 py-4 font-medium">Date Onboarded</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                <tr><td colSpan="6" className="text-center py-8 text-slate-500">Loading organisations...</td></tr>
+              ) : organisations.length === 0 ? (
+                <tr><td colSpan="6" className="text-center py-8 text-slate-500">No organisations found.</td></tr>
+              ) : (
+                organisations.map((org) => (
+                  <tr 
+                    key={org._id} 
+                    onClick={() => navigate(`/superadmin/organisations/${org._id}`)}
+                    className="hover:bg-slate-50 cursor-pointer transition-colors group"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-slate-900 group-hover:text-emerald-700 transition-colors">{org.name}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">No: {org.companyNumber}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600 max-w-[150px] truncate" title={org.registeredAddress}>
+                      {org.registeredAddress}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-semibold text-slate-700">
+                      £{org.annualFee.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      {renderBadge(org.annualFeeStatus)}
+                    </td>
+                    <td className="px-6 py-4">
+                      {renderBadge(org.agreementStatus)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {new Date(org.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+          <span className="text-sm text-slate-500">
+            Showing <span className="font-medium">{organisations.length > 0 ? (currentPage - 1) * 10 + 1 : 0}</span> to <span className="font-medium">{Math.min(currentPage * 10, totalOrgs)}</span> of <span className="font-medium">{totalOrgs}</span> results
+          </span>
+          <div className="flex gap-2">
+            <button 
+              disabled={currentPage === 1 || isLoading}
+              onClick={() => setCurrentPage(p => p - 1)}
+              className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              Previous
+            </button>
+            <button 
+              disabled={currentPage >= totalPages || isLoading}
+              onClick={() => setCurrentPage(p => p + 1)}
+              className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </SidebarLayout>
+  );
+};

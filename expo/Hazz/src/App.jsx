@@ -3,6 +3,10 @@ import { Show, RedirectToSignIn } from '@clerk/react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import { EmployeeDashboard, AdminDashboard, SuperAdminDashboard, Unauthorized } from './pages/Dashboards';
+import { OrganisationsList } from './pages/superadmin/OrganisationsList';
+import { OrganisationDetails } from './pages/superadmin/OrganisationDetails';
+import { UsersList } from './pages/superadmin/UsersList';
+import { AdminEmployees } from './pages/admin/AdminEmployees';
 import { RequireRole } from './components/RequireRole';
 
 const ProtectedRoute = ({ children }) => (
@@ -39,7 +43,48 @@ function App() {
               </RequireRole>
             } 
           />
-          {/* We can add nested routes for /superadmin/organisations later */}
+          <Route 
+            path="/superadmin/organisations" 
+            element={
+              <RequireRole role="superadmin">
+                <OrganisationsList />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/superadmin/organisations/:id" 
+            element={
+              <RequireRole role="superadmin">
+                <OrganisationDetails />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/superadmin/users" 
+            element={
+              <RequireRole role="superadmin">
+                <UsersList />
+              </RequireRole>
+            } 
+          />
+
+          {/* Org Admin Routes */}
+          <Route 
+            path="/admin" 
+            element={
+              <RequireRole role="org:admin">
+                <AdminDashboard />
+              </RequireRole>
+            } 
+          />
+          <Route 
+            path="/admin/employees" 
+            element={
+              <RequireRole role="org:admin">
+                <AdminEmployees />
+              </RequireRole>
+            } 
+          />
 
           {/* Other Protected Routes (Legacy layout) */}
           <Route path="/dashboard" element={

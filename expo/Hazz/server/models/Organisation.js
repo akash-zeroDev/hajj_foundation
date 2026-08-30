@@ -10,6 +10,14 @@ const organisationSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  isSuspended: {
+    type: Boolean,
+    default: false
+  },
+  isArchived: {
+    type: Boolean,
+    default: false
+  },
   companyNumber: {
     type: String,
     required: true
@@ -29,8 +37,8 @@ const organisationSchema = new mongoose.Schema({
   },
   agreementStatus: {
     type: String,
-    enum: ['pending', 'signed', 'expired'],
-    default: 'signed' // Assuming they sign and upload immediately on onboarding
+    enum: ['pending', 'signed'],
+    default: 'pending' // They must log in and accept the agreement
   },
   agreementUrl: {
     type: String,

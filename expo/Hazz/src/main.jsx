@@ -9,8 +9,12 @@ import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ClerkProvider afterSignOutUrl="/">
-<Provider store={store}>
+    <ClerkProvider 
+      afterSignOutUrl="/" 
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
+    >
+      <Provider store={store}>
       <BrowserRouter>
         <App />
       </BrowserRouter>

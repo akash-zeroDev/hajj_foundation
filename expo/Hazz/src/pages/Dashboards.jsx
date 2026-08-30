@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { useUser, useAuth } from '@clerk/react';
+import { useState, useEffect } from 'react';
+import { useUser, useAuth, useOrganization } from '@clerk/react';
+import { useLocation, Link } from 'react-router-dom';
 import SidebarLayout from '../layouts/SidebarLayout';
-import { superAdminNavigation } from '../config/navigation';
+import { superAdminNavigation, orgAdminNavigation } from '../config/navigation';
 
 // ... (OldLayout and Employee/Admin Dashboards unchanged for now)
 
@@ -26,26 +27,463 @@ const OldLayout = ({ title, children, description }) => {
   );
 };
 
-export const EmployeeDashboard = () => (
-  <OldLayout title="Employee Portal" description="Manage your contributions, view balances, and download statements.">
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-      <h3 className="text-lg font-medium text-slate-900">No Contributions Yet</h3>
-    </div>
-  </OldLayout>
-);
+export const EmployeeDashboard = () => {
+  const { getToken } = useAuth(); // EmployeeDashboard
+  const { user, isLoaded: userLoaded } = useUser();
+  const { organization, isLoaded: orgLoaded } = useOrganization();
+  const [employeeData, setEmployeeData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAccepting, setIsAccepting] = useState(false);
+    const [contribution, setContribution] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
 
-export const AdminDashboard = () => (
-  <OldLayout title="Organisation Administrator" description="Manage your employees, view signed agreements, and pay annual fees.">
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-      <h3 className="text-lg font-medium text-slate-900">Your Team</h3>
-    </div>
-  </OldLayout>
-);
+  useEffect(() => {
+    const fetchEmployeeData = async () => {
+      if (!userLoaded || !orgLoaded || !user || !organization) return;
+      try {
+        const res = await fetch(`http://localhost:5000/api/employees/clerk/${user.id}?clerkOrgId=${organization.id}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
+        const data = await res.json();
+        if (data.success) {
+          setEmployeeData(data.data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEmployeeData();
+  }, [user, organization, userLoaded, orgLoaded]);
+
+  const handleCompleteOnboarding = async (e) => {
+    e.preventDefault();
+    if (!contribution || Number(contribution) < 10) {
+      alert('Minimum contribution is £10');
+      return;
+    }
+    setIsAccepting(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/employees/${employeeData._id}/complete-onboarding`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ monthlyContribution: Number(contribution), firstName, lastName, phone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEmployeeData(data.data);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  if (!userLoaded || !orgLoaded || isLoading) {
+    return (
+      <OldLayout title="Loading Profile..." description="">
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        </div>
+      </OldLayout>
+    );
+  }
+
+  if (employeeData?.agreementStatus === 'pending') {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 font-sans">
+        <div className="flex-grow flex flex-col items-center justify-center p-6 max-w-3xl mx-auto w-full">
+          <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 flex items-center justify-center rounded-full mb-8 shadow-lg shadow-emerald-500/10">
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white text-center">
+            Welcome, {user?.firstName || 'Employee'}!
+          </h1>
+          <p className="text-lg text-slate-400 mb-10 max-w-xl text-center">
+            To finalise your enrollment in {organization?.name}'s savings plan, please accept your employee agreement and set your monthly contribution.
+          </p>
+
+          <form onSubmit={handleCompleteOnboarding} className="w-full bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50 flex flex-col">
+            <div className="p-6 bg-slate-800 border-b border-slate-700">
+              
+              <h2 className="text-xl font-bold text-white mb-2">1. Personal Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">First Name</label>
+                  <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500" placeholder="John" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Last Name</label>
+                  <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500" placeholder="Doe" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Phone Number</label>
+                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500" placeholder="+44 7700 900077" />
+                </div>
+              </div>
+              <hr className="border-slate-700 mb-6" />
+              <h2 className="text-xl font-bold text-white mb-2">2. Employee Agreement</h2>
+              <p className="text-sm text-emerald-400 mb-4">Please read the document below carefully.</p>
+              <div className="h-64 bg-slate-100 rounded-lg overflow-hidden border border-slate-600">
+                <iframe src="https://res.cloudinary.com/demo/image/upload/v1612450893/sample.pdf" className="w-full h-full" title="Employee Agreement"></iframe>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-slate-800 border-b border-slate-700">
+              <h2 className="text-xl font-bold text-white mb-2">3. Monthly Contribution</h2>
+              <p className="text-sm text-slate-400 mb-4">How much would you like to automatically save from your salary each month? (Minimum £10)</p>
+              <div className="relative max-w-xs">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-slate-400 sm:text-lg">£</span>
+                </div>
+                <input
+                  type="number"
+                  min="10"
+                  required
+                  value={contribution}
+                  onChange={(e) => setContribution(e.target.value)}
+                  className="block w-full pl-8 pr-12 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sm:text-lg"
+                  placeholder="50"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <span className="text-slate-400 sm:text-sm">/ mo</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-slate-800">
+              <button
+                type="submit"
+                disabled={isAccepting}
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-xl transition shadow-lg shadow-emerald-900/20 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isAccepting ? 'Saving Profile...' : 'Accept & Complete Setup'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <OldLayout title="Employee Portal" description="Manage your contributions, view balances, and download statements.">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+            <p className="text-sm text-slate-500 font-medium mb-1">Total Savings Balance</p>
+            <p className="text-4xl font-extrabold text-emerald-600">£{employeeData?.balance?.toLocaleString()}</p>
+          </div>
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+            <p className="text-sm text-slate-500 font-medium mb-1">Monthly Contribution</p>
+            <p className="text-4xl font-extrabold text-slate-800">£{employeeData?.monthlyContribution?.toLocaleString()}</p>
+          </div>
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 flex flex-col justify-center">
+            <p className="text-sm text-slate-500 font-medium mb-2">Hajj Award Status</p>
+            <span className="px-3 py-1 bg-slate-200 text-slate-700 text-sm font-bold rounded-full w-max">
+              Not Selected Yet
+            </span>
+          </div>
+        </div>
+
+        <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
+          <h3 className="text-lg font-bold text-slate-800 mb-2">No Transactions Yet</h3>
+          <p className="text-slate-500">Your first payroll deduction will appear here soon.</p>
+        </div>
+      </div>
+    </OldLayout>
+  );
+};
+
+export const AdminDashboard = () => {
+  const { getToken } = useAuth(); // AdminDashboard
+  const { organization, isLoaded: orgLoaded } = useOrganization();
+  const [orgData, setOrgData] = useState(null);
+  const [isLoadingBackend, setIsLoadingBackend] = useState(true);
+  const [empCount, setEmpCount] = useState(0);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const handlePayAnnualFee = async () => {
+    setIsRedirecting(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/payments/create-annual-fee-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await getToken()}`
+        },
+        body: JSON.stringify({ orgId: orgData._id })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error(data.message);
+        setIsRedirecting(false);
+      }
+    } catch (err) {
+      console.error('Payment Error:', err);
+      setIsRedirecting(false);
+    }
+  };
+
+
+  useEffect(() => {
+    if (orgLoaded && organization) {
+      getToken().then(token => fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}`, { headers: { Authorization: `Bearer ${token}` } })).then(res => {
+          if (!res.ok) throw new Error('Not found');
+          return res.json();
+        })
+        .then(data => {
+          setOrgData(data.data || data);
+          setIsLoadingBackend(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsLoadingBackend(false);
+        });
+
+      organization.getMemberships().then(m => {
+        setEmpCount(m?.data?.length || 0);
+      }).catch(console.error);
+    } else if (orgLoaded && !organization) {
+      setIsLoadingBackend(false);
+    }
+  }, [orgLoaded, organization]);
+
+  const handleAcceptAgreement = async () => {
+    setIsAccepting(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}/accept-agreement`, { headers: { Authorization: `Bearer ${await getToken()}` },
+        method: 'PATCH'
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setOrgData(updated);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  if (!orgLoaded || isLoadingBackend) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-12 w-12 bg-emerald-200 rounded-full mb-4"></div>
+          <div className="h-4 w-32 bg-slate-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!organization) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="max-w-md w-full text-center bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">No Organisation Found</h2>
+          <p className="text-slate-500">You do not seem to be attached to an active organisation. Please ensure you clicked the invitation link.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (orgData?.agreementStatus === 'pending') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl w-full">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-extrabold text-white mb-3">Welcome to Hajj Savings</h1>
+            <p className="text-lg text-slate-400">Before managing your employees, you must review and accept your organisation's financial agreement.</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="bg-emerald-50 px-8 py-6 border-b border-emerald-100 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-emerald-900">{orgData.name} - Master Agreement</h2>
+                <p className="text-sm text-emerald-700 mt-1">Please read the document below carefully.</p>
+              </div>
+              <div className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                Action Required
+              </div>
+            </div>
+
+            <div className="p-8 flex-1 overflow-y-auto bg-slate-50">
+              {orgData.agreementUrl ? (
+                <div className="w-full bg-slate-200 rounded-xl overflow-hidden border border-slate-300 h-96 flex flex-col">
+                   <div className="bg-slate-800 px-4 py-2 flex justify-between items-center text-white text-sm font-medium">
+                     <span>Legal_Agreement.pdf</span>
+                     <a href={orgData.agreementUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300">Open in New Tab ↗</a>
+                   </div>
+                   <iframe src={orgData.agreementUrl} className="w-full flex-1" title="Agreement Document"></iframe>
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+                  <p className="text-slate-500">No document was uploaded by the Super Admin.</p>
+                </div>
+              )}
+              
+              <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
+                <strong>Legal Notice:</strong> By clicking "I Accept" below, you digitally sign and bind <strong>{orgData.name}</strong> to the terms specified in this document. 
+                You also agree to pay the Annual Fee of <strong>£{orgData.annualFee.toLocaleString()}</strong>.
+              </div>
+            </div>
+
+            <div className="px-8 py-6 bg-white border-t border-slate-200 flex items-center justify-between">
+              <p className="text-sm text-slate-500">Take your time to review. You cannot proceed until accepted.</p>
+              <button 
+                onClick={handleAcceptAgreement}
+                disabled={isAccepting}
+                className="px-8 py-3 bg-emerald-600 border border-transparent rounded-xl text-base font-bold text-white shadow-lg hover:bg-emerald-700 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/30 transition-all disabled:opacity-50"
+              >
+                {isAccepting ? 'Processing...' : 'I Accept & Sign Document'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <SidebarLayout navigation={orgAdminNavigation} title="Employer Dashboard">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900">{organization.name} Overview</h1>
+        <p className="text-sm text-slate-500">Manage your employees, view signed agreements, and pay annual fees.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Status Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-sm font-medium text-slate-500 mb-4">Annual Fee Status</h3>
+          <div className="flex items-center gap-3">
+            {orgData?.annualFeeStatus === 'pending' ? (
+              <>
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-slate-900">£{orgData?.annualFee?.toLocaleString()}</p>
+                  <p className="text-sm text-amber-600 font-medium">Pending Payment</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-slate-900">£{orgData?.annualFee?.toLocaleString()}</p>
+                  <p className="text-sm text-emerald-600 font-medium">Paid Successfully</p>
+                </div>
+              </>
+            )}
+          </div>
+          {orgData?.annualFeeStatus === 'pending' && (
+            <button 
+              onClick={handlePayAnnualFee}
+              disabled={isRedirecting}
+              className="mt-4 w-full py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm disabled:bg-slate-700 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+            >
+              {isRedirecting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  Connecting to Stripe...
+                </>
+              ) : (
+                'Pay Now'
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Agreement Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-sm font-medium text-slate-500 mb-4">Master Agreement</h3>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-slate-900">Signed</p>
+              <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-600 font-medium hover:underline inline-flex items-center gap-1">
+                View Document
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Employees Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-slate-500 mb-1">Active Employees</h3>
+            <p className="text-3xl font-bold text-slate-900">0</p>
+          </div>
+          <Link to="/admin/employees" className="mt-4 w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition shadow-sm text-center block">
+            Manage Employees
+          </Link>
+        </div>
+      </div>
+
+      {/* Setup Checklist */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+          <h3 className="font-bold text-slate-800">Account Setup Checklist</h3>
+        </div>
+        <div className="divide-y divide-slate-100">
+          <div className="p-6 flex items-center gap-4 bg-emerald-50/30">
+            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <div>
+              <p className="font-bold text-slate-900">Accept Master Agreement</p>
+              <p className="text-sm text-slate-500">Completed on {new Date(orgData?.updatedAt).toLocaleDateString('en-GB')}</p>
+            </div>
+          </div>
+          <div className="p-6 flex items-center gap-4">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${orgData?.annualFeeStatus === 'pending' ? 'border-2 border-slate-300 text-slate-400' : 'bg-emerald-500 text-white'}`}>
+              {orgData?.annualFeeStatus === 'pending' ? '2' : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>}
+            </div>
+            <div>
+              <p className="font-bold text-slate-900">Pay Annual Setup Fee</p>
+              <p className="text-sm text-slate-500">Your organisation's £{orgData?.annualFee?.toLocaleString()} fee must be cleared by the Super Admin.</p>
+            </div>
+          </div>
+          <div className="p-6 flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full border-2 border-slate-300 text-slate-400 flex items-center justify-center shrink-0">
+              3
+            </div>
+            <div>
+              <p className="font-bold text-slate-900">Add Employees</p>
+              <p className="text-sm text-slate-500">Onboard your staff so they can begin making monthly Hajj savings contributions.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </SidebarLayout>
+  );
+};
 
 export const SuperAdminDashboard = () => {
   const { getToken } = useAuth();
+  const location = useLocation();
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (location.search.includes('onboard=true')) {
+      setIsCreating(true);
+    }
+  }, [location.search]);
   const [formData, setFormData] = useState({
     orgName: '', companyNumber: '', address: '',
     adminFirstName: '', adminLastName: '', adminEmail: '', adminPhone: '',
@@ -68,7 +506,7 @@ export const SuperAdminDashboard = () => {
 
       const response = await fetch('http://localhost:5000/api/organisations/onboard', {
         method: 'POST',
-        headers: {
+        headers: { Authorization: `Bearer ${await getToken()}`,
           'Authorization': `Bearer ${token}`
         },
         body: submitData

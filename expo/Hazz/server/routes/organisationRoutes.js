@@ -1,20 +1,41 @@
+const { isAuthenticated, requireSuperAdmin, requireOrgAdmin } = require('../middleware/auth');
 const express = require('express');
 const multer = require('multer');
-const { onboardOrganisation } = require('../controllers/organisationController');
-const { requireAuth } = require('@clerk/express'); // Clerk express middleware
+const { onboardOrganisation, getOrganisations, getOrganisationById, getOrganisationEmployees, updateOrganisation, toggleSuspension, archiveOrganisation, getOrganisationByClerkId, acceptAgreement } = require('../controllers/organisationController');
+const { requireAuth } = require('@clerk/express'); 
 
 const router = express.Router();
-
-// Configure multer for memory storage (we upload buffer to Cloudinary directly)
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Define the route
-// requireAuth() ensures only logged-in users can call this. 
-// We could also add a custom middleware to check if req.auth.sessionClaims.publicMetadata.role === 'superadmin'
+// GET all organisations
+router.get('/', requireSuperAdmin, getOrganisations);
+
+// GET organisation by Clerk ID (Used by Org Admin frontend)
+router.get('/clerk/:clerkId', isAuthenticated, getOrganisationByClerkId);
+
+// PATCH accept agreement by Clerk ID
+router.patch('/clerk/:clerkId/accept-agreement', requireOrgAdmin, acceptAgreement);
+
+// GET single organisation by ID
+router.get('/:id', requireSuperAdmin, getOrganisationById);
+
+// PUT edit single organisation
+router.put('/:id', requireSuperAdmin, updateOrganisation);
+
+// PATCH toggle suspension
+router.patch('/:id/suspend', requireSuperAdmin, toggleSuspension);
+
+// PATCH archive organisation
+router.patch('/:id/archive', requireSuperAdmin, archiveOrganisation);
+
+// GET employees for an organisation
+router.get('/:id/employees', requireSuperAdmin, getOrganisationEmployees);
+
+// POST onboard new organisation
 router.post(
   '/onboard',
-  // requireAuth(), // uncomment once Clerk is fully wired up on backend
+  isAuthenticated, 
   upload.single('agreementFile'), 
   onboardOrganisation
 );

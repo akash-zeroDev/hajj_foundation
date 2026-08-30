@@ -1,8 +1,23 @@
-import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+import { useUser, useOrganization } from '@clerk/react';
+import { useEffect } from 'react';
 
 const Home = () => {
-  const { isAuthenticated, user } = useSelector(state => state.auth);
+  const { isSignedIn, user, isLoaded: userLoaded } = useUser();
+  const { membership, isLoaded: orgLoaded } = useOrganization();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userLoaded && orgLoaded && isSignedIn) {
+      if (user?.publicMetadata?.role === 'superadmin') {
+        navigate('/superadmin');
+      } else if (membership?.role === 'org:admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [userLoaded, orgLoaded, isSignedIn, user, membership, navigate]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col bg-slate-50 text-slate-800">
@@ -26,13 +41,10 @@ const Home = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            {isAuthenticated ? (
-              <Link 
-                to={`/${user?.role}`} 
-                className="w-full sm:w-auto flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Go to Dashboard
-              </Link>
+            {(!userLoaded || !orgLoaded) ? (
+              <div className="px-8 py-4 text-emerald-600 font-bold">Loading...</div>
+            ) : isSignedIn ? (
+              <div className="px-8 py-4 text-emerald-600 font-bold animate-pulse">Redirecting to Dashboard...</div>
             ) : (
               <Link 
                 to="/login" 

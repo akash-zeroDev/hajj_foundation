@@ -5,17 +5,32 @@ require('dotenv').config();
 
 const { clerkMiddleware } = require('@clerk/express');
 const organisationRoutes = require('./routes/organisationRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
+const userRoutes = require('./routes/userRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 // Add Clerk middleware to parse incoming auth tokens from React
-app.use(clerkMiddleware());
+app.use((req, res, next) => {
+  console.log('[Debug Logger] Incoming request:', req.method, req.url);
+  console.log('[Debug Logger] Authorization Header:', req.headers.authorization ? req.headers.authorization.substring(0, 20) + '...' : 'NONE');
+  next();
+});
+app.use(clerkMiddleware({ secretKey: process.env.CLERK_SECRET_KEY, publishableKey: process.env.CLERK_PUBLISHABLE_KEY }));
+app.use((req, res, next) => {
+  console.log('[Debug Logger] req.auth after clerkMiddleware:', req.auth ? 'PRESENT' : 'MISSING', req.auth?.userId || '');
+  next();
+});
 
 // Routes
 // (Old custom auth routes removed since we now use Clerk)
 app.use('/api/organisations', organisationRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/payments', paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/rbac_db';
