@@ -265,7 +265,7 @@ function Navbar({ dashboardLink }) {
           className="mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-6 md:px-10"
         >
           <a href="#top" className="block leading-none flex items-center gap-3">
-            <span className="text-green flex-shrink-0">
+            <span className={`flex-shrink-0 transition-colors duration-700 ${inverted ? "text-ivory" : "text-green"}`}>
               <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z" opacity="0.8"/>
                 <circle cx="12" cy="12" r="3" fill="white" />
@@ -413,9 +413,9 @@ function Hero({ dashboardLink }) {
           height={1280}
           className="h-full w-full object-cover object-[62%_center]"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-green-forest/92 via-olive-deep/58 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-green-forest/70 to-transparent" />
-        <div className="absolute inset-0 bg-green-deep/10 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-r from-green-forest/[0.92] via-olive-deep/[0.58] to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-green-forest/[0.70] to-transparent" />
+        <div className="absolute inset-0 bg-green-deep/[0.10] mix-blend-multiply" />
       </motion.div>
 
       <div className="relative mx-auto w-full max-w-[1440px] px-6 pb-16 pt-36 md:px-10 md:pb-20">
@@ -429,7 +429,7 @@ function Hero({ dashboardLink }) {
             >
               <motion.span
                 aria-hidden
-                className="h-px w-8 origin-left bg-green-muted"
+                className="h-px w-8 origin-left bg-ivory"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.7, duration: 0.9, ease: EASE }}
