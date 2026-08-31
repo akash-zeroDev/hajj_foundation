@@ -264,21 +264,21 @@ function Navbar({ dashboardLink }) {
           aria-label="Primary"
           className="mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-6 md:px-10"
         >
-          <a href="#top" className="block leading-none">
-            <span
-              className={`block font-serif text-[1.55rem] font-light tracking-[0.32em] transition-colors duration-700 ${
-                inverted ? "text-ivory" : "text-olive"
-              }`}
-            >
-              EDEN
+          <a href="#top" className="block leading-none flex items-center gap-3">
+            <span className="text-green flex-shrink-0">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z" opacity="0.8"/>
+                <circle cx="12" cy="12" r="3" fill="white" />
+              </svg>
             </span>
-            <span
-              className={`mt-1 block text-[0.5625rem] font-medium uppercase tracking-[0.3em] transition-colors duration-700 ${
-                inverted ? "text-ivory/60" : "text-olive-muted"
-              }`}
-            >
-              Hajj Savings Fund
-            </span>
+            <div>
+              <span className={`block font-serif text-[1.55rem] font-light tracking-[0.32em] transition-colors duration-700 ${inverted ? "text-ivory" : "text-olive"}`}>
+                EDEN
+              </span>
+              <span className={`mt-1 block text-[0.5625rem] font-medium uppercase tracking-[0.3em] transition-colors duration-700 ${inverted ? "text-green-pale/80" : "text-green"}`}>
+                Hajj Savings Fund
+              </span>
+            </div>
           </a>
 
           <div className="hidden items-center gap-10 lg:flex">
