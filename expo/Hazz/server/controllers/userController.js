@@ -7,9 +7,7 @@ exports.getAllUsers = async (req, res) => {
     const users = await clerk.users.getUserList();
     const rawUsers = Array.isArray(users) ? users : (users.data || []);
     
-    // We can also fetch all employees from MongoDB to attach financial data if needed
-    // const dbEmployees = await Employee.find().populate('organisationId');
-    
+
     res.status(200).json(rawUsers);
   } catch (error) {
     console.error('Error fetching all users:', error);

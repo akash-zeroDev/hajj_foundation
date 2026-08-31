@@ -40,6 +40,14 @@ export const AuditLogs = () => {
         return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">Draw Approved</span>;
       case 'DISCARDED_DRAW':
         return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800 border border-rose-200">Draw Discarded</span>;
+      case 'DOWNLOADED_LEDGER_CSV':
+        return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">Ledger Download</span>;
+      case 'DOWNLOADED_OPS_PDF':
+        return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">Summary Download</span>;
+      case 'DOWNLOADED_SAVINGS_STATEMENT':
+        return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800 border border-teal-200">Statement Download</span>;
+      case 'VIEWED_SIGNED_CONTRACT':
+        return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800 border border-teal-200">Contract Viewed</span>;
       default:
         return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">{action}</span>;
     }

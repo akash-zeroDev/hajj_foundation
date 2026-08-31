@@ -19,9 +19,8 @@ exports.getGlobalTransactions = async (req, res) => {
 
 exports.getOrgTransactions = async (req, res) => {
   try {
-    // Mongo ID or Clerk ID mapping logic - assuming orgId is the mongo ID in our DB
-    // Our requireOrgAdmin middleware usually checks rights, but we filter specifically here.
-    const clerkOrgId = req.params.orgId; // It's actually the Clerk ID from the frontend
+
+    const clerkOrgId = req.params.orgId; 
     const org = await Organisation.findOne({ clerkOrganizationId: clerkOrgId });
     if (!org) {
       return res.status(404).json({ message: 'Organisation not found' });
@@ -67,7 +66,7 @@ exports.getGlobalStats = async (req, res) => {
 
 exports.getEmployeeTransactions = async (req, res) => {
   try {
-    const clerkUserId = getAuth(req).userId; // Securely pulled from token
+    const clerkUserId = getAuth(req).userId; 
     const employee = await Employee.findOne({ clerkUserId });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });

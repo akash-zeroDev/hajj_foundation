@@ -29,8 +29,26 @@ export const Reports = () => {
     fetchStats();
   }, []);
 
+  
+  const trackDownload = async (action, details) => {
+    try {
+      const token = await getToken();
+      await fetch('http://localhost:5000/api/audit-logs/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ action, details })
+      });
+    } catch (e) {
+      console.error('Failed to track download', e);
+    }
+  };
+
   const downloadCSV = async () => {
     setIsGeneratingCsv(true);
+    await trackDownload('DOWNLOADED_LEDGER_CSV', 'Super Admin downloaded Global Financial Ledger CSV');
     try {
       const token = await getToken();
       const res = await fetch('http://localhost:5000/api/reports/ledger-export', {
@@ -83,9 +101,10 @@ export const Reports = () => {
     }
   };
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     if (!stats) return;
     setIsGeneratingPdf(true);
+    await trackDownload('DOWNLOADED_OPS_PDF', 'Super Admin downloaded Operational Summary PDF');
     
     try {
       const doc = new jsPDF();

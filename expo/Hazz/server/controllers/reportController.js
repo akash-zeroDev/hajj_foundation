@@ -55,7 +55,7 @@ exports.getLedgerExport = async (req, res) => {
     const formattedData = transactions.map(tx => ({
       transactionId: tx._id,
       date: tx.createdAt,
-      type: tx.type, // 'revenue' or 'savings'
+      type: tx.type, 
       amount: tx.amount,
       currency: tx.currency,
       status: tx.status,

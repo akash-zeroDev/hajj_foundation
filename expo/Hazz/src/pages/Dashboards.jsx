@@ -43,8 +43,26 @@ export const EmployeeDashboard = () => {
   const [isLoadingTx, setIsLoadingTx] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-    const downloadStatement = () => {
+    
+  const trackDocumentActivity = async (action, details) => {
+    try {
+      const token = await getToken();
+      await fetch('http://localhost:5000/api/audit-logs/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ action, details })
+      });
+    } catch (e) {
+      console.error('Failed to track activity', e);
+    }
+  };
+
+  const downloadStatement = async () => {
     if (!employeeData) return;
+    await trackDocumentActivity('DOWNLOADED_SAVINGS_STATEMENT', `Employee ${employeeData.firstName} ${employeeData.lastName} downloaded their Savings Statement PDF`);
     
     try {
       const doc = new jsPDF();
@@ -402,6 +420,57 @@ export const EmployeeDashboard = () => {
           </div>
         </div>
       </div>
+      {/* Document Center Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full lg:col-span-3">
+          <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+               <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+               Document Center
+            </h2>
+          </div>
+          <div className="p-6 flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 p-5 border border-slate-200 rounded-xl flex items-start gap-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition">
+              <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Savings Statement</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-3">Download a formal PDF statement of your account balance and historical contributions.</p>
+                <button 
+                  onClick={downloadStatement}
+                  className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition"
+                >
+                  Download PDF
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 p-5 border border-slate-200 rounded-xl flex items-start gap-4 hover:border-blue-200 hover:bg-blue-50/50 transition">
+              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">My Signed Agreement</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-3">View the specific version of the Shariah Master Agreement that you digitally signed.</p>
+                {employeeData?.signedDocumentId ? (
+                   <a 
+                     href={employeeData.signedDocumentId.fileUrl} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     onClick={() => trackDocumentActivity('VIEWED_SIGNED_CONTRACT', `Employee ${employeeData.firstName} ${employeeData.lastName} viewed their signed Shariah Master Agreement`)}
+                     className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition inline-block"
+                   >
+                     View Contract
+                   </a>
+                ) : (
+                   <span className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full">No Contract Found</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+
     </OldLayout>
   );
 };
@@ -696,56 +765,7 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
-        {/* Document Center Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full lg:col-span-3">
-          <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-               <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-               Document Center
-            </h2>
-          </div>
-          <div className="p-6 flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 p-5 border border-slate-200 rounded-xl flex items-start gap-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition">
-              <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">Savings Statement</h3>
-                <p className="text-xs text-slate-500 mt-1 mb-3">Download a formal PDF statement of your account balance and historical contributions.</p>
-                <button 
-                  onClick={downloadStatement}
-                  className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition"
-                >
-                  Download PDF
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 p-5 border border-slate-200 rounded-xl flex items-start gap-4 hover:border-blue-200 hover:bg-blue-50/50 transition">
-              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">My Signed Agreement</h3>
-                <p className="text-xs text-slate-500 mt-1 mb-3">View the specific version of the Shariah Master Agreement that you digitally signed.</p>
-                {employeeData?.signedDocumentId ? (
-                   <a 
-                     href={employeeData.signedDocumentId.fileUrl} 
-                     target="_blank" 
-                     rel="noopener noreferrer"
-                     className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition inline-block"
-                   >
-                     View Contract
-                   </a>
-                ) : (
-                   <span className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full">No Contract Found</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-    </SidebarLayout>
+            </SidebarLayout>
   );
 };
 

@@ -10,3 +10,27 @@ exports.getAuditLogs = async (req, res) => {
     res.status(500).json({ message: 'Server error fetching audit logs' });
   }
 };
+
+
+const logAudit = require('../utils/auditLogger');
+
+exports.trackAction = async (req, res) => {
+  try {
+    const { action, details } = req.body;
+    
+    // Fallback to clerk auth parsing
+    let clerkId = 'Unknown User';
+    if (req.auth && req.auth.userId) clerkId = req.auth.userId;
+    else if (req.auth && typeof req.auth === 'function' && req.auth().userId) {
+      clerkId = req.auth().userId;
+    }
+    
+    // We already have logAudit doing the IP and db save
+    await logAudit(req, clerkId, action, details);
+    
+    res.status(200).json({ success: true, message: 'Action tracked' });
+  } catch (error) {
+    console.error('Error tracking action:', error);
+    res.status(500).json({ success: false, message: 'Server error tracking action' });
+  }
+};

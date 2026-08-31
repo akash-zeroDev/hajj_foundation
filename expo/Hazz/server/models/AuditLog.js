@@ -13,7 +13,11 @@ const auditLogSchema = new mongoose.Schema({
       'UPLOADED_DOCUMENT',
       'EXECUTED_DRAW',
       'APPROVED_DRAW',
-      'DISCARDED_DRAW'
+      'DISCARDED_DRAW',
+      'DOWNLOADED_LEDGER_CSV',
+      'DOWNLOADED_OPS_PDF',
+      'DOWNLOADED_SAVINGS_STATEMENT',
+      'VIEWED_SIGNED_CONTRACT'
     ]
   },
   details: {
