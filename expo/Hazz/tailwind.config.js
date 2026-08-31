@@ -29,8 +29,6 @@ export default {
         serif: ['"Playfair Display"', 'serif'],
       },
     },
-    extend: {},
   },
   plugins: [],
 }
-
