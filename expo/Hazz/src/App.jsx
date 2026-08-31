@@ -170,7 +170,11 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Catch all */}
+          {/* Dashboard Catch-alls to prevent landing page drops */}
+          <Route path="/admin/*" element={<Navigate to="/unauthorized" replace />} />
+          <Route path="/superadmin/*" element={<Navigate to="/unauthorized" replace />} />
+          
+          {/* Global Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import archesImage from "../assets/arches.png";
 import heroImage from "../assets/hero-makkah.png";
 import pilgrimsImage from "../assets/pilgrims.png";
-import { useAuth } from '@clerk/react';
+import { useAuth, useUser, Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
 import { Link } from 'react-router-dom';
 
 /* ------------------------------------------------------------------ */
@@ -289,7 +289,7 @@ function Navbar({ dashboardLink }) {
                     href={item.href}
                     className={`link-rule text-[0.8125rem] tracking-[0.06em] transition-colors duration-500 ${
                       inverted
-                        ? "text-ivory/85 hover:text-green-muted"
+                        ? "text-ivory/85 hover:text-white"
                         : "text-olive/80 hover:text-green"
                     }`}
                   >
@@ -302,16 +302,47 @@ function Navbar({ dashboardLink }) {
               aria-hidden
               className={`h-5 w-px transition-colors duration-700 ${inverted ? "bg-ivory/25" : "bg-olive/20"}`}
             />
-            <Link
-              to={dashboardLink}
-              className={`inline-flex items-center gap-2 px-5 py-3 text-[0.75rem] uppercase tracking-[0.2em] transition-colors duration-500 ${
-                inverted
-                  ? "border border-ivory/35 text-ivory hover:border-green-muted hover:text-green-muted"
-                  : "bg-green text-ivory hover:bg-green-deep"
-              }`}
-            >
-              Portal Login
-            </Link>
+            <Show when="signed-in">
+              <div className="flex items-center gap-6">
+                <Link
+                  to={dashboardLink}
+                  className={`inline-flex items-center gap-2 px-5 py-3 text-[0.75rem] uppercase tracking-[0.2em] transition-colors duration-500 ${
+                    inverted
+                      ? "border border-ivory/35 text-ivory hover:bg-ivory hover:text-green-forest"
+                      : "bg-green text-ivory hover:bg-green-deep"
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <UserButton />
+              </div>
+            </Show>
+            <Show when="signed-out">
+              <div className="flex items-center gap-6">
+                <SignInButton mode="modal">
+                  <button
+                    className={`link-rule text-[0.8125rem] tracking-[0.06em] transition-colors duration-500 ${
+                      inverted
+                        ? "text-ivory/85 hover:text-white"
+                        : "text-olive/80 hover:text-green"
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button
+                    className={`inline-flex items-center gap-2 px-5 py-3 text-[0.75rem] uppercase tracking-[0.2em] transition-colors duration-500 ${
+                      inverted
+                        ? "border border-ivory/35 text-ivory hover:bg-ivory hover:text-green-forest"
+                        : "bg-green text-ivory hover:bg-green-deep"
+                    }`}
+                  >
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </div>
+            </Show>
           </div>
 
           <button
@@ -1130,7 +1161,22 @@ function Footer({ dashboardLink }) {
 
 export default function Home() {
   const { isSignedIn } = useAuth();
-  const dashboardLink = isSignedIn ? '/admin' : '/login';
+  const { user } = useUser();
+  
+  let dashboardLink = '/dashboard';
+  if (isSignedIn && user) {
+    if (user.publicMetadata?.role === 'superadmin') {
+      dashboardLink = '/superadmin';
+    } else {
+      // Check if they are an admin of any organization
+      const isOrgAdmin = user.organizationMemberships?.some(
+        mem => mem.role === 'org:admin' || mem.role === 'admin'
+      );
+      if (isOrgAdmin) {
+        dashboardLink = '/admin';
+      }
+    }
+  }
 
   return (
     <div className="bg-ivory text-charcoal font-sans">

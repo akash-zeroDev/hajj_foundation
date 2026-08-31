@@ -26,6 +26,10 @@ export const RequireRole = ({ role, children }) => {
   // Handle Org Admin (Clerk B2B Role)
   else if (role === 'org:admin') {
     if (!membership || membership.role !== 'org:admin') {
+      // If they are a superadmin, gently redirect them to their own dashboard
+      if (user.publicMetadata?.role === 'superadmin') {
+         return <Navigate to="/superadmin" replace />;
+      }
       return <Navigate to="/unauthorized" replace />;
     }
   }
