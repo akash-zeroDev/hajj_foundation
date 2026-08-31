@@ -8,3 +8,44 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@layer utilities {
+  .display {
+    font-family: "Playfair Display", serif;
+    font-weight: 300;
+    line-height: 1.1;
+  }
+  .body-copy {
+    font-family: "Outfit", sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .eyebrow {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+  .link-rule {
+    position: relative;
+  }
+  .link-rule::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: currentColor;
+    transition: width 0.3s ease;
+  }
+  .link-rule:hover::after {
+    width: 100%;
+  }
+  .geo-veil {
+    /* background-image removed */
+    /* background-blend-mode removed */
+    background-size: cover;
+  }
+}

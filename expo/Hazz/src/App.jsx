@@ -34,7 +34,9 @@ function App() {
         The SuperAdmin layout has its own sidebar and top header. 
       */}
       <Routes>
+        <Route path="/" element={null} />
         <Route path="/superadmin/*" element={null} />
+        <Route path="/admin/*" element={null} />
         <Route path="*" element={<Navbar />} />
       </Routes>
 
