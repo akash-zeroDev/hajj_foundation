@@ -19,15 +19,18 @@ export default function SidebarLayout({ navigation, title, children }) {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-30 w-64 bg-emerald-900 text-emerald-50 flex flex-col transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-30 w-64 bg-olive-deep text-ivory/90 flex flex-col transition-transform duration-300 ease-in-out
         lg:static lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="h-16 flex items-center justify-center border-b border-emerald-800/50">
-          <Link to="/" className="text-xl font-bold tracking-wider flex items-center gap-2 text-white">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Hajj Savings
+        <div className="h-16 flex items-center justify-center border-b border-ivory/10">
+          <Link to="/" className="flex items-center gap-3">
+            <span className="flex-shrink-0 text-ivory">
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z" opacity="0.8"/>
+                <circle cx="12" cy="12" r="2.5" fill="white" />
+              </svg>
+            </span>
+            <span className="font-serif text-lg tracking-[0.25em] text-ivory">EDEN</span>
           </Link>
         </div>
         
@@ -43,8 +46,8 @@ export default function SidebarLayout({ navigation, title, children }) {
                 className={`
                   flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                   ${isActive 
-                    ? 'bg-emerald-800 text-white shadow-sm' 
-                    : 'text-emerald-100 hover:bg-emerald-800/50 hover:text-white'
+                    ? 'bg-green text-ivory shadow-sm' 
+                    : 'text-ivory/70 hover:bg-green/40 hover:text-ivory'
                   }
                 `}
               >
@@ -54,13 +57,13 @@ export default function SidebarLayout({ navigation, title, children }) {
           })}
         </nav>
         
-        <div className="p-4 border-t border-emerald-800/50 flex items-center gap-3">
+        <div className="p-4 border-t border-ivory/10 flex items-center gap-3">
            <UserButton />
            <div className="flex flex-col">
-             <span className="text-sm font-medium text-white truncate max-w-[150px]">
+             <span className="text-sm font-medium text-ivory truncate max-w-[150px]">
                {user?.firstName || user?.primaryEmailAddress?.emailAddress.split('@')[0]}
              </span>
-             <span className="text-xs text-emerald-300 capitalize">
+             <span className="text-xs text-ivory/50 capitalize">
                {user?.publicMetadata?.role || 'User'}
              </span>
            </div>

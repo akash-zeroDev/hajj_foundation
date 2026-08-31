@@ -2,6 +2,7 @@ import { useAuth } from '@clerk/react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SidebarLayout from '../../layouts/SidebarLayout';
+import CustomSelect from '../../components/CustomSelect';
 import SearchFilterBar from '../../components/SearchFilterBar';
 import { superAdminNavigation } from '../../config/navigation';
 
@@ -105,39 +106,42 @@ export const OrganisationsList = () => {
           </div>
           
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-            <select 
-              value={statusFilter} 
-              onChange={(e) => setStatusFilter(e.target.value)} 
-              className="text-sm border border-slate-300 rounded-lg py-2 pl-3 pr-8 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-            >
-              <option value="all">All Agreements</option>
-              <option value="pending">Pending</option>
-              <option value="signed">Signed</option>
-            </select>
+            <CustomSelect
+              className="min-w-[150px]"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: "all", label: "All Agreements" },
+                { value: "pending", label: "Pending" },
+                { value: "signed", label: "Signed" }
+              ]}
+            />
             
-            <select 
-              value={feeFilter} 
-              onChange={(e) => setFeeFilter(e.target.value)} 
-              className="text-sm border border-slate-300 rounded-lg py-2 pl-3 pr-8 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-            >
-              <option value="all">All Fees</option>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="overdue">Overdue</option>
-            </select>
+            <CustomSelect
+              className="min-w-[130px]"
+              value={feeFilter}
+              onChange={setFeeFilter}
+              options={[
+                { value: "all", label: "All Fees" },
+                { value: "pending", label: "Pending" },
+                { value: "paid", label: "Paid" },
+                { value: "overdue", label: "Overdue" }
+              ]}
+            />
             
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value)} 
-              className="text-sm border border-slate-300 rounded-lg py-2 pl-3 pr-8 focus:ring-emerald-500 focus:border-emerald-500 bg-white font-medium text-slate-700"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="name-asc">Name (A-Z)</option>
-              <option value="name-desc">Name (Z-A)</option>
-              <option value="fee-high">Fee (High to Low)</option>
-              <option value="fee-low">Fee (Low to High)</option>
-            </select>
+            <CustomSelect
+              className="min-w-[160px]"
+              value={sortBy}
+              onChange={setSortBy}
+              options={[
+                { value: "newest", label: "Newest First" },
+                { value: "oldest", label: "Oldest First" },
+                { value: "name-asc", label: "Name (A-Z)" },
+                { value: "name-desc", label: "Name (Z-A)" },
+                { value: "fee-high", label: "Fee (High to Low)" },
+                { value: "fee-low", label: "Fee (Low to High)" }
+              ]}
+            />
           </div>
         </div>
         

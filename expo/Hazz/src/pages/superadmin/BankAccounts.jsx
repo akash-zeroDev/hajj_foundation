@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
+import CustomSelect from '../../components/CustomSelect';
 import { superAdminNavigation } from '../../config/navigation';
 
 export const BankAccounts = () => {
@@ -160,14 +161,15 @@ export const BankAccounts = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Which routing rule are you updating?</label>
-                <select 
+                <CustomSelect
+                  className="w-full"
                   value={accountType}
-                  onChange={(e) => setAccountType(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                >
-                  <option value="operating_revenue">Corporate Operating Account (Employer Fees)</option>
-                  <option value="hajj_trust_pool">Hajj Trust Account (Employee Savings)</option>
-                </select>
+                  onChange={setAccountType}
+                  options={[
+                    { value: "operating_revenue", label: "Corporate Operating Account (Employer Fees)" },
+                    { value: "hajj_trust_pool", label: "Hajj Trust Account (Employee Savings)" }
+                  ]}
+                />
               </div>
 
               <div>
