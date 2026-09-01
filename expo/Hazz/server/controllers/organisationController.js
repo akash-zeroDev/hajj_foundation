@@ -18,7 +18,7 @@ const uploadToCloudinary = (fileBuffer) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: 'hajj_agreements',
-        resource_type: 'raw', 
+        resource_type: 'image', 
         public_id: `agreement_${Date.now()}.pdf`
       },
       (error, result) => {
@@ -84,7 +84,7 @@ exports.getOrganisations = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    const { search, agreementStatus, feeStatus, sort } = req.query;
+    const { search, agreementStatus, feeStatus, sort, isSuspended } = req.query;
     
     const query = { isArchived: { $ne: true } };
     
@@ -101,6 +101,12 @@ exports.getOrganisations = async (req, res) => {
     
     if (feeStatus && feeStatus !== 'all') {
       query.annualFeeStatus = feeStatus;
+    }
+
+    if (isSuspended === 'true') {
+      query.isSuspended = true;
+    } else if (isSuspended === 'false') {
+      query.isSuspended = false;
     }
 
     let sortObj = { createdAt: -1 }; 
@@ -229,7 +235,62 @@ exports.getOrganisationByClerkId = async (req, res) => {
     if (!org) {
       return res.status(404).json({ message: 'Organisation not found' });
     }
-    res.status(200).json(org);
+
+    // Aggregation logic for stats
+    const totalEmployees = await Employee.countDocuments({ organisationId: org._id });
+    
+    const savingsAgg = await Employee.aggregate([
+      { $match: { organisationId: org._id } },
+      { $group: { _id: null, total: { $sum: '$balance' } } }
+    ]);
+    const totalCombinedSavings = savingsAgg.length > 0 ? savingsAgg[0].total : 0;
+    
+    const hajjJourneysWon = await Employee.countDocuments({ organisationId: org._id, awardStatus: { $in: ['won', 'claimed'] } });
+    
+    // Monthly onboarding data (Last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5); // To get a full 6 month window
+    
+    const activityAgg = await Employee.aggregate([
+      { $match: { organisationId: org._id, createdAt: { $gte: sixMonthsAgo } } },
+      { $group: {
+          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+    
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const activityGraphData = activityAgg.map(item => ({
+      month: monthNames[item._id.month - 1],
+      employees: item.count
+    }));
+
+    // Generate fallback data if empty to make graph look nice empty
+    if (activityGraphData.length === 0) {
+      const currentMonth = new Date().getMonth();
+      activityGraphData.push(
+        { month: monthNames[(currentMonth - 2 + 12) % 12], employees: 0 },
+        { month: monthNames[(currentMonth - 1 + 12) % 12], employees: 0 },
+        { month: monthNames[currentMonth], employees: 0 }
+      );
+    }
+
+    const pendingAgreements = await Employee.countDocuments({ organisationId: org._id, agreementStatus: 'pending' });
+    const recentEmployees = await Employee.find({ organisationId: org._id }).sort({ createdAt: -1 }).limit(4);
+
+    const orgObj = org.toObject();
+    orgObj.dashboardStats = {
+      totalEmployees,
+      totalCombinedSavings,
+      hajjJourneysWon,
+      pendingAgreements,
+      recentEmployees,
+      activityGraphData
+    };
+
+    res.status(200).json(orgObj);
   } catch (error) {
     console.error('Error fetching org by clerk id:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -292,5 +353,26 @@ exports.updateOrganisationDetails = async (req, res) => {
   } catch (error) {
     console.error('Error updating organisation details:', error);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.getEmployeeAgreements = async (req, res) => {
+  try {
+    const { clerkId } = req.params;
+    
+    // Find the org in Mongo
+    const org = await Organisation.findOne({ clerkOrganizationId: clerkId });
+    if (!org) {
+      return res.status(404).json({ success: false, message: 'Organisation not found' });
+    }
+
+    // Find all employees that belong to this org
+    const Employee = require('../models/Employee');
+    const employees = await Employee.find({ organisationId: org._id }).populate('signedDocumentId').sort({ createdAt: -1 });
+    
+    res.status(200).json({ success: true, data: employees });
+  } catch (error) {
+    console.error('Error fetching employee agreements:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };

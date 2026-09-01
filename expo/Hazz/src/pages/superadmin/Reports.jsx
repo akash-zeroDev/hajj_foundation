@@ -4,98 +4,106 @@ import SidebarLayout from '../../layouts/SidebarLayout';
 import { superAdminNavigation } from '../../config/navigation';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useToast } from '../../context/ToastContext';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, Legend 
+} from 'recharts';
 
 export const Reports = () => {
   const { getToken } = useAuth();
+  const { showToast } = useToast();
+  
+  const [activeTab, setActiveTab] = useState('summary');
+  
+  const [stats, setStats] = useState(null);
+  const [ledgerData, setLedgerData] = useState([]);
+  const [auditData, setAuditData] = useState([]);
+  
+  const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingCsv, setIsGeneratingCsv] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchAllData = async () => {
+      setIsLoading(true);
       try {
         const token = await getToken();
-        const res = await fetch('http://localhost:5000/api/reports/operational-stats', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setStats(data.data);
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [statsRes, ledgerRes, auditRes] = await Promise.all([
+          fetch('http://localhost:5000/api/reports/operational-stats', { headers }),
+          fetch('http://localhost:5000/api/reports/ledger-export', { headers }),
+          fetch('http://localhost:5000/api/audit', { headers })
+        ]);
+
+        if (statsRes.ok) {
+          const s = await statsRes.json();
+          setStats(s.data);
         }
-      } catch (err) {
-        console.error('Error fetching stats:', err);
+        if (ledgerRes.ok) {
+          const l = await ledgerRes.json();
+          setLedgerData(l.data || []);
+        }
+        if (auditRes.ok) {
+          const a = await auditRes.json();
+          setAuditData(a.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching reports data:', error);
+        showToast('Failed to load report data', 'error');
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchStats();
-  }, []);
+    fetchAllData();
+  }, [getToken, showToast]);
 
-  
   const trackDownload = async (action, details) => {
     try {
       const token = await getToken();
-      await fetch('http://localhost:5000/api/audit-logs/track', {
+      await fetch('http://localhost:5000/api/audit/track', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action, details })
       });
-    } catch (e) {
-      console.error('Failed to track download', e);
+    } catch (error) {
+      console.error('Failed to track audit:', error);
     }
   };
 
   const downloadCSV = async () => {
     setIsGeneratingCsv(true);
     await trackDownload('DOWNLOADED_LEDGER_CSV', 'Super Admin downloaded Global Financial Ledger CSV');
+    
     try {
-      const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/reports/ledger-export', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const json = await res.json();
-      const transactions = json.data || [];
-
-      if (transactions.length === 0) {
-        alert("No transactions found to export.");
-        setIsGeneratingCsv(false);
-        return;
+      if (!ledgerData || ledgerData.length === 0) {
+         showToast('No ledger data available to export.', 'error');
+         return;
       }
-
-      // Convert to CSV string
-      const headers = ['Transaction ID', 'Date', 'Type', 'Entity Name', 'Entity Type', 'Amount (GBP)', 'Status', 'Stripe ID'];
-      const csvRows = [headers.join(',')];
-
-      transactions.forEach(tx => {
-        const row = [
-          tx.transactionId,
-          new Date(tx.date).toISOString(),
-          tx.type,
-          `"${tx.entityName || ''}"`,
-          tx.entityType,
-          tx.amount,
-          tx.status,
-          tx.stripePaymentIntentId || ''
-        ];
-        csvRows.push(row.join(','));
-      });
-
-      const csvString = csvRows.join('\n');
-      const blob = new Blob([csvString], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      
+      const headers = ['Transaction ID', 'Date', 'Type', 'Amount (GBP)', 'Status', 'Entity Name', 'Entity Type', 'Stripe Payment ID'];
+      const rows = ledgerData.map(tx => [
+        tx.transactionId,
+        new Date(tx.date).toISOString(),
+        tx.type,
+        tx.amount,
+        tx.status,
+        tx.entityName || 'N/A',
+        tx.entityType || 'N/A',
+        tx.stripePaymentIntentId || 'N/A'
+      ]);
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.setAttribute('hidden', '');
-      a.setAttribute('href', url);
-      a.setAttribute('download', `EdenHoldings_GlobalLedger_${new Date().toISOString().split('T')[0]}.csv`);
+      a.href = url;
+      a.setAttribute('download', `HajjSavings_Ledger_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
     } catch (error) {
       console.error('Error generating CSV:', error);
-      alert('Failed to generate CSV export.');
+      showToast('Failed to generate CSV export.', 'error');
     } finally {
       setIsGeneratingCsv(false);
     }
@@ -108,20 +116,15 @@ export const Reports = () => {
     
     try {
       const doc = new jsPDF();
-      
-      // Header
       doc.setFontSize(22);
-      doc.setTextColor(15, 23, 42); // slate-900
-      doc.text("Eden Holdings Ltd.", 14, 20);
-      
+      doc.setTextColor(15, 23, 42); 
+      doc.text("Hajj Savings", 14, 20);
       doc.setFontSize(14);
-      doc.setTextColor(100, 116, 139); // slate-500
+      doc.setTextColor(100, 116, 139); 
       doc.text("Operational & Financial Summary", 14, 28);
-      
       doc.setFontSize(10);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 34);
 
-      // Financials Table
       doc.autoTable({
         startY: 45,
         head: [['Financial Metric', 'Amount (GBP)']],
@@ -130,11 +133,10 @@ export const Reports = () => {
           ['Total Operating Revenue (Employer Fees)', `£${stats.financials.revenue.toLocaleString()}`]
         ],
         theme: 'striped',
-        headStyles: { fillColor: [5, 150, 105] }, // emerald-600
+        headStyles: { fillColor: [5, 150, 105] }, 
         styles: { fontSize: 11, cellPadding: 6 }
       });
 
-      // Operational Table
       doc.autoTable({
         startY: doc.lastAutoTable.finalY + 15,
         head: [['Operational Metric', 'Count']],
@@ -147,91 +149,275 @@ export const Reports = () => {
           ['Pending Employees (Not Signed)', stats.employees.pending.toString()]
         ],
         theme: 'grid',
-        headStyles: { fillColor: [51, 65, 85] }, // slate-700
+        headStyles: { fillColor: [51, 65, 85] }, 
         styles: { fontSize: 11, cellPadding: 6 }
       });
       
-      // Footer
       doc.setFontSize(9);
       doc.setTextColor(148, 163, 184);
-      doc.text("Strictly Confidential. For internal use by Eden Holdings Ltd.", 14, doc.internal.pageSize.height - 10);
-
-      doc.save(`EdenHoldings_OperationalSummary_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.text("Strictly Confidential. For internal use by Hajj Savings", 14, doc.internal.pageSize.height - 10);
+      doc.save(`HajjSavings_OperationalSummary_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF.');
+      showToast('Failed to generate PDF.', 'error');
     } finally {
       setIsGeneratingPdf(false);
     }
   };
 
+  const renderOperationalSummary = () => {
+    if (!stats) return <div className="p-8 text-center text-slate-500">Loading metrics...</div>;
+
+    const employeePieData = [
+      { name: 'Compliant', value: stats.employees.compliant },
+      { name: 'Pending', value: stats.employees.pending }
+    ];
+    const COLORS = ['#10b981', '#f59e0b']; // emerald, amber
+
+    const orgBarData = [
+      { name: 'Active', count: stats.organizations.active },
+      { name: 'Suspended', count: stats.organizations.suspended }
+    ];
+
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 self-start">Employee Compliance</h3>
+            <div className="w-full h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={employeePieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {employeePieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 self-start">Organisation Status</h3>
+            <div className="w-full h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={orgBarData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={50} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+            <h3 className="font-bold text-slate-800">Key Performance Metrics</h3>
+          </div>
+          <table className="w-full text-left text-sm">
+            <tbody className="divide-y divide-slate-100">
+              <tr className="hover:bg-slate-50">
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Assets Under Management (AUM)</td>
+                <td className="px-6 py-4 text-slate-900 font-bold">£{stats.financials.aum.toLocaleString()}</td>
+              </tr>
+              <tr className="hover:bg-slate-50">
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Platform Revenue</td>
+                <td className="px-6 py-4 text-slate-900 font-bold">£{stats.financials.revenue.toLocaleString()}</td>
+              </tr>
+              <tr className="hover:bg-slate-50">
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Organisations</td>
+                <td className="px-6 py-4 text-slate-600">{stats.organizations.total}</td>
+              </tr>
+              <tr className="hover:bg-slate-50">
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Employees</td>
+                <td className="px-6 py-4 text-slate-600">{stats.employees.total}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFinancialLedger = () => {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-3">Date</th>
+                <th className="px-6 py-3">Entity Name</th>
+                <th className="px-6 py-3">Type</th>
+                <th className="px-6 py-3">Amount</th>
+                <th className="px-6 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {ledgerData.length === 0 ? (
+                <tr><td colSpan="5" className="text-center py-12 text-slate-500">No ledger records found.</td></tr>
+              ) : (
+                ledgerData.map((tx) => (
+                  <tr key={tx.transactionId} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 text-slate-600">{new Date(tx.date).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 font-medium text-slate-900">{tx.entityName || 'N/A'}</td>
+                    <td className="px-6 py-4">
+                      {tx.type === 'revenue' ? (
+                        <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">Revenue</span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Savings</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 font-bold text-slate-900">£{tx.amount?.toLocaleString() || 0}</td>
+                    <td className="px-6 py-4">
+                      {tx.status === 'succeeded' ? (
+                         <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">Paid</span>
+                      ) : (
+                         <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">{tx.status}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const renderAuditLog = () => {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-3">Timestamp</th>
+                <th className="px-6 py-3">Action</th>
+                <th className="px-6 py-3">Details</th>
+                <th className="px-6 py-3">IP Address</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {auditData.length === 0 ? (
+                <tr><td colSpan="4" className="text-center py-12 text-slate-500">No audit logs found.</td></tr>
+              ) : (
+                auditData.map((log) => (
+                  <tr key={log._id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 text-slate-600 whitespace-nowrap">{new Date(log.createdAt).toLocaleString()}</td>
+                    <td className="px-6 py-4 font-medium text-slate-900">
+                      <span className="inline-flex px-2 py-0.5 rounded text-xs font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                        {log.action}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">{log.details}</td>
+                    <td className="px-6 py-4 text-xs font-mono text-slate-400">{log.ipAddress}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <SidebarLayout title="Reports & Exports" navigation={superAdminNavigation}>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Platform Reports</h1>
-        <p className="text-slate-500 mt-1">Generate and export financial ledgers and operational summaries.</p>
+    <SidebarLayout title="Reports & Audit" navigation={superAdminNavigation}>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Reports & Audit</h1>
+          <p className="text-slate-500 mt-1">Review operational metrics, financial ledgers, and system logs.</p>
+        </div>
+        
+        <div className="flex gap-3 w-full md:w-auto">
+          <button
+            onClick={downloadCSV}
+            disabled={isGeneratingCsv || isLoading}
+            className="flex-1 md:flex-none px-4 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-lg transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+          >
+            {isGeneratingCsv ? 'Processing...' : (
+              <><svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Export Ledger (CSV)</>
+            )}
+          </button>
+          
+          <button
+            onClick={downloadPDF}
+            disabled={isGeneratingPdf || isLoading || !stats}
+            className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+          >
+            {isGeneratingPdf ? 'Generating...' : (
+              <><svg className="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Export Summary (PDF)</>
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* CSV Export Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-          <div className="p-8 flex-grow">
-            <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">Global Financial Ledger</h2>
-            <p className="text-slate-500">
-              Export the raw, unpaginated transaction history for all employers and employees. Perfect for importing into Xero, QuickBooks, or handing to your accountants.
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-slate-600 font-medium">
-              <li className="flex items-center gap-2"><svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> Includes all £12.3k revenues</li>
-              <li className="flex items-center gap-2"><svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> Includes all £50/mo savings</li>
-              <li className="flex items-center gap-2"><svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> Stripe Payment IDs mapped</li>
-            </ul>
-          </div>
-          <div className="p-6 bg-slate-50 border-t border-slate-200">
-            <button
-              onClick={downloadCSV}
-              disabled={isGeneratingCsv}
-              className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isGeneratingCsv ? (
-                 <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Processing Export...</>
-              ) : 'Download CSV Export'}
-            </button>
-          </div>
-        </div>
-
-        {/* PDF Export Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-          <div className="p-8 flex-grow">
-            <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">Operational Summary</h2>
-            <p className="text-slate-500">
-              Generate a clean, branded PDF summarizing the platform's current health. Ideal for board meetings and executive reporting.
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-slate-600 font-medium">
-              <li className="flex items-center gap-2"><svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> Total AUM & Revenue figures</li>
-              <li className="flex items-center gap-2"><svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> Organisation lifecycle status</li>
-              <li className="flex items-center gap-2"><svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> Employee legal compliance tracking</li>
-            </ul>
-          </div>
-          <div className="p-6 bg-slate-50 border-t border-slate-200">
-            <button
-              onClick={downloadPDF}
-              disabled={isGeneratingPdf || !stats}
-              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isGeneratingPdf ? (
-                 <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Generating PDF...</>
-              ) : !stats ? 'Loading metrics...' : 'Download PDF Summary'}
-            </button>
-          </div>
-        </div>
-
+      {/* Tabs */}
+      <div className="flex space-x-1 bg-slate-100/50 p-1 rounded-xl mb-6 border border-slate-200/60 max-w-2xl">
+        <button
+          onClick={() => setActiveTab('summary')}
+          className={`flex-1 py-2 px-4 text-sm font-bold rounded-lg transition-all ${
+            activeTab === 'summary' 
+              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+          }`}
+        >
+          Operational Summary
+        </button>
+        <button
+          onClick={() => setActiveTab('ledger')}
+          className={`flex-1 py-2 px-4 text-sm font-bold rounded-lg transition-all ${
+            activeTab === 'ledger' 
+              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+          }`}
+        >
+          Financial Ledger
+        </button>
+        <button
+          onClick={() => setActiveTab('audit')}
+          className={`flex-1 py-2 px-4 text-sm font-bold rounded-lg transition-all ${
+            activeTab === 'audit' 
+              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+          }`}
+        >
+          System Audit Log
+        </button>
       </div>
+
+      {/* Tab Content */}
+      <div className="min-h-[500px]">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64 text-slate-500 gap-3">
+             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500"></div>
+             Loading report data...
+          </div>
+        ) : (
+          <>
+            {activeTab === 'summary' && renderOperationalSummary()}
+            {activeTab === 'ledger' && renderFinancialLedger()}
+            {activeTab === 'audit' && renderAuditLog()}
+          </>
+        )}
+      </div>
+
     </SidebarLayout>
   );
 };

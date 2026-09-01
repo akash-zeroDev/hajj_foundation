@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
+import PrimaryButton from '../../components/PrimaryButton';
+import { useAuth } from '@clerk/react';
+import { useToast } from '../../context/ToastContext';
 import { superAdminNavigation } from '../../config/navigation';
 
-export const DocumentManagement = () => {
+const DocumentManagement = () => {
   const { getToken } = useAuth();
+  const { showToast } = useToast();
+  
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -13,24 +17,22 @@ export const DocumentManagement = () => {
   const [file, setFile] = useState(null);
   const [forceResign, setForceResign] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [isError, setIsError] = useState(false);
-  
   const fileInputRef = useRef(null);
 
   const fetchDocuments = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const token = await getToken();
       const res = await fetch('http://localhost:5000/api/documents', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setDocuments(data.data || []);
+      const data = await res.json();
+      if (data.success) {
+        setDocuments(data.data);
       }
-    } catch (err) {
-      console.error('Error fetching documents:', err);
+    } catch (error) {
+      console.error('Failed to fetch documents', error);
+      showToast('Failed to load documents.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -42,75 +44,46 @@ export const DocumentManagement = () => {
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      const selected = e.target.files[0];
-      if (selected.type !== 'application/pdf') {
-        setIsError(true);
-        setMessage('Only PDF files are allowed.');
-        e.target.value = '';
-        setFile(null);
-        return;
-      }
-      if (selected.size > 10 * 1024 * 1024) {
-        setIsError(true);
-        setMessage('File size must be less than 10MB.');
-        e.target.value = '';
-        setFile(null);
-        return;
-      }
-      setIsError(false);
-      setMessage('');
-      setFile(selected);
+      setFile(e.target.files[0]);
     }
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!file) {
-      setIsError(true);
-      setMessage('Please select a PDF file to upload.');
-      return;
-    }
-    
-    if (forceResign && !window.confirm("WARNING: You checked 'Force Re-sign'. This will instantly lock all existing employees out of their dashboard until they sign this new version. Are you sure?")) {
+    if (!title || !file) {
+      showToast('Please provide a title and select a file.', 'error');
       return;
     }
 
     setIsUploading(true);
-    setMessage('');
-    
     try {
       const token = await getToken();
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('forceResign', forceResign);
       formData.append('agreementFile', file);
+      formData.append('forceResign', forceResign);
 
       const res = await fetch('http://localhost:5000/api/documents/upload', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData
       });
-      
+
       const data = await res.json();
-      
-      if (res.ok) {
-        setIsError(false);
-        setMessage(`Success! Version ${data.data.version} is now live.`);
+
+      if (data.success) {
+        showToast('Document uploaded successfully!', 'success');
         setTitle('');
         setFile(null);
         setForceResign(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
-        fetchDocuments(); // Refresh list
+        fetchDocuments(); // Refresh the list
       } else {
-        setIsError(true);
-        setMessage(data.message || 'Failed to upload document.');
+        throw new Error(data.message || 'Upload failed');
       }
-    } catch (err) {
-      console.error(err);
-      setIsError(true);
-      setMessage('A critical error occurred while uploading.');
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || 'Failed to upload document.', 'error');
     } finally {
       setIsUploading(false);
     }
@@ -119,180 +92,158 @@ export const DocumentManagement = () => {
   const activeDoc = documents.find(d => d.isActive);
 
   return (
-    <SidebarLayout title="Document Management" navigation={superAdminNavigation}>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Shariah Documents</h1>
-        <p className="text-slate-500 mt-1">Upload and version control the Global Master Agreements for all employees.</p>
+    <SidebarLayout navigation={superAdminNavigation} title="Document Management">
+      <div className="mb-6">
+        <h3 className="text-[23px] font-bold tracking-[-0.5px] text-slate-900 m-0">Shariah Documents</h3>
+        <p className="mt-1.5 text-[13.5px] text-[#5c6b65]">Upload and version control the Global Master Agreements for all employees.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Left Column: Upload Form */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-              <h2 className="text-lg font-bold text-slate-800">Upload New Master Agreement</h2>
-              <p className="text-sm text-slate-500">This will automatically become the new active template for all future signups.</p>
-            </div>
-            
-            <form onSubmit={handleUpload} className="p-6 space-y-5">
-              {message && (
-                <div className={`p-4 rounded-lg text-sm font-medium ${isError ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
-                  {message}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Document Title</label>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start mb-4">
+        {/* Upload Card */}
+        <div className="bg-white rounded-[14px] border border-[#e6ecea] shadow-[0_1px_2px_rgba(14,26,22,0.04),0_8px_24px_-18px_rgba(14,26,22,0.35)]">
+          <div className="px-[18px] py-[16px] border-b border-[#e6ecea]">
+            <h4 className="text-[15px] font-bold tracking-[-0.2px] m-0 text-[#0e1a16]">Upload New Master Agreement</h4>
+            <p className="mt-[3px] text-[12.5px] text-[#8a9994]">This will automatically become the new active template for all future signups.</p>
+          </div>
+          
+          <div className="p-[18px]">
+            <form onSubmit={handleUpload} className="grid gap-[16px]">
+              
+              <div className="grid gap-[6px]">
+                <label className="text-[12.5px] font-semibold text-[#5c6b65]">Document title</label>
                 <input 
                   type="text" 
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Master Shariah Agreement 2026 (v2)"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full text-[14px] px-[13px] py-[11px] border border-[#e6ecea] rounded-[10px] bg-white text-[#0e1a16] outline-none focus:border-[#17a377] focus:ring-[3px] focus:ring-[rgba(23,163,119,0.14)] transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">PDF File</label>
+              <div className="grid gap-[6px]">
+                <label className="text-[12.5px] font-semibold text-[#5c6b65]">PDF file</label>
+                <label className="flex items-center gap-[13px] p-[18px] border-[1.5px] border-dashed border-[#cfdcd7] rounded-[12px] bg-[#fafcfb] cursor-pointer hover:border-[#17a377] hover:bg-[rgba(23,163,119,0.06)] transition-all">
+                  <div className="w-[38px] h-[38px] rounded-[11px] flex-shrink-0 grid place-items-center bg-[rgba(11,122,91,0.10)] text-[#0b7a5b]">
+                    <svg className="w-[19px] h-[19px] stroke-current stroke-[1.8px] fill-none" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+                  </div>
+                  <div>
+                    <b className="block text-[13.5px] text-[#0e1a16]">{file ? file.name : "Choose a file or drag it here"}</b>
+                    <small className="text-[#8a9994] text-[12px]">{file ? (file.size / 1048576).toFixed(2) + " MB · ready" : "PDF only · max 10 MB"}</small>
+                  </div>
+                  <input type="file" className="hidden" accept=".pdf" required ref={fileInputRef} onChange={handleFileChange} />
+                </label>
+              </div>
+
+              <label className="flex gap-[12px] p-[14px] rounded-[12px] bg-[#fdf6e6] border border-[#f2e3c2] text-[#8a5b12] cursor-pointer">
                 <input 
-                  type="file" 
-                  accept=".pdf"
-                  required
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  type="checkbox" 
+                  checked={forceResign} 
+                  onChange={(e) => setForceResign(e.target.checked)} 
+                  className="appearance-none w-[17px] h-[17px] flex-shrink-0 mt-[2px] border-[1.5px] border-[#d9bd85] rounded-[5px] bg-white cursor-pointer checked:bg-[#0b7a5b] checked:border-[#0b7a5b] relative checked:after:content-[''] checked:after:absolute checked:after:w-[9px] checked:after:h-[5px] checked:after:border-l-[2px] checked:after:border-b-[2px] checked:after:border-white checked:after:-rotate-45 checked:after:left-[2.5px] checked:after:top-[3px]" 
                 />
-              </div>
-
-              <div className="mt-6 p-5 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="forceResign"
-                      name="forceResign"
-                      type="checkbox"
-                      checked={forceResign}
-                      onChange={(e) => setForceResign(e.target.checked)}
-                      className="focus:ring-amber-500 h-5 w-5 text-amber-600 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label htmlFor="forceResign" className="font-bold text-amber-900">
-                      Force existing employees to re-sign
-                    </label>
-                    <p className="text-amber-700 mt-1">
-                      If checked, every existing employee will be locked out of their dashboard until they read and sign this new version. If left unchecked, they are grandfathered into their old contract.
-                    </p>
-                  </div>
+                <div>
+                  <b className="block text-[13.2px] font-bold text-[#6f4a0e]">Force existing employees to re-sign</b>
+                  <p className="mt-[4px] text-[12.6px] leading-[1.55]">If checked, every existing employee will be locked out of their dashboard until they read and sign this new version. If left unchecked, they are grandfathered into their old contract.</p>
                 </div>
-              </div>
+              </label>
 
-              <div className="pt-4 flex justify-end">
-                <button 
-                  type="submit"
-                  disabled={isUploading}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+              <div className="flex items-center pt-[16px] border-t border-[#e6ecea]">
+                <PrimaryButton 
+                  type="submit" 
+                  isLoading={isUploading}
+                  icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12l5 5L20 7" /></svg>}
+                  className="ml-auto"
                 >
-                  {isUploading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Uploading to Cloud...
-                    </>
-                  ) : 'Publish New Version'}
-                </button>
+                  {isUploading ? 'Uploading...' : 'Publish new version'}
+                </PrimaryButton>
               </div>
             </form>
           </div>
         </div>
 
-        {/* Right Column: Active Status */}
-        <div className="lg:col-span-1">
-           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col h-full">
-             <h3 className="text-sm font-medium text-slate-500 mb-4 uppercase tracking-wide">Currently Active Template</h3>
-             {isLoading ? (
-               <p className="text-slate-500 animate-pulse">Loading...</p>
-             ) : activeDoc ? (
-               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                 <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
-                   <span className="text-2xl font-black">v{activeDoc.version}</span>
-                 </div>
-                 <h4 className="text-lg font-bold text-slate-900 mb-2">{activeDoc.title}</h4>
-                 <p className="text-sm text-slate-500 mb-6">Published on {new Date(activeDoc.createdAt).toLocaleDateString()}</p>
-                 <a 
-                   href={activeDoc.fileUrl} 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition"
-                 >
-                   View PDF Document ↗
-                 </a>
-               </div>
-             ) : (
-               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                 <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-4">
-                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                 </div>
-                 <p className="text-slate-500 font-medium">No active templates.</p>
-                 <p className="text-sm text-slate-400 mt-1">Onboarding is currently blocked.</p>
-               </div>
-             )}
-           </div>
+        {/* Active Template Card */}
+        <div className="bg-white rounded-[14px] border border-[#e6ecea] shadow-[0_1px_2px_rgba(14,26,22,0.04),0_8px_24px_-18px_rgba(14,26,22,0.35)] h-auto self-start">
+          <div className="px-[18px] py-[14px] border-b border-[#e6ecea] bg-[#fafcfb] rounded-t-[14px]">
+            <span className="text-[10.5px] tracking-[0.14em] uppercase text-[#8a9994] font-bold">Currently active template</span>
+          </div>
+          <div className="px-[18px] py-[18px]">
+            {isLoading ? (
+              <p className="text-[#8a9994] animate-pulse text-sm">Loading...</p>
+            ) : activeDoc ? (
+              <div className="flex flex-col gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-[rgba(23,163,119,0.14)] text-[#0b7a5b] px-[6px] py-[2px] rounded font-bold text-[10px] tracking-wide uppercase">
+                      v{activeDoc.version}
+                    </span>
+                    <h5 className="m-0 text-[14.5px] font-bold tracking-[-0.2px] text-[#0e1a16] truncate" title={activeDoc.title}>
+                      {activeDoc.title}
+                    </h5>
+                  </div>
+                  <p className="text-[12px] text-[#8a9994] mt-1.5">
+                    Published on {new Date(activeDoc.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </p>
+                </div>
+                
+                <a 
+                  href={activeDoc.fileUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center justify-center gap-[8px] w-full font-semibold text-[13px] px-[14px] py-[9px] rounded-[8px] bg-white border border-[#e6ecea] text-[#0e1a16] hover:bg-[#f2f6f5] transition-colors cursor-pointer no-underline"
+                >
+                  <svg className="w-[14px] h-[14px] stroke-current stroke-[2px] fill-none" viewBox="0 0 24 24"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
+                  View PDF document
+                </a>
+              </div>
+            ) : (
+              <div className="text-[13px] text-[#8a9994]">No active templates</div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Version History */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-800">Document Version History</h2>
+      {/* History Table */}
+      <div className="bg-white rounded-[14px] border border-[#e6ecea] shadow-[0_1px_2px_rgba(14,26,22,0.04),0_8px_24px_-18px_rgba(14,26,22,0.35)]">
+        <div className="px-[18px] py-[16px] border-b border-[#e6ecea]">
+          <h4 className="text-[15px] font-bold tracking-[-0.2px] m-0 text-[#0e1a16]">Document Version History</h4>
+          <p className="mt-[3px] text-[12.5px] text-[#8a9994]">Every published version stays available for audit.</p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-3">Version</th>
-                <th className="px-6 py-3">Title</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Date Published</th>
-                <th className="px-6 py-3">Link</th>
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="bg-[#fafcfb]">
+                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Version</th>
+                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Title</th>
+                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Status</th>
+                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Date published</th>
+                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Link</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-slate-500">Loading history...</td>
+                  <td colSpan="5" className="px-[18px] py-8 text-center text-[#8a9994]">Loading history...</td>
                 </tr>
               ) : documents.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-slate-500">No documents uploaded yet.</td>
+                  <td colSpan="5" className="px-[18px] py-8 text-center text-[#8a9994]">No documents uploaded yet.</td>
                 </tr>
               ) : (
                 documents.map(doc => (
-                  <tr key={doc._id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
-                      v{doc.version}
+                  <tr key={doc._id} className="hover:bg-[#fafcfb] group transition-colors">
+                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] text-[#0e1a16] group-last:border-0"><b className="font-semibold">v{doc.version}</b></td>
+                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] text-[#0e1a16] group-last:border-0">{doc.title}</td>
+                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] group-last:border-0">
+                      <span className={`inline-block text-[11px] font-bold px-[9px] py-[3px] rounded-full ${doc.isActive ? 'bg-[rgba(23,163,119,0.14)] text-[#0b7a5b]' : 'bg-[#eef1f0] text-[#8a9994]'}`}>
+                        {doc.isActive ? 'Active' : 'Archived'}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 font-medium text-slate-700">
-                      {doc.title}
+                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] text-[#5c6b65] tabular-nums group-last:border-0">
+                      {new Date(doc.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {doc.isActive ? (
-                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                           Active
-                         </span>
-                      ) : (
-                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                           Archived
-                         </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {new Date(doc.createdAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 font-medium text-sm">
-                        View PDF
-                      </a>
+                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] group-last:border-0">
+                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-[#0b7a5b] font-semibold no-underline hover:underline">View PDF</a>
                     </td>
                   </tr>
                 ))
@@ -304,3 +255,6 @@ export const DocumentManagement = () => {
     </SidebarLayout>
   );
 };
+
+export default DocumentManagement;
+export { DocumentManagement };

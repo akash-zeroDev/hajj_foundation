@@ -52,8 +52,8 @@ exports.completeOnboarding = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Minimum contribution is £10' });
     }
 
-    if (!firstName || !lastName) {
-      return res.status(400).json({ success: false, message: 'First Name and Last Name are required' });
+    if (!firstName || !lastName || !phone) {
+      return res.status(400).json({ success: false, message: 'First Name, Last Name, and Phone are fully required' });
     }
 
     
@@ -123,6 +123,38 @@ exports.updateEmployeeProfile = async (req, res) => {
     res.status(200).json({ success: true, data: employee });
   } catch (error) {
     console.error('Error updating employee profile:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.getEmployeeForAdmin = async (req, res) => {
+  try {
+    const { clerkId } = req.params;
+    
+    // Find the employee in the database
+    const employee = await Employee.findOne({ clerkUserId: clerkId })
+      .populate('organisationId')
+      .populate('signedDocumentId');
+
+    if (!employee) {
+      // If the employee hasn't logged in yet, they might not exist in Mongo.
+      // We return a skeleton representation.
+      return res.status(200).json({ 
+        success: true, 
+        data: {
+          clerkUserId: clerkId,
+          agreementStatus: 'pending',
+          balance: 0,
+          monthlyContribution: 0,
+          awardStatus: 'none',
+          subscriptionStatus: 'inactive'
+        } 
+      });
+    }
+
+    res.status(200).json({ success: true, data: employee });
+  } catch (error) {
+    console.error('Error fetching employee for admin:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

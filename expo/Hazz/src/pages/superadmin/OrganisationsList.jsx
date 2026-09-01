@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import CustomSelect from '../../components/CustomSelect';
+import PrimaryButton from '../../components/PrimaryButton';
 import SearchFilterBar from '../../components/SearchFilterBar';
 import { superAdminNavigation } from '../../config/navigation';
 
@@ -21,6 +22,7 @@ export const OrganisationsList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [feeFilter, setFeeFilter] = useState('all');
+  const [suspensionFilter, setSuspensionFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export const OrganisationsList = () => {
       fetchOrganisations();
     }, 300);
     return () => clearTimeout(delayDebounceFn);
-  }, [currentPage, searchQuery, statusFilter, feeFilter, sortBy]);
+  }, [currentPage, searchQuery, statusFilter, feeFilter, suspensionFilter, sortBy]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -43,7 +45,8 @@ export const OrganisationsList = () => {
         sort: sortBy,
         ...(searchQuery && { search: searchQuery }),
         ...(statusFilter !== 'all' && { agreementStatus: statusFilter }),
-        ...(feeFilter !== 'all' && { feeStatus: feeFilter })
+        ...(feeFilter !== 'all' && { feeStatus: feeFilter }),
+        ...(suspensionFilter !== 'all' && { isSuspended: suspensionFilter === 'suspended' ? 'true' : 'false' })
       });
 
       const res = await fetch(`http://localhost:5000/api/organisations?${params.toString()}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
@@ -79,15 +82,12 @@ export const OrganisationsList = () => {
     <SidebarLayout navigation={superAdminNavigation} title="Participating Organisations">
       
       <div className="flex justify-end mb-6">
-        <button 
+        <PrimaryButton 
           onClick={() => navigate('/superadmin?onboard=true')}
-          className="flex items-center gap-1.5 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition"
+          icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
           Onboard Organisation
-        </button>
+        </PrimaryButton>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
@@ -106,6 +106,18 @@ export const OrganisationsList = () => {
           </div>
           
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+            
+            <CustomSelect
+              className="min-w-[140px]"
+              value={suspensionFilter}
+              onChange={setSuspensionFilter}
+              options={[
+                { value: "all", label: "All Status" },
+                { value: "active", label: "Active" },
+                { value: "suspended", label: "Suspended" }
+              ]}
+            />
+
             <CustomSelect
               className="min-w-[150px]"
               value={statusFilter}
@@ -164,15 +176,24 @@ export const OrganisationsList = () => {
                 <tr><td colSpan="6" className="text-center py-8 text-slate-500">No organisations found.</td></tr>
               ) : (
                 organisations.map((org) => (
+                  
                   <tr 
                     key={org._id} 
                     onClick={() => navigate(`/superadmin/organisations/${org._id}`)}
-                    className="hover:bg-slate-50 cursor-pointer transition-colors group"
+                    className={`hover:bg-slate-50 cursor-pointer transition-colors group ${org.isSuspended ? 'bg-slate-50/40 opacity-75 grayscale-[20%]' : ''}`}
                   >
                     <td className="px-6 py-4">
-                      <div className="font-medium text-slate-900 group-hover:text-emerald-700 transition-colors">{org.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-slate-900 group-hover:text-emerald-700 transition-colors">{org.name}</div>
+                        {org.isSuspended && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wider whitespace-nowrap">
+                            Suspended
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-slate-500 mt-0.5">No: {org.companyNumber}</div>
                     </td>
+
                     <td className="px-6 py-4 text-sm text-slate-600 max-w-[150px] truncate" title={org.registeredAddress}>
                       {org.registeredAddress}
                     </td>

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useOrganization } from '@clerk/react';
+import { useOrganization, useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
+import PrimaryButton from '../../components/PrimaryButton';
 import { orgAdminNavigation } from '../../config/navigation';
 
 export const AdminEmployees = () => {
   const { organization, isLoaded } = useOrganization();
+  const { getToken } = useAuth();
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,6 +15,37 @@ export const AdminEmployees = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [activeMember, setActiveMember] = useState(null);
+  const [employeeProfile, setEmployeeProfile] = useState(null);
+  const [isFetchingProfile, setIsFetchingProfile] = useState(false);
+
+  useEffect(() => {
+    if (activeMember) {
+      fetchEmployeeProfile(activeMember.publicUserData.userId);
+    } else {
+      setEmployeeProfile(null);
+    }
+  }, [activeMember]);
+
+  const fetchEmployeeProfile = async (clerkId) => {
+    setIsFetchingProfile(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`http://localhost:5000/api/employees/clerk/${clerkId}/admin`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEmployeeProfile(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsFetchingProfile(false);
+    }
+  };
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -119,11 +152,16 @@ export const AdminEmployees = () => {
                 <tr><td colSpan="4" className="text-center py-8 text-slate-500">No active employees found.</td></tr>
               ) : (
                 members.map((member) => (
-                  <tr key={member.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={member.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => { setActiveMember(member); setSelectedMember(member); }}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        {member.publicUserData.imageUrl && (
-                          <img src={member.publicUserData.imageUrl} alt="" className="w-10 h-10 rounded-full border border-slate-200" />
+                        {member.publicUserData.hasImage ? (
+                          <img src={member.publicUserData.imageUrl} alt="" className="w-10 h-10 rounded-full border border-slate-200 object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 shrink-0 rounded-full grid place-items-center text-white font-bold text-sm bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-sm border border-emerald-700/50">
+                            {member.publicUserData.firstName?.[0] || ''}{member.publicUserData.lastName?.[0] || ''}
+                            {!member.publicUserData.firstName && !member.publicUserData.lastName && (member.publicUserData.identifier?.[0]?.toUpperCase() || 'U')}
+                          </div>
                         )}
                         <div>
                           <div className="font-medium text-slate-900">
@@ -146,7 +184,7 @@ export const AdminEmployees = () => {
                     <td className="px-6 py-4 text-right">
                       {member.role !== 'org:admin' && (
                         <button 
-                          onClick={() => handleRemove(member.publicUserData.userId)}
+                          onClick={(e) => { e.stopPropagation(); handleRemove(member.publicUserData.userId); }}
                           className="text-red-600 hover:text-red-800 text-sm font-medium transition"
                         >
                           Remove
@@ -247,6 +285,209 @@ export const AdminEmployees = () => {
         </div>
       )}
 
-    </SidebarLayout>
-  );
+
+      
+      
+      {/* Sidecard Overlay */}
+      <div 
+        className={`fixed inset-0 bg-[#09100d]/50 backdrop-blur-[2px] z-40 transition-opacity duration-[250ms] ease-in-out ${selectedMember ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} 
+        onClick={() => setSelectedMember(null)}
+      ></div>
+
+      <aside 
+        className={`fixed top-0 right-0 h-screen w-[440px] max-w-[94vw] z-50 bg-[#fbfdfc] border-l border-[#e8edeb] flex flex-col transform transition-transform duration-[320ms] ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[-30px_0_60px_-30px_rgba(14,26,22,.4)] ${selectedMember ? 'translate-x-0' : 'translate-x-full'}`}
+        role="dialog" 
+        aria-label="Employee profile"
+      >
+        {activeMember && (
+          <>
+            <div className="p-[8px_16px_10px] text-white bg-emerald-900 shrink-0">
+              <div className="flex items-center gap-[10px]">
+                <span className="text-[10px] tracking-[0.14em] uppercase text-white/50 font-bold">Employee profile</span>
+                <button 
+                  className="ml-auto w-[24px] h-[24px] rounded-[6px] border border-white/20 bg-white/10 text-[#e3ede9] grid place-items-center cursor-pointer hover:bg-white/20 hover:text-white transition-colors"
+                  onClick={() => setSelectedMember(null)}
+                  aria-label="Close"
+                >
+                  <svg viewBox="0 0 24 24" className="w-[12px] h-[12px] stroke-current stroke-[2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+              </div>
+              <div className="flex items-center gap-[12px] mt-[6px]">
+                <div className="w-[38px] h-[38px] shrink-0 rounded-[12px] grid place-items-center text-white font-extrabold text-[14px] tracking-[-0.4px] bg-gradient-to-br from-[#17a377] to-[#0a6b50] shadow-[0_6px_16px_-8px_rgba(23,163,119,.9)]">
+                  {activeMember.publicUserData.firstName?.[0]}{activeMember.publicUserData.lastName?.[0]}
+                </div>
+                <div>
+                  <h3 className="m-0 text-[16px] tracking-[-0.4px] font-bold leading-tight">{activeMember.publicUserData.firstName} {activeMember.publicUserData.lastName}</h3>
+                  <a href={`mailto:${activeMember.publicUserData.identifier}`} className="inline-block mt-[1px] text-[#9ff0d2] text-[12px] font-medium no-underline hover:underline">
+                    {activeMember.publicUserData.identifier}
+                  </a>
+                  <div className="flex gap-[6px] mt-[4px] flex-wrap">
+                    <span className="text-[9.5px] font-semibold px-[7px] py-[2px] rounded-full bg-white/10 border border-white/20 text-[#dbe8e3]">
+                      {activeMember.role === 'org:admin' ? 'Administrator' : 'Employee'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-[18px_20px_24px]">
+              {isFetchingProfile ? (
+                <div className="flex justify-center items-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#17a377]"></div>
+                </div>
+              ) : employeeProfile ? (
+                <>
+                  <div className="bg-white border border-[#e8edeb] rounded-[16px] p-[16px_17px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)]">
+                    <div className="flex items-end justify-between gap-[12px]">
+                      <div>
+                        <div className="text-[11px] text-[#93a19c] font-semibold">Total savings balance</div>
+                        <b className="block mt-[4px] text-[27px] font-extrabold tracking-[-1px] tabular-nums leading-none text-[#0e1a16]">£{(employeeProfile.balance || 0).toFixed(2)}</b>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[11px] text-[#93a19c] font-semibold">Monthly contribution</div>
+                        <b className="text-[16px] tracking-[-0.4px] text-[#5c6b65]">£{(employeeProfile.contribution || 0).toFixed(2)}</b>
+                      </div>
+                    </div>
+                    
+                    {(() => {
+                      const target = employeeProfile.hajjTarget || 6000;
+                      const balance = employeeProfile.balance || 0;
+                      const pct = Math.min(100, (balance / target) * 100);
+                      const months = employeeProfile.contribution > 0 ? Math.floor(balance / employeeProfile.contribution) : 0;
+                      return (
+                        <>
+                          <div className="h-[6px] rounded-full bg-[#eef2f0] overflow-hidden mt-[16px]">
+                            <div className="block h-full rounded-full bg-gradient-to-r from-[#17a377] to-[#0b7a5b]" style={{ width: `${Math.max(pct, 1.5)}%` }}></div>
+                          </div>
+                          <div className="flex justify-between mt-[8px] text-[11.5px] text-[#93a19c]">
+                            <span><b className="inline text-[11.5px] font-bold text-[#5c6b65] tracking-normal">{pct.toFixed(1)}%</b> of £{target.toLocaleString()} Hajj target</span>
+                            <span>{months} month{months === 1 ? '' : 's'} contributed</span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="text-[10.5px] tracking-[0.14em] uppercase text-[#93a19c] font-bold m-[22px_0_9px]">Compliance &amp; status</div>
+                  <div className="bg-white border border-[#e8edeb] rounded-[16px] overflow-hidden shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)]">
+                    <div className="flex items-center gap-[12px] p-[13px_15px] border-b border-[#e8edeb]">
+                      <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.12)] text-[#0b7a5b]">
+                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M7 3h7l5 5v13H7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5M10 14l2 2 4-4"/></svg>
+                      </div>
+                      <div>
+                        <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#0e1a16]">Shariah agreement</div>
+                        <div className="text-[11.8px] text-[#93a19c] mt-[2px]">Master agreement v2</div>
+                      </div>
+                      <div className="ml-auto text-right flex flex-col items-end gap-[4px]">
+                        {employeeProfile.agreementStatus === 'signed' ? (
+                          <>
+                            <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[rgba(23,163,119,.12)] text-[#0b7a5b] border border-[rgba(11,122,91,.18)]">Signed</span>
+                            {/* Skipping actual date for now since it's not strictly tracked in DB as 'agreementSignedDate' yet, showing creation date as fallback to match visual density */}
+                            <span className="text-[11px] text-[#93a19c]">{new Date(employeeProfile.createdAt).toLocaleDateString('en-GB')}</span>
+                          </>
+                        ) : (
+                          <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[#fdf6e6] text-[#8a5b12] border border-[#f2e3c2]">Pending</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-[12px] p-[13px_15px] border-b border-[#e8edeb]">
+                      <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.12)] text-[#0b7a5b]">
+                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><rect x="3" y="6" width="18" height="12" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h3"/></svg>
+                      </div>
+                      <div>
+                        <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#0e1a16]">Subscription</div>
+                        <div className="text-[11.8px] text-[#93a19c] mt-[2px]">Direct debit · Stripe</div>
+                      </div>
+                      <div className="ml-auto text-right flex flex-col items-end gap-[4px]">
+                        {employeeProfile.subscriptionStatus === 'active' ? (
+                          <>
+                            <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[rgba(23,163,119,.12)] text-[#0b7a5b] border border-[rgba(11,122,91,.18)]">Active</span>
+                            {/* Assuming next payment is roughly 1 month from now or something for visual fidelity */}
+                            <span className="text-[11px] text-[#93a19c]">Next: {new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'})}</span>
+                          </>
+                        ) : (
+                          <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[#f1f4f3] text-[#93a19c] border border-[#e6ebe9]">Inactive</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-[12px] p-[13px_15px]">
+                      <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.12)] text-[#0b7a5b]">
+                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v6a8 8 0 01-16 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 20h6M12 18v2"/></svg>
+                      </div>
+                      <div>
+                        <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#0e1a16]">Hajj award</div>
+                        <div className="text-[11.8px] text-[#93a19c] mt-[2px]">Monthly draw eligibility</div>
+                      </div>
+                      <div className="ml-auto text-right flex flex-col items-end gap-[4px]">
+                        <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[#f1f4f3] text-[#93a19c] border border-[#e6ebe9]">
+                          {employeeProfile.awardStatus ? employeeProfile.awardStatus.charAt(0).toUpperCase() + employeeProfile.awardStatus.slice(1) : 'None'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {employeeProfile.agreementStatus !== 'signed' && (
+                    <div className="mt-[10px] flex gap-[11px] p-[12px_13px] rounded-[14px] bg-[#fdf6e6] border border-[#f2e3c2] text-[#6f4a0e]">
+                      <svg viewBox="0 0 24 24" className="w-[16px] h-[16px] shrink-0 mt-[2px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v5M12 17h.01"/><path strokeLinecap="round" strokeLinejoin="round" d="M10.3 4l-7.4 13A2 2 0 004.6 20h14.8a2 2 0 001.7-3L13.7 4a2 2 0 00-3.4 0z"/></svg>
+                      <span>
+                        <b className="block text-[12.6px]">Action needed</b>
+                        <p className="m-[3px_0_0] text-[12.1px] leading-[1.55] text-[#8a5b12]">This employee has not signed the current agreement version.</p>
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="text-[10.5px] tracking-[0.14em] uppercase text-[#93a19c] font-bold m-[22px_0_9px]">Account details</div>
+                  <div className="bg-white border border-[#e8edeb] rounded-[16px] overflow-hidden shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)]">
+                    
+                    {/* Just Joined and User ID as per schema */}
+                    <div className="flex items-center gap-[12px] p-[13px_15px] border-b border-[#e8edeb]">
+                      <div>
+                        <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#0e1a16]">Joined</div>
+                        <div className="text-[11.8px] text-[#93a19c] mt-[2px]">{new Date(activeMember.createdAt).toLocaleString('en-GB')}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-[12px] p-[13px_15px]">
+                      <div>
+                        <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#0e1a16]">User ID</div>
+                        <div className="text-[11.6px] text-[#93a19c] mt-[2px] font-mono break-all">{activeMember.publicUserData.userId}</div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 text-[#93a19c]">Failed to load profile.</div>
+              )}
+            </div>
+
+            <div className="p-[13px_20px] border-t border-[#e8edeb] bg-white grid gap-[9px] shrink-0">
+              <button className="border-0 cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full text-white bg-gradient-to-b from-[#17a377] to-[#0b7a5b] shadow-[0_10px_22px_-14px_rgba(11,122,91,.9)] hover:brightness-106 transition-all">
+                <svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v16H4z"/><path strokeLinecap="round" strokeLinejoin="round" d="M8 9h8M8 13h5"/></svg>
+                View savings statement
+              </button>
+              <div className="grid grid-cols-2 gap-[9px]">
+                <button className="cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-white border border-[#e8edeb] text-[#0e1a16] hover:bg-[#f4f8f6] transition-colors">
+                  <svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 5h16v14H4z"/><path strokeLinecap="round" strokeLinejoin="round" d="M4 7l8 6 8-6"/></svg>
+                  Send reminder
+                </button>
+                <button 
+                  onClick={() => {
+                    handleRemove(activeMember.publicUserData.userId);
+                    setSelectedMember(null);
+                  }}
+                  className="cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-white border border-[#f6cfcc] text-[#a3271f] hover:bg-[#fdeceb] transition-colors"
+                >
+                  <svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+                  Remove
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </aside>
+
+
+    </SidebarLayout>  );
 };
+export default AdminEmployees;

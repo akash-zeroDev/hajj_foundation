@@ -1,3 +1,4 @@
+const logAudit = require('../utils/auditLogger');
 const { getAuth } = require('@clerk/express');
 const AwardDraw = require('../models/AwardDraw');
 const Employee = require('../models/Employee');
@@ -45,7 +46,7 @@ exports.runDraw = async (req, res) => {
     });
 
     // Populate winners for the response
-    const populatedDraw = await AwardDraw.findById(draw._id).populate('winners', 'firstName lastName email companyName');
+    const populatedDraw = await AwardDraw.findById(draw._id).populate({ path: 'winners', populate: { path: 'organisationId', select: 'name' } });
 
     res.status(201).json({ success: true, data: populatedDraw });
   } catch (error) {
@@ -56,9 +57,33 @@ exports.runDraw = async (req, res) => {
 
 exports.getDraws = async (req, res) => {
   try {
-    const draws = await AwardDraw.find()
-      .populate('winners', 'firstName lastName email companyName')
-      .sort({ createdAt: -1 });
+    const AwardDraw = require('../models/AwardDraw');
+    const Organisation = require('../models/Organisation');
+    const { createClerkClient } = require('@clerk/clerk-sdk-node');
+    const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+    
+    let draws = await AwardDraw.find()
+      .populate('winners')
+      .sort({ createdAt: -1 })
+      .lean();
+      
+    for (let draw of draws) {
+      for (let winner of draw.winners) {
+        if (winner && winner.organisationId) {
+          const org = await Organisation.findById(winner.organisationId).lean();
+          winner.organisationId = org ? { _id: org._id, name: org.name } : null;
+          
+          try {
+            const clerkUser = await clerk.users.getUser(winner.clerkUserId);
+            const email = clerkUser.emailAddresses[0]?.emailAddress;
+            winner.email = email || 'No email found';
+          } catch(err) {
+            winner.email = 'Protected (Clerk)';
+          }
+        }
+      }
+    }
+    
     res.status(200).json({ success: true, data: draws });
   } catch (error) {
     console.error('Fetch draws error:', error);
@@ -69,6 +94,7 @@ exports.getDraws = async (req, res) => {
 exports.approveDraw = async (req, res) => {
   try {
     const drawId = req.params.id;
+    const adminId = getAuth(req).userId;
     const draw = await AwardDraw.findById(drawId);
 
     if (!draw) return res.status(404).json({ message: 'Draw not found' });

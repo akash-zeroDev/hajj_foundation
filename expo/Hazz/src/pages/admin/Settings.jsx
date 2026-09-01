@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../../context/ToastContext';
 import { useAuth, useOrganization } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { orgAdminNavigation } from '../../config/navigation';
 
 export const Settings = () => {
+  const { showToast } = useToast();
   const { getToken } = useAuth();
   const { organization } = useOrganization();
   const [orgData, setOrgData] = useState(null);
@@ -64,7 +66,7 @@ export const Settings = () => {
       }
     } catch (error) {
       console.error('Error updating settings:', error);
-      alert('Failed to update settings');
+      showToast('Failed to update settings', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -146,7 +148,7 @@ export const Settings = () => {
                 </div>
               </div>
               <p className="text-xs text-slate-500 mt-3">
-                Locked fields are bound by your service contract. If you need to update your registration number or fee structure, please contact Eden Holdings support.
+                Locked fields are bound by your service contract. If you need to update your registration number or fee structure, please contact Hajj Savings support.
               </p>
             </div>
 

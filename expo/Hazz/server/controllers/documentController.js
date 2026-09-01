@@ -23,10 +23,15 @@ exports.uploadDocument = async (req, res) => {
     }
 
     // Upload to Cloudinary using memory buffer
+    
     const uploadToCloudinary = () => {
       return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { resource_type: 'raw', folder: 'hajj_agreements' },
+          { 
+            resource_type: 'image', 
+            folder: 'hajj_agreements',
+            public_id: `hajj_master_agreement_${Date.now()}.pdf`
+          },
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
@@ -39,6 +44,7 @@ exports.uploadDocument = async (req, res) => {
     const cloudinaryResult = await uploadToCloudinary();
 
     // Determine the next version number
+
     const lastDoc = await GlobalDocument.findOne().sort({ version: -1 });
     const nextVersion = lastDoc ? lastDoc.version + 1 : 1;
 

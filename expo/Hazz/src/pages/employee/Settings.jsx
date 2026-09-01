@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../../context/ToastContext';
 import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { employeeNavigation } from '../../config/navigation';
 
 export const EmployeeSettings = () => {
+  const { showToast } = useToast();
   const { getToken, userId } = useAuth();
   const [employeeData, setEmployeeData] = useState(null);
   
@@ -66,7 +68,7 @@ export const EmployeeSettings = () => {
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Failed to update profile');
+      showToast('Failed to update profile', 'error');
     } finally {
       setIsSaving(false);
     }

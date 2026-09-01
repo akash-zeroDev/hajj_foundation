@@ -1,7 +1,10 @@
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { useToast } from '../context/ToastContext';
 import { useState, useEffect } from 'react';
 import { useUser, useAuth, useOrganization } from '@clerk/react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import SidebarLayout from '../layouts/SidebarLayout';
+import PrimaryButton from '../components/PrimaryButton';
 import { superAdminNavigation, orgAdminNavigation } from '../config/navigation';
 
 // ... (OldLayout and Employee/Admin Dashboards unchanged for now)
@@ -28,6 +31,7 @@ const OldLayout = ({ title, children, description }) => {
 };
 
 export const EmployeeDashboard = () => {
+  const { showToast } = useToast();
   const { getToken } = useAuth(); // EmployeeDashboard
   const { user, isLoaded: userLoaded } = useUser();
   const { organization, isLoaded: orgLoaded } = useOrganization();
@@ -36,6 +40,7 @@ export const EmployeeDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
     const [contribution, setContribution] = useState('');
+  const [isAgreed, setIsAgreed] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -98,7 +103,7 @@ export const EmployeeDashboard = () => {
       doc.save(`Hajj_Savings_Statement_${employeeData.firstName}_${employeeData.lastName}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF statement.');
+      showToast('Failed to generate PDF statement.', 'error');
     }
   };
 
@@ -143,6 +148,17 @@ export const EmployeeDashboard = () => {
         const data = await res.json();
         if (data.success) {
           setEmployeeData(data.data);
+          // Fetch active document for employee to sign
+          try {
+            const docRes = await fetch('http://localhost:5000/api/documents/active');
+            const docData = await docRes.json();
+            if (docData.success) {
+              setActiveDocument(docData.data);
+            }
+          } catch(e) {
+            console.error('Failed to fetch active document', e);
+          }
+          
           // Fetch transactions
           try {
             const txRes = await fetch('http://localhost:5000/api/financials/my-transactions', {
@@ -170,7 +186,7 @@ export const EmployeeDashboard = () => {
   const handleCompleteOnboarding = async (e) => {
     e.preventDefault();
     if (!contribution || Number(contribution) < 10) {
-      alert('Minimum contribution is £10');
+      showToast('Minimum contribution is £10', 'error');
       return;
     }
     setIsAccepting(true);
@@ -202,86 +218,210 @@ export const EmployeeDashboard = () => {
   }
 
   if (employeeData?.agreementStatus === 'pending') {
+    
     return (
-      <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 font-sans">
-        <div className="flex-grow flex flex-col items-center justify-center p-6 max-w-3xl mx-auto w-full">
-          <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 flex items-center justify-center rounded-full mb-8 shadow-lg shadow-emerald-500/10">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+      <div className="hs-onboard">
+        <style>{`
+  .hs-onboard {
+    --green:#0b7a5b; --green-600:#0a6b50; --green-400:#17a377; --mint:#9ff0d2;
+    --bg:#f4f7f6; --card:#fff; --line:#e6ecea;
+    --ink:#0e1a16; --ink-2:#5c6b65; --ink-3:#8a9994;
+    --amber:#8a5b12; --amber-soft:#fdf6e6; --amber-line:#f2e3c2;
+    --r:14px;
+    --shadow:0 1px 2px rgba(14,26,22,.04), 0 8px 24px -18px rgba(14,26,22,.35);
+    background: var(--bg); color: var(--ink);
+    font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .hs-onboard * { box-sizing: border-box; }
+  .hs-onboard .wrap { max-width: 820px; margin: 0 auto; padding: 34px 22px 60px; }
+  .hs-onboard .hero { text-align: center; margin-bottom: 26px; }
+  .hs-onboard .hero .ic { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 16px; display: grid; place-items: center; background: rgba(11,122,91,.10); color: var(--green); }
+  .hs-onboard .hero .ic svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.8; fill: none; }
+  .hs-onboard .hero h1 { margin: 0; font-size: 27px; letter-spacing: -.7px; }
+  .hs-onboard .hero p { margin: 8px auto 0; max-width: 520px; color: var(--ink-2); font-size: 14px; line-height: 1.6; }
+  .hs-onboard .steps { display: flex; align-items: center; gap: 8px; justify-content: center; margin: 22px 0 24px; }
+  .hs-onboard .step { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+  .hs-onboard .step i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11.5px; background: #e9efed; color: var(--ink-3); }
+  .hs-onboard .step.done i, .hs-onboard .step.now i { background: var(--green); color: #fff; }
+  .hs-onboard .step.now, .hs-onboard .step.done { color: var(--ink); }
+  .hs-onboard .steps .bar { width: 38px; height: 2px; border-radius: 2px; background: #e2e9e7; }
+  .hs-onboard .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); margin-bottom: 16px; text-align: left; }
+  .hs-onboard .card-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 11px; }
+  .hs-onboard .card-head .n { width: 24px; height: 24px; flex: 0 0 24px; border-radius: 8px; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: rgba(11,122,91,.10); color: var(--green); }
+  .hs-onboard .card-head h4 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+  .hs-onboard .card-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-3); }
+  .hs-onboard .card-body { padding: 20px; }
+  .hs-onboard .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .hs-onboard .field { display: grid; gap: 6px; }
+  .hs-onboard .field label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+  .hs-onboard input[type="text"], .hs-onboard input[type="tel"] { width: 100%; font: inherit; font-size: 14px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); outline: none; }
+  .hs-onboard input::placeholder { color: #b3bfbb; }
+  .hs-onboard input:focus { border-color: var(--green-400); box-shadow: 0 0 0 3px rgba(23,163,119,.14); }
+  .hs-onboard .mt { margin-top: 14px; }
+  .hs-onboard .doc { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fafcfb; }
+  .hs-onboard .doc-bar { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: #fff; }
+  .hs-onboard .doc-bar .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(11,122,91,.10); color: var(--green); }
+  .hs-onboard .doc-bar .ic svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.8; fill: none; }
+  .hs-onboard .doc-bar b { font-size: 13.4px; }
+  .hs-onboard .doc-bar small { display: block; color: var(--ink-3); font-size: 11.8px; }
+  .hs-onboard .doc-bar .btn-sm { margin-left: auto; }
+  .hs-onboard .btn-sm { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 7px 12px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+  .hs-onboard .btn-sm:hover { background: #f2f6f5; }
+  .hs-onboard .btn-sm svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
+  .hs-onboard .doc-body { height: 350px; padding: 0; overflow-y: hidden; font-size: 12.9px; line-height: 1.7; color: var(--ink-2); }
+  .hs-onboard .agree { display: flex; gap: 11px; align-items: flex-start; margin-top: 14px; padding: 13px 14px; border-radius: 11px; background: #fafcfb; border: 1px solid var(--line); cursor: pointer;}
+  .hs-onboard .agree input[type="checkbox"] { appearance: none; width: 17px; height: 17px; flex: 0 0 17px; margin: 1px 0 0; border: 1.5px solid #cfdcd7; border-radius: 5px; background: #fff; cursor: pointer; display: grid; place-items: center; padding: 0; }
+  .hs-onboard .agree input[type="checkbox"]:checked { background: var(--green); border-color: var(--green); }
+  .hs-onboard .agree input[type="checkbox"]:checked::after { content: ""; width: 9px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translateY(-1px); }
+  .hs-onboard .agree span { font-size: 12.9px; color: var(--ink-2); line-height: 1.55; }
+  .hs-onboard .agree b { color: var(--ink); }
+  .hs-onboard .amount { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 11px; background: #fff; overflow: hidden; max-width: 230px; }
+  .hs-onboard .amount .cur { padding: 0 13px; color: var(--ink-3); font-weight: 600; font-size: 14px; }
+  .hs-onboard .amount input { border: 0; box-shadow: none; font-size: 19px; font-weight: 700; padding: 12px 0; letter-spacing: -.4px; outline: none; flex: 1; min-width: 0; }
+  .hs-onboard .amount .per { padding: 0 13px; color: var(--ink-3); font-size: 12.5px; }
+  .hs-onboard .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .hs-onboard .chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 12.8px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+  .hs-onboard .chip:hover { background: #f2f6f5; }
+  .hs-onboard .chip.sel { background: var(--green); border-color: var(--green); color: #fff; }
+  .hs-onboard .notice { display: flex; gap: 11px; padding: 13px 14px; border-radius: 12px; background: var(--amber-soft); border: 1px solid var(--amber-line); color: var(--amber); font-size: 12.6px; line-height: 1.55; }
+  .hs-onboard .notice svg { width: 17px; height: 17px; flex: 0 0 17px; margin-top: 1px; stroke: currentColor; stroke-width: 1.9; fill: none; }
+  .hs-onboard .submit { border: 0; cursor: pointer; font: inherit; font-weight: 700; font-size: 14.5px; padding: 14px 18px; border-radius: 12px; width: 100%; color: #fff; background: linear-gradient(180deg,var(--green-400),var(--green)); box-shadow: 0 12px 26px -14px rgba(11,122,91,.95); display: inline-flex; align-items: center; justify-content: center; gap: 9px; }
+  .hs-onboard .submit:hover { filter: brightness(1.06); }
+  .hs-onboard .submit:disabled { background: #cfdcd7; box-shadow: none; cursor: not-allowed; }
+  .hs-onboard .submit svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+  .hs-onboard .foot-note { margin: 11px 0 0; text-align: center; font-size: 12.2px; color: var(--ink-3); }
+  @media(max-width:640px){ .hs-onboard .grid2 { grid-template-columns: 1fr; } .hs-onboard .steps .bar { width: 20px; } .hs-onboard .hero h1 { font-size: 23px; } }
+`}</style>
+        
+        <div className="wrap">
+          <div className="hero">
+            <div className="ic">
+              <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+            </div>
+            <h1>Complete your enrollment</h1>
+            <p>Three short steps to join {organization?.name || 'your employer'}'s savings plan — confirm your details, sign the agreement, and choose your monthly contribution.</p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white text-center">
-            Welcome, {user?.firstName || 'Employee'}!
-          </h1>
-          <p className="text-lg text-slate-400 mb-10 max-w-xl text-center">
-            To finalise your enrollment in {organization?.name}'s savings plan, please accept your employee agreement and set your monthly contribution.
-          </p>
 
-          <form onSubmit={handleCompleteOnboarding} className="w-full bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50 flex flex-col">
-            <div className="p-6 bg-slate-800 border-b border-slate-700">
-              
-              <h2 className="text-xl font-bold text-white mb-2">1. Personal Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">First Name</label>
-                  <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500" placeholder="John" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">Last Name</label>
-                  <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500" placeholder="Doe" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-300 mb-1">Phone Number</label>
-                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500" placeholder="+44 7700 900077" />
-                </div>
+          <div className="steps">
+            <div className={`step ${firstName && lastName && phone ? 'done' : 'now'}`} id="s1"><i>1</i>Details</div><div className="bar"></div>
+            <div className={`step ${isAgreed ? 'done' : ''}`} id="s2"><i>2</i>Agreement</div><div className="bar"></div>
+            <div className={`step ${Number(contribution) >= 10 ? 'done' : ''}`} id="s3"><i>3</i>Contribution</div>
+          </div>
+
+          <form onSubmit={handleCompleteOnboarding} id="form">
+            {/* 1 */}
+            <div className="card">
+              <div className="card-head">
+                <span className="n">1</span>
+                <div><h4>Personal details</h4><p>Used on your savings agreement.</p></div>
               </div>
-              <hr className="border-slate-700 mb-6" />
-              <h2 className="text-xl font-bold text-white mb-2">2. Employee Agreement</h2>
-              <p className="text-sm text-emerald-400 mb-4">Please read the document below carefully.</p>
-              <div className="h-64 bg-slate-100 rounded-lg overflow-hidden border border-slate-600 flex items-center justify-center">
-                {activeDocument ? (
-                  <iframe src={activeDocument.fileUrl} className="w-full h-full" title="Employee Agreement"></iframe>
-                ) : (
-                  <p className="text-slate-500">No active agreement document found. Please contact your administrator.</p>
-                )}
-              </div>
-            </div>
-            
-            <div className="p-6 bg-slate-800 border-b border-slate-700">
-              <h2 className="text-xl font-bold text-white mb-2">3. Monthly Contribution</h2>
-              <p className="text-sm text-slate-400 mb-4">How much would you like to automatically save from your salary each month? (Minimum £10)</p>
-              <div className="relative max-w-xs">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-slate-400 sm:text-lg">£</span>
+              <div className="card-body">
+                <div className="grid2">
+                  <div className="field">
+                    <label>First name</label>
+                    <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="John" autoComplete="given-name" />
+                  </div>
+                  <div className="field">
+                    <label>Last name</label>
+                    <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Doe" autoComplete="family-name" />
+                  </div>
                 </div>
-                <input
-                  type="number"
-                  min="10"
-                  required
-                  value={contribution}
-                  onChange={(e) => setContribution(e.target.value)}
-                  className="block w-full pl-8 pr-12 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sm:text-lg"
-                  placeholder="50"
-                />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <span className="text-slate-400 sm:text-sm">/ mo</span>
+                <div className="field mt">
+                  <label>Phone number</label>
+                  <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="+44 7700 900077" autoComplete="tel" />
                 </div>
               </div>
             </div>
 
-            <div className="p-6 bg-slate-800">
-              <button
-                type="submit"
-                disabled={isAccepting}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-xl transition shadow-lg shadow-emerald-900/20 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isAccepting ? 'Saving Profile...' : 'Accept & Complete Setup'}
-              </button>
+            {/* 2 */}
+            <div className="card">
+              <div className="card-head">
+                <span className="n">2</span>
+                <div><h4>Employee agreement</h4><p>Please read the document carefully before signing.</p></div>
+              </div>
+              <div className="card-body">
+                <div className="doc">
+                  <div className="doc-bar">
+                    <span className="ic"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg></span>
+                    <span>
+                      <b>{activeDocument?.title || 'Master Shariah Agreement'}</b>
+                      <small>PDF · v{activeDocument?.version || 1} · published {activeDocument ? new Date(activeDocument.createdAt).toLocaleDateString('en-GB') : 'N/A'}</small>
+                    </span>
+                    {activeDocument?.fileUrl && (
+                      <a href={activeDocument.fileUrl} target="_blank" rel="noopener noreferrer" className="btn-sm">
+                        Open PDF<svg viewBox="0 0 24 24"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
+                      </a>
+                    )}
+                  </div>
+                  <div className="doc-body">
+                    {activeDocument ? (
+                      <object data={activeDocument.fileUrl} type="application/pdf" style={{ width: '100%', height: '100%' }}>
+                        <iframe src={activeDocument.fileUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="Employee Agreement">
+                          <p>Your browser does not support PDFs. <a href={activeDocument.fileUrl} target="_blank" rel="noopener noreferrer">Download the PDF</a>.</p>
+                        </iframe>
+                      </object>
+                    ) : (
+                      <div style={{ padding: '16px 18px' }}>No active agreement document found. Please contact your administrator.</div>
+                    )}
+                  </div>
+                </div>
+                <label className="agree">
+                  <input type="checkbox" required checked={isAgreed} onChange={(e) => setIsAgreed(e.target.checked)} />
+                  <span><b>I have read and accept the Master Shariah Agreement.</b> I understand my contributions are held in trust and remain withdrawable.</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 3 */}
+            <div className="card">
+              <div className="card-head">
+                <span className="n">3</span>
+                <div><h4>Monthly contribution</h4><p>Automatically saved from your salary each month. Minimum £10.</p></div>
+              </div>
+              <div className="card-body">
+                <div className="amount">
+                  <span className="cur">£</span>
+                  <input type="text" inputMode="numeric" required value={contribution} onChange={e => setContribution(e.target.value.replace(/\D/g, ''))} />
+                  <span className="per">/ mo</span>
+                </div>
+                <div className="chips">
+                  {[25, 50, 100, 200].map(val => (
+                    <button 
+                      key={val} 
+                      type="button" 
+                      className={`chip ${Number(contribution) === val ? 'sel' : ''}`}
+                      onClick={() => setContribution(String(val))}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-body">
+                <div className="notice">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+                  <span>Your first collection happens on the 1st of next month. You will receive an email confirmation with your direct-debit reference.</span>
+                </div>
+                <button className="submit mt" type="submit" disabled={isAccepting || !isAgreed || Number(contribution) < 10 || !firstName || !lastName || !phone}>
+                  {isAccepting ? (
+                    'Saving Profile...'
+                  ) : (
+                    <><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Accept & complete setup</>
+                  )}
+                </button>
+                <p className="foot-note">By continuing you agree to the terms of the Master Shariah Agreement.</p>
+              </div>
             </div>
           </form>
         </div>
       </div>
     );
+
   }
 
   return (
@@ -476,13 +616,14 @@ export const EmployeeDashboard = () => {
 };
 
 export const AdminDashboard = () => {
-  const { getToken } = useAuth(); // AdminDashboard
+  const { showToast } = useToast();
+  const { getToken } = useAuth();
   const { organization, isLoaded: orgLoaded } = useOrganization();
   const [orgData, setOrgData] = useState(null);
   const [isLoadingBackend, setIsLoadingBackend] = useState(true);
-  const [empCount, setEmpCount] = useState(0);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const navigate = useNavigate();
 
   const handlePayAnnualFee = async () => {
     setIsRedirecting(true);
@@ -496,149 +637,106 @@ export const AdminDashboard = () => {
         body: JSON.stringify({ orgId: orgData._id })
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error(data.message);
-        setIsRedirecting(false);
-      }
+      if (data.url) window.location.href = data.url;
+      else throw new Error(data.message || 'Failed to create checkout session');
     } catch (err) {
-      console.error('Payment Error:', err);
+      showToast(err.message, 'error');
       setIsRedirecting(false);
     }
   };
 
-
-  useEffect(() => {
-    if (orgLoaded && organization) {
-      const verifyPaymentIfNeeded = async () => {
-        const params = new URLSearchParams(window.location.search);
-        const sessionId = params.get('session_id');
-        if (sessionId) {
-          try {
-            const token = await getToken();
-            await fetch(`http://localhost:5000/api/payments/verify-annual-fee?session_id=${sessionId}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            // Clear URL so it doesn't verify again on refresh
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } catch (err) {
-            console.error('Failed to verify payment', err);
-          }
-        }
-      };
-
-      verifyPaymentIfNeeded().then(() => {
-        getToken().then(token => fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}`, { headers: { Authorization: `Bearer ${token}` } })).then(res => {
-          if (!res.ok) throw new Error('Not found');
-          return res.json();
-        })
-        .then(data => {
-          setOrgData(data.data || data);
-          setIsLoadingBackend(false);
-        })
-        .catch(err => {
-          console.error(err);
-          setIsLoadingBackend(false);
-        });
-
-      });
-
-      organization.getMemberships().then(m => {
-        setEmpCount(m?.data?.length || 0);
-      }).catch(console.error);
-    } else if (orgLoaded && !organization) {
-      setIsLoadingBackend(false);
-    }
-  }, [orgLoaded, organization]);
-
   const handleAcceptAgreement = async () => {
     setIsAccepting(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}/accept-agreement`, { headers: { Authorization: `Bearer ${await getToken()}` },
-        method: 'PATCH'
+      const token = await getToken();
+      const res = await fetch(`http://localhost:5000/api/organisations/${organization.id}/accept`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
       });
+      const data = await res.json();
       if (res.ok) {
-        const updated = await res.json();
-        setOrgData(updated);
+        showToast("Agreement signed successfully!", "success");
+        setOrgData(data);
+      } else {
+        throw new Error(data.message);
       }
     } catch (error) {
-      console.error(error);
+      showToast(error.message, "error");
     } finally {
       setIsAccepting(false);
     }
   };
 
+  useEffect(() => {
+    const fetchOrganisationData = async () => {
+      if (!orgLoaded || !organization) return;
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+
+        if (sessionId) {
+          await fetch(`http://localhost:5000/api/payments/verify-annual-fee?session_id=${sessionId}`, {
+            headers: { Authorization: `Bearer ${await getToken()}` }
+          });
+          window.history.replaceState({}, document.title, window.location.pathname);
+          showToast('Payment successful!', 'success');
+        }
+
+        const token = await getToken();
+        const res = await fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setOrgData(data);
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to load organisation data', 'error');
+      } finally {
+        setIsLoadingBackend(false);
+      }
+    };
+    fetchOrganisationData();
+  }, [orgLoaded, organization]);
+
   if (!orgLoaded || isLoadingBackend) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 bg-emerald-200 rounded-full mb-4"></div>
-          <div className="h-4 w-32 bg-slate-200 rounded"></div>
+      <SidebarLayout navigation={orgAdminNavigation} title="Employer Dashboard">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#17a377]"></div>
         </div>
-      </div>
-    );
-  }
-
-  if (!organization) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="max-w-md w-full text-center bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">No Organisation Found</h2>
-          <p className="text-slate-500">You do not seem to be attached to an active organisation. Please ensure you clicked the invitation link.</p>
-        </div>
-      </div>
+      </SidebarLayout>
     );
   }
 
   if (orgData?.agreementStatus === 'pending') {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-[calc(100vh-70px)] bg-[#f4f7f6] flex flex-col p-4 sm:p-8">
         <div className="mx-auto max-w-3xl w-full">
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold text-white mb-3">Welcome to Hajj Savings</h1>
-            <p className="text-lg text-slate-400">Before managing your employees, you must review and accept your organisation's financial agreement.</p>
+            <h1 className="text-[28px] font-extrabold text-[#0e1a16] tracking-tight mb-2">Welcome to Hajj Savings</h1>
+            <p className="text-[15px] text-[#5c6b65]">Before managing your employees, you must review and accept your organisation's financial agreement.</p>
           </div>
-
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="bg-emerald-50 px-8 py-6 border-b border-emerald-100 flex justify-between items-center">
+          <div className="bg-white rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden border border-[#e6ecea]">
+            <div className="bg-[#fdf3e3] px-8 py-6 border-b border-[#f2e3c2] flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold text-emerald-900">{orgData.name} - Master Agreement</h2>
-                <p className="text-sm text-emerald-700 mt-1">Please read the document below carefully.</p>
-              </div>
-              <div className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                Action Required
+                <h2 className="text-[18px] font-bold text-[#c8811f] m-0 tracking-[-0.2px]">{orgData.name} - Master Agreement</h2>
               </div>
             </div>
-
-            <div className="p-8 flex-1 overflow-y-auto bg-slate-50">
+            <div className="p-8 bg-[#fcfdfd]">
               {orgData.agreementUrl ? (
-                <div className="w-full bg-slate-200 rounded-xl overflow-hidden border border-slate-300 h-96 flex flex-col">
-                   <div className="bg-slate-800 px-4 py-2 flex justify-between items-center text-white text-sm font-medium">
-                     <span>Legal_Agreement.pdf</span>
-                     <a href={orgData.agreementUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300">Open in New Tab ↗</a>
-                   </div>
-                   <iframe src={orgData.agreementUrl} className="w-full flex-1" title="Agreement Document"></iframe>
+                <div className="w-full bg-slate-100 rounded-xl overflow-hidden border border-[#e6ecea] h-96">
+                   <object data={orgData.agreementUrl} type="application/pdf" className="w-full h-full">
+                     <iframe src={orgData.agreementUrl} className="w-full h-full" title="Agreement Document">
+                       <p>Your browser does not support PDFs. <a href={orgData.agreementUrl} target="_blank" rel="noopener noreferrer">Download the PDF</a>.</p>
+                     </iframe>
+                   </object>
                 </div>
               ) : (
-                <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
-                  <p className="text-slate-500">No document was uploaded by the Super Admin.</p>
-                </div>
+                <div className="text-center py-12 border border-[#e6ecea] rounded-xl"><p className="text-[#8a9994] text-[13.5px]">No document available.</p></div>
               )}
-              
-              <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
-                <strong>Legal Notice:</strong> By clicking "I Accept" below, you digitally sign and bind <strong>{orgData.name}</strong> to the terms specified in this document. 
-                You also agree to pay the Annual Fee of <strong>£{orgData.annualFee.toLocaleString()}</strong>.
-              </div>
             </div>
-
-            <div className="px-8 py-6 bg-white border-t border-slate-200 flex items-center justify-between">
-              <p className="text-sm text-slate-500">Take your time to review. You cannot proceed until accepted.</p>
-              <button 
-                onClick={handleAcceptAgreement}
-                disabled={isAccepting}
-                className="px-8 py-3 bg-emerald-600 border border-transparent rounded-xl text-base font-bold text-white shadow-lg hover:bg-emerald-700 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/30 transition-all disabled:opacity-50"
-              >
+            <div className="px-8 py-6 bg-white border-t border-[#e6ecea] flex items-center justify-between">
+              <button onClick={handleAcceptAgreement} disabled={isAccepting} className="px-8 py-3 bg-[#0b7a5b] text-white rounded-[10px] text-[14px] font-bold hover:bg-[#17a377] transition-colors disabled:opacity-50 ml-auto">
                 {isAccepting ? 'Processing...' : 'I Accept & Sign Document'}
               </button>
             </div>
@@ -648,311 +746,334 @@ export const AdminDashboard = () => {
     );
   }
 
+  const stats = orgData?.dashboardStats || { totalEmployees: 0, totalCombinedSavings: 0, hajjJourneysWon: 0, pendingAgreements: 0, activityGraphData: [], recentEmployees: [] };
+  const currentMonth = new Date().getMonth();
+  const currentMonthData = stats.activityGraphData?.find(d => d.month === ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][currentMonth]);
+  const monthEnrolments = currentMonthData ? currentMonthData.employees : 0;
+
   return (
-    <SidebarLayout navigation={orgAdminNavigation} title="Employer Dashboard">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">{organization.name} Overview</h1>
-        <p className="text-sm text-slate-500">Manage your employees, view signed agreements, and pay annual fees.</p>
+    <SidebarLayout navigation={orgAdminNavigation} title="Overview">
+      <div className="flex items-end gap-4 mb-[18px] flex-wrap">
+        <div>
+          <h3 className="m-0 text-[23px] tracking-[-0.5px] font-bold text-[#0e1a16]">{orgData.name} Overview</h3>
+          <p className="m-0 mt-1 text-[#5c6b65] text-[13.5px]">Track your company's CSR impact, monitor engagement and manage alerts.</p>
+        </div>
+        <div className="ml-auto flex gap-[10px]">
+          <PrimaryButton 
+            onClick={() => navigate('/admin/employees')}
+            className="!text-[13.5px] !py-[11px] !px-[18px] !rounded-[10px] shadow-[0_10px_22px_-12px_rgba(11,122,91,.9)]"
+            icon={<svg className="w-4 h-4 stroke-current stroke-[2] fill-none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>}
+          >
+            Invite Employees
+          </PrimaryButton>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Status Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-sm font-medium text-slate-500 mb-4">Annual Fee Status</h3>
-          <div className="flex items-center gap-3">
-            {orgData?.annualFeeStatus === 'pending' ? (
-              <>
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-slate-900">£{orgData?.annualFee?.toLocaleString()}</p>
-                  <p className="text-sm text-amber-600 font-medium">Pending Payment</p>
-                </div>
-              </>
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px] relative overflow-hidden after:content-[''] after:absolute after:-bottom-10 after:-right-[30px] after:w-[120px] after:h-[120px] after:rounded-full after:bg-[radial-gradient(circle,rgba(23,163,119,.10),transparent_70%)]">
+          <div className="flex items-center justify-between relative z-10">
+            <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Staff Enrolled</span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><circle cx="9" cy="8" r="3.2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/></svg></span>
+          </div>
+          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16] relative z-10">{stats.totalEmployees}</div>
+          <span className={`text-[12.5px] font-semibold inline-flex items-center gap-[5px] relative z-10 ${monthEnrolments > 0 ? 'text-[#0b7a5b]' : 'text-[#8a9994]'}`}>
+            {monthEnrolments > 0 ? (
+              <><svg viewBox="0 0 24 24" className="w-[13px] h-[13px] stroke-current stroke-[2.2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/></svg>+{monthEnrolments} this month</>
+            ) : 'No new enrolments this month'}
+          </span>
+        </div>
+        
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px] relative overflow-hidden after:content-[''] after:absolute after:-bottom-10 after:-right-[30px] after:w-[120px] after:h-[120px] after:rounded-full after:bg-[radial-gradient(circle,rgba(23,163,119,.10),transparent_70%)]">
+          <div className="flex items-center justify-between relative z-10">
+            <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Combined Savings</span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><circle cx="12" cy="12" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="M14 9.5A2.5 2.5 0 1012 15"/></svg></span>
+          </div>
+          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16] relative z-10">£{stats.totalCombinedSavings.toLocaleString()}</div>
+          <div className="text-[12.5px] text-[#5c6b65] relative z-10">Funded towards Hajj by your staff</div>
+        </div>
+
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px] relative overflow-hidden after:content-[''] after:absolute after:-bottom-10 after:-right-[30px] after:w-[120px] after:h-[120px] after:rounded-full after:bg-[radial-gradient(circle,rgba(23,163,119,.10),transparent_70%)]">
+          <div className="flex items-center justify-between relative z-10">
+            <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Hajj Journeys Won</span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v6a8 8 0 01-16 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 20h6M12 18v2"/></svg></span>
+          </div>
+          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16] relative z-10">{stats.hajjJourneysWon}</div>
+          <span className="text-[12.5px] font-semibold inline-flex items-center gap-[5px] text-[#8a9994] relative z-10">No draws won yet</span>
+        </div>
+      </section>
+
+      <section className="p-[22px] rounded-[14px] border border-white/5 text-[#eaf6f1] bg-[radial-gradient(120%_120%_at_100%_0%,rgba(23,163,119,.35),transparent_60%),linear-gradient(135deg,#0b7a5b,#075c44)] flex flex-col md:flex-row md:items-center gap-[22px] shadow-[0_18px_34px_-22px_rgba(7,92,68,.9)] mb-4">
+        <div>
+          <h4 className="m-0 mb-[6px] text-[19px] text-white tracking-[-0.3px] font-bold">The Monthly Award Draw</h4>
+          <p className="m-0 text-[13.5px] text-white/80 max-w-[46ch] leading-[1.5]">Every active employee earns your company more collective chances to win the sponsored Hajj trip each month.</p>
+        </div>
+        <div className="md:ml-auto shrink-0 text-center px-[26px] py-[16px] rounded-[12px] bg-white/10 border border-white/10">
+          <span className="block text-[10px] tracking-[0.14em] uppercase text-white/70 font-semibold">Company Tickets</span>
+          <strong className="block mt-2 text-[32px] font-extrabold text-white leading-none">{stats.totalEmployees}</strong>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-4 mb-4">
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] flex flex-col">
+          <div className="flex items-center gap-3 px-[18px] py-[16px] border-b border-[#e6ecea]">
+            <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Activity &amp; Engagement</h4>
+            <span className="text-[12.5px] text-[#8a9994]">Enrolments per month</span>
+            <span className="ml-auto text-[11.5px] font-semibold px-[10px] py-[4px] rounded-full bg-[#f2f6f5] text-[#5c6b65]">Last 6 months</span>
+          </div>
+          <div className="p-[18px] flex-1">
+            <div className="h-[210px] w-full">
+               <ResponsiveContainer width="100%" height="100%">
+                 <BarChart data={stats.activityGraphData} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
+                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10.5, fill: '#8a9994' }} dy={10} />
+                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10.5, fill: '#8a9994' }} allowDecimals={false} />
+                   <RechartsTooltip 
+                     cursor={{ fill: '#f4f7f6' }}
+                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', fontSize: '12px' }}
+                   />
+                   <Bar dataKey="employees" radius={[6, 6, 0, 0]}>
+                     {stats.activityGraphData?.map((entry, index) => (
+                       <Cell key={`cell-${index}`} fill="#0b7a5b" />
+                     ))}
+                   </Bar>
+                 </BarChart>
+               </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] flex flex-col">
+          <div className="flex items-center gap-3 px-[18px] py-[16px] border-b border-[#e6ecea]">
+            <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Smart Alerts</h4>
+            {(orgData?.annualFeeStatus === 'pending' || stats.pendingAgreements > 0) ? (
+              <span className="ml-auto text-[11.5px] font-semibold px-[10px] py-[4px] rounded-full bg-[#fdf3e3] text-[#c8811f]">
+                {(orgData?.annualFeeStatus === 'pending' ? 1 : 0) + (stats.pendingAgreements > 0 ? 1 : 0)} Pending
+              </span>
             ) : (
-              <>
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-slate-900">£{orgData?.annualFee?.toLocaleString()}</p>
-                  <p className="text-sm text-emerald-600 font-medium">Paid Successfully</p>
-                </div>
-              </>
+               <span className="ml-auto text-[11.5px] font-semibold px-[10px] py-[4px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">All clear</span>
             )}
           </div>
-          {orgData?.annualFeeStatus === 'pending' && (
-            <button 
-              onClick={handlePayAnnualFee}
-              disabled={isRedirecting}
-              className="mt-4 w-full py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm disabled:bg-slate-700 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-            >
-              {isRedirecting ? (
-                <>
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  Connecting to Stripe...
-                </>
-              ) : (
-                'Pay Now'
-              )}
+          <ul className="m-0 p-0 list-none flex-1">
+            {orgData?.annualFeeStatus === 'pending' && (
+              <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4l9 16H3z"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v4M12 17h.01"/></svg></span>
+                <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Fee payment required</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Your annual fee of £{orgData?.annualFee?.toLocaleString()} is pending.</small></div>
+                <button onClick={handlePayAnnualFee} disabled={isRedirecting} className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap bg-transparent border-0 cursor-pointer p-0">{isRedirecting ? 'Connecting...' : 'Pay now'}</button>
+              </li>
+            )}
+            {orgData?.agreementStatus === 'signed' && (
+              <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.14)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5"/></svg></span>
+                <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Shariah agreement signed</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Master agreement v2 active for your organisation.</small></div>
+                <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View</a>
+              </li>
+            )}
+            {stats.pendingAgreements > 0 && (
+              <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span>
+                <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Action Required</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">{stats.pendingAgreements} employees are pending agreement signature.</small></div>
+                <Link to="/admin/employees" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Review</Link>
+              </li>
+            )}
+            {stats.totalEmployees < 2 && (
+              <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><circle cx="9" cy="8" r="3.2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/></svg></span>
+                <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Invite more staff</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Only {stats.totalEmployees} of your team has enrolled so far.</small></div>
+                <Link to="/admin/employees" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Invite</Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-4 mb-4">
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden">
+          <div className="flex items-center gap-3 px-[18px] py-[16px] border-b border-[#e6ecea]">
+            <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Recent Employees</h4>
+            <span className="text-[12.5px] text-[#8a9994]">Latest enrolments</span>
+            <Link to="/admin/employees" className="ml-auto text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View all</Link>
+          </div>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr>
+                  <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Employee</th>
+                  <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Monthly</th>
+                  <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Balance</th>
+                  <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Agreement</th>
+                  <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recentEmployees?.map((emp) => (
+                  <tr key={emp._id} className="hover:bg-[#f7faf9] transition-colors border-b border-[#e6ecea] last:border-0">
+                    <td className="px-[18px] py-[12px] text-[13.5px]">
+                      <span className="flex items-center gap-[10px] font-semibold text-[#0e1a16]">{emp.firstName} {emp.lastName}</span>
+                    </td>
+                    <td className="px-[18px] py-[12px] text-[13.5px] text-[#0e1a16]">£{emp.contribution || 0}</td>
+                    <td className="px-[18px] py-[12px] text-[13.5px] text-[#0e1a16]">£{emp.balance || 0}</td>
+                    <td className="px-[18px] py-[12px] text-[13.5px]">
+                      {emp.agreementStatus === 'signed' ? (
+                        <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">Signed</span>
+                      ) : emp.agreementStatus === 'pending' ? (
+                        <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#fdf3e3] text-[#c8811f]">Pending</span>
+                      ) : (
+                        <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#f2f6f5] text-[#5c6b65]">Invited</span>
+                      )}
+                    </td>
+                    <td className="px-[18px] py-[12px] text-[13.5px] text-[#0e1a16]">
+                      {new Date(emp.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </td>
+                  </tr>
+                ))}
+                {(!stats.recentEmployees || stats.recentEmployees.length === 0) && (
+                  <tr>
+                    <td colSpan="5" className="px-[18px] py-8 text-center text-[#8a9994] text-[13.5px]">No employees enrolled yet.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)]">
+          <div className="flex items-center gap-3 px-[18px] py-[16px] border-b border-[#e6ecea]">
+            <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Quick Actions</h4>
+          </div>
+          <div className="grid gap-[10px] p-[18px]">
+            <button onClick={() => navigate('/admin/employees')} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg></span>
+              Invite New Employees
             </button>
-          )}
-        </div>
-
-        {/* Agreement Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-sm font-medium text-slate-500 mb-4">Master Agreement</h3>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-            <div>
-              <p className="text-xl font-bold text-slate-900">Signed</p>
-              <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-600 font-medium hover:underline inline-flex items-center gap-1">
-                View Document
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-              </a>
-            </div>
+            <button onClick={handlePayAnnualFee} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><rect x="3" y="6" width="18" height="12" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18"/></svg></span>
+              Pay Annual Fee
+            </button>
+            <button onClick={() => navigate('/admin/agreements')} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M7 3h7l5 5v13H7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5"/></svg></span>
+              View Agreements
+            </button>
           </div>
         </div>
-
-        {/* Employees Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
-          <div>
-            <h3 className="text-sm font-medium text-slate-500 mb-1">Active Employees</h3>
-            <p className="text-3xl font-bold text-slate-900">0</p>
-          </div>
-          <Link to="/admin/employees" className="mt-4 w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition shadow-sm text-center block">
-            Manage Employees
-          </Link>
-        </div>
-      </div>
-
-      {/* Setup Checklist */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-          <h3 className="font-bold text-slate-800">Account Setup Checklist</h3>
-        </div>
-        <div className="divide-y divide-slate-100">
-          <div className="p-6 flex items-center gap-4 bg-emerald-50/30">
-            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <div>
-              <p className="font-bold text-slate-900">Accept Master Agreement</p>
-              <p className="text-sm text-slate-500">Completed on {new Date(orgData?.updatedAt).toLocaleDateString('en-GB')}</p>
-            </div>
-          </div>
-          <div className="p-6 flex items-center gap-4">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${orgData?.annualFeeStatus === 'pending' ? 'border-2 border-slate-300 text-slate-400' : 'bg-emerald-500 text-white'}`}>
-              {orgData?.annualFeeStatus === 'pending' ? '2' : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>}
-            </div>
-            <div>
-              <p className="font-bold text-slate-900">Pay Annual Setup Fee</p>
-              <p className="text-sm text-slate-500">Your organisation's £{orgData?.annualFee?.toLocaleString()} fee must be cleared by the Super Admin.</p>
-            </div>
-          </div>
-          <div className="p-6 flex items-center gap-4">
-            <div className="w-8 h-8 rounded-full border-2 border-slate-300 text-slate-400 flex items-center justify-center shrink-0">
-              3
-            </div>
-            <div>
-              <p className="font-bold text-slate-900">Add Employees</p>
-              <p className="text-sm text-slate-500">Onboard your staff so they can begin making monthly Hajj savings contributions.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-            </SidebarLayout>
+      </section>
+    </SidebarLayout>
   );
 };
 
+
 export const SuperAdminDashboard = () => {
-  const { getToken } = useAuth();
-  const location = useLocation();
-  const [isCreating, setIsCreating] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (location.search.includes('onboard=true')) {
-      setIsCreating(true);
-    }
-  }, [location.search]);
-  const [formData, setFormData] = useState({
-    orgName: '', companyNumber: '', address: '',
-    adminFirstName: '', adminLastName: '', adminEmail: '', adminPhone: '',
-    annualFee: ''
+  const [overviewData, setOverviewData] = useState({
+    recentOrgs: [],
+    stats: { totalOrgs: 0, activeMembers: 0, totalSavings: 0 },
+    alerts: { pendingDraws: 0, unpaidOrgs: 0 }
   });
-  const [file, setFile] = useState(null);
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-  const handleFileChange = (e) => setFile(e.target.files[0]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const token = await getToken();
-      
-      const submitData = new FormData();
-      Object.keys(formData).forEach(key => submitData.append(key, formData[key]));
-      if (file) submitData.append('agreementFile', file);
-
-      const response = await fetch('http://localhost:5000/api/organisations/onboard', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${await getToken()}`,
-          'Authorization': `Bearer ${token}`
-        },
-        body: submitData
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.message || 'Failed to onboard organisation');
-
-      alert("Success! " + data.message);
-      setIsCreating(false);
-      setFormData({
-        orgName: '', companyNumber: '', address: '',
-        adminFirstName: '', adminLastName: '', adminEmail: '', adminPhone: '',
-        annualFee: ''
-      });
-      setFile(null);
-    } catch (error) {
-      alert("Error: " + error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!isCreating) {
-    return (
-      <SidebarLayout navigation={superAdminNavigation} title="Dashboard Overview">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col items-center justify-center text-center min-h-[400px]">
-           <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-           </div>
-           <h3 className="text-xl font-bold text-slate-900 mb-2">No Organisations Yet</h3>
-           <p className="text-slate-500 max-w-md mx-auto mb-6">
-              You haven't onboarded any organisations yet. Get started by setting up the first participating organisation.
-           </p>
-           <button 
-             onClick={() => setIsCreating(true)}
-             className="flex items-center justify-center py-2.5 px-6 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition"
-           >
-              + Onboard Organisation
-           </button>
-        </div>
-      </SidebarLayout>
-    );
-  }
+  const [isLoading, setIsLoading] = useState(true);
+  const { getToken } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch('http://localhost:5000/api/organisations?limit=5', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        setOverviewData({
+          recentOrgs: data.organisations || [],
+          stats: { totalOrgs: data.totalOrganisations || 0, activeMembers: 0, totalSavings: 0 },
+          alerts: { pendingDraws: 0, unpaidOrgs: 0 }
+        });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOverview();
+  }, []);
 
   return (
-    <SidebarLayout navigation={superAdminNavigation} title="Onboard New Organisation">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-200 bg-slate-50/50">
-          <h2 className="text-xl font-bold text-slate-800">Organisation Onboarding Form</h2>
-          <p className="text-sm text-slate-500 mt-1">Fill out the details below to create a new tenant organisation and invite their administrator.</p>
+    <SidebarLayout navigation={superAdminNavigation} title="Super Admin Dashboard">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900">Platform Overview</h1>
+        <p className="text-sm text-slate-500">Manage organisations, monitor global savings, and run awards.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-sm font-medium text-slate-500 mb-1">Total Organisations</h3>
+          <p className="text-3xl font-bold text-slate-900">{overviewData.stats.totalOrgs}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-sm font-medium text-slate-500 mb-1">Active Members</h3>
+          <p className="text-3xl font-bold text-slate-900">0</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 className="text-sm font-medium text-slate-500 mb-1">Total Savings (Platform)</h3>
+          <p className="text-3xl font-bold text-emerald-600">£0</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <section className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden">
+            <div className="flex items-center gap-3 px-[18px] py-4 border-b border-[#e6ecea]">
+              <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Recent Organisations</h4>
+              <Link to="/superadmin/organisations" className="ml-auto text-[#0b7a5b] text-[12.5px] font-semibold hover:underline">View all</Link>
+            </div>
+            <div className="overflow-x-auto w-full">
+              <table className="w-full border-collapse text-left text-[13.5px]">
+                <thead>
+                  <tr>
+                    <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Organisation</th>
+                    <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Annual Fee</th>
+                    <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overviewData.recentOrgs.map((org, i) => (
+                    <tr key={i} className="hover:bg-[#f7faf9] border-b border-[#e6ecea] last:border-0 transition-colors">
+                      <td className="px-[18px] py-3 font-semibold text-[#0e1a16]">{org.name}</td>
+                      <td className="px-[18px] py-3">
+                        {org.annualFeeStatus === 'paid' ? (
+                          <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">Paid</span>
+                        ) : (
+                          <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#fdf3e3] text-[#c8811f]">Unpaid</span>
+                        )}
+                      </td>
+                      <td className="px-[18px] py-3 text-[#0e1a16]">{new Date(org.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                  {overviewData.recentOrgs.length === 0 && (
+                    <tr><td colSpan="3" className="px-[18px] py-4 text-center text-[#5c6b65]">No organisations onboarded yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          {/* Section 1 */}
-          <div>
-            <h3 className="text-lg font-bold text-emerald-800 border-b border-slate-200 pb-2 mb-5 flex items-center gap-2">
-              <span className="bg-emerald-100 text-emerald-800 w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
-              Company Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Organisation Name</label>
-                <input required type="text" name="orgName" value={formData.orgName} onChange={handleChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Company / Charity Number</label>
-                <input required type="text" name="companyNumber" value={formData.companyNumber} onChange={handleChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Registered Address</label>
-                <textarea required name="address" value={formData.address} onChange={handleChange} rows="3" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea>
-              </div>
+        <div className="space-y-6">
+          <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden">
+            <div className="px-[18px] py-4 border-b border-[#e6ecea]">
+              <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Quick Actions</h4>
+            </div>
+            <div className="p-4 space-y-3">
+              <PrimaryButton onClick={() => navigate('/superadmin?onboard=true')} className="w-full justify-center">
+                Onboard Organisation
+              </PrimaryButton>
+              <button onClick={() => navigate('/superadmin/awards')} className="w-full flex items-center justify-center gap-2 p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer font-inherit text-[13.5px] font-semibold text-[#0e1a16] hover:bg-slate-50 transition-colors">
+                Run Awards Draw
+              </button>
             </div>
           </div>
-
-          {/* Section 2 */}
-          <div>
-            <h3 className="text-lg font-bold text-emerald-800 border-b border-slate-200 pb-2 mb-5 flex items-center gap-2">
-              <span className="bg-emerald-100 text-emerald-800 w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
-              Administrator Profile
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
-                <input required type="text" name="adminFirstName" value={formData.adminFirstName} onChange={handleChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
-                <input required type="text" name="adminLastName" value={formData.adminLastName} onChange={handleChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Admin Email</label>
-                <input required type="email" name="adminEmail" value={formData.adminEmail} onChange={handleChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                <input required type="tel" name="adminPhone" value={formData.adminPhone} onChange={handleChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3 */}
-          <div>
-            <h3 className="text-lg font-bold text-emerald-800 border-b border-slate-200 pb-2 mb-5 flex items-center gap-2">
-              <span className="bg-emerald-100 text-emerald-800 w-6 h-6 rounded-full flex items-center justify-center text-sm">3</span>
-              Financials & Agreements
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Agreed Annual Fee</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-slate-500 sm:text-sm">£</span>
-                  </div>
-                  <input required type="number" name="annualFee" value={formData.annualFee} onChange={handleChange} className="w-full pl-8 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="0.00" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Initial Signed Agreement (PDF)</label>
-                <input type="file" accept=".pdf" onChange={handleFileChange} className="w-full px-4 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="pt-6 border-t border-slate-200 flex justify-end gap-4">
-            <button 
-              type="button" 
-              onClick={() => setIsCreating(false)}
-              className="px-6 py-2.5 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="px-6 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
-            >
-              {isLoading ? 'Processing...' : 'Complete Onboarding'}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </SidebarLayout>
   );
 };
+
 
 export const Unauthorized = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">

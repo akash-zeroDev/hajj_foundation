@@ -5,7 +5,7 @@ const Transaction = require('../models/Transaction');
 exports.getOperationalStats = async (req, res) => {
   try {
     const totalOrgs = await Organisation.countDocuments();
-    const suspendedOrgs = await Organisation.countDocuments({ status: 'suspended' });
+    const suspendedOrgs = await Organisation.countDocuments({ isSuspended: true });
     
     const totalEmployees = await Employee.countDocuments();
     const compliantEmployees = await Employee.countDocuments({ agreementStatus: 'signed' });
@@ -48,8 +48,8 @@ exports.getOperationalStats = async (req, res) => {
 exports.getLedgerExport = async (req, res) => {
   try {
     const transactions = await Transaction.find()
-      .populate('orgId', 'name clerkOrganizationId')
-      .populate('employeeId', 'firstName lastName email clerkUserId')
+      .populate('payerId')
+      
       .sort({ createdAt: -1 });
 
     const formattedData = transactions.map(tx => ({
@@ -60,9 +60,7 @@ exports.getLedgerExport = async (req, res) => {
       currency: tx.currency,
       status: tx.status,
       stripePaymentIntentId: tx.stripePaymentIntentId,
-      entityName: tx.type === 'revenue' 
-        ? tx.orgId?.name 
-        : `${tx.employeeId?.firstName} ${tx.employeeId?.lastName}`,
+      entityName: tx.payerModel === 'Organisation' ? tx.payerId?.name : `${tx.payerId?.firstName || ''} ${tx.payerId?.lastName || ''}`.trim(),
       entityType: tx.type === 'revenue' ? 'Employer' : 'Employee'
     }));
 

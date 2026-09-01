@@ -15,6 +15,8 @@ export const OrganisationDetails = () => {
   // Employees State
   const [employees, setEmployees] = useState(null);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [activeMember, setActiveMember] = useState(null);
 
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -325,7 +327,7 @@ export const OrganisationDetails = () => {
                   <tr><td colSpan="3" className="text-center py-8 text-slate-500">No employees found.</td></tr>
                 ) : (
                   (employees || []).map((member) => (
-                    <tr key={member.id} className="hover:bg-slate-50">
+                    <tr key={member.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => { setActiveMember(member); setSelectedMember(member); }}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {member.publicUserData.imageUrl && (
@@ -549,6 +551,75 @@ export const OrganisationDetails = () => {
         </div>
       )}
       
+    
+      {/* Employee Details Side Panel */}
+      <>
+        <div 
+          className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${selectedMember ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setSelectedMember(null)}
+        ></div>
+        <div className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[70] overflow-y-auto transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col ${selectedMember ? 'translate-x-0' : 'translate-x-full'}`}>
+          
+          <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+            <h2 className="text-lg font-bold text-slate-900">Employee Profile</h2>
+            <button onClick={() => setSelectedMember(null)} className="text-slate-400 hover:text-slate-600 p-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <div className="p-6 flex-grow flex flex-col items-center">
+            {activeMember && (
+              <>
+                {activeMember.publicUserData.imageUrl && (
+                  <img src={activeMember.publicUserData.imageUrl} alt="" className="w-24 h-24 rounded-full border-4 border-white shadow-md mb-4" />
+                )}
+                <h3 className="text-2xl font-bold text-slate-900">
+                  {activeMember.publicUserData.firstName || activeMember.publicUserData.lastName 
+                    ? `${activeMember.publicUserData.firstName || ''} ${activeMember.publicUserData.lastName || ''}`.trim() 
+                    : (
+                      <span className="italic text-slate-400 font-normal">
+                        {activeMember.publicUserData.identifier?.split('@')[0] || 'Awaiting setup'}
+                      </span>
+                    )
+                  }
+                </h3>
+                <p className="text-emerald-600 font-medium mb-8">{activeMember.publicUserData.identifier}</p>
+
+                <div className="w-full space-y-4">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Clerk User ID</p>
+                    <p className="text-sm font-mono text-slate-800 break-all">{activeMember.publicUserData.userId}</p>
+                  </div>
+                  
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Role in Organisation</p>
+                    <p className="text-sm text-slate-800 capitalize">
+                      {activeMember.role === 'org:admin' ? 'Administrator' : 'Employee'}
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Joined Date</p>
+                    <p className="text-sm text-slate-800">
+                      {new Date(activeMember.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <div className="p-6 border-t border-slate-200 bg-slate-50">
+            <button 
+              onClick={() => setSelectedMember(null)}
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              Close Profile
+            </button>
+          </div>
+        </div>
+      </>
+
     </SidebarLayout>
   );
 };

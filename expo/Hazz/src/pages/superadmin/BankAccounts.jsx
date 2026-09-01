@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../../context/ToastContext';
 import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
+import PrimaryButton from '../../components/PrimaryButton';
 import CustomSelect from '../../components/CustomSelect';
 import { superAdminNavigation } from '../../config/navigation';
 
 export const BankAccounts = () => {
+  const { showToast } = useToast();
   const { getToken } = useAuth();
   const [banks, setBanks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,150 +92,153 @@ export const BankAccounts = () => {
   const operatingBank = banks.find(b => b.accountType === 'operating_revenue');
   const trustBank = banks.find(b => b.accountType === 'hajj_trust_pool');
 
+  
   return (
     <SidebarLayout title="Bank Accounts" navigation={superAdminNavigation}>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Routing Configuration</h1>
-        <p className="text-slate-500 mt-1">Manage the destination bank accounts for automated Stripe payouts.</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: Current Configuration */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-              </div>
-              <h3 className="font-bold text-slate-800">Corporate Operating Account</h3>
-            </div>
-            {isLoading ? (
-              <p className="text-sm text-slate-500">Loading...</p>
-            ) : operatingBank ? (
-              <div>
-                <p className="text-sm text-slate-500 mb-1">Routes: <span className="font-medium text-slate-700">£12,300 Employer Fees</span></p>
-                <p className="text-lg font-bold text-slate-900">{operatingBank.bankName}</p>
-                <p className="text-sm text-slate-600 font-mono">**** **** **** {operatingBank.last4}</p>
-                <p className="text-xs text-slate-400 mt-2 uppercase">Stripe Ref: {operatingBank.stripeBankAccountId}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-red-500 font-medium">Not Configured</p>
-            )}
-          </div>
-
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-              </div>
-              <h3 className="font-bold text-slate-800">Hajj Trust Account</h3>
-            </div>
-            {isLoading ? (
-              <p className="text-sm text-slate-500">Loading...</p>
-            ) : trustBank ? (
-              <div>
-                <p className="text-sm text-slate-500 mb-1">Routes: <span className="font-medium text-slate-700">£50/mo Employee Savings</span></p>
-                <p className="text-lg font-bold text-slate-900">{trustBank.bankName}</p>
-                <p className="text-sm text-slate-600 font-mono">**** **** **** {trustBank.last4}</p>
-                <p className="text-xs text-slate-400 mt-2 uppercase">Stripe Ref: {trustBank.stripeBankAccountId}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-red-500 font-medium">Not Configured</p>
-            )}
-          </div>
+      <div className="flex flex-col">
+        {/* Page Head */}
+        <div className="mb-[18px]">
+          <h3 className="m-0 text-[23px] tracking-[-0.5px] font-bold text-[#0e1a16]">Routing Configuration</h3>
+          <p className="m-0 mt-[5px] text-[#5c6b65] text-[13.5px]">Manage the destination bank accounts used for automated payouts.</p>
         </div>
 
-        {/* Right Column: Update Form */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-              <h2 className="text-lg font-bold text-slate-800">Update Routing Destination</h2>
-              <p className="text-sm text-slate-500">Securely push new bank details to Stripe's Payout API.</p>
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-[16px] items-start">
+          
+          {/* Left Column: Accounts Stack */}
+          <div className="grid gap-[16px]">
+            {/* Corporate Account */}
+            <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px]">
+              <div className="flex items-center gap-[12px]">
+                <span className="w-[38px] h-[38px] rounded-[11px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b] flex-shrink-0">
+                  <svg className="w-[18px] h-[18px] stroke-current stroke-[1.8] fill-none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M5 10V8l7-4 7 4v2M6 10v8M10 10v8M14 10v8M18 10v8M3 20h18"/></svg>
+                </span>
+                <h4 className="m-0 text-[14.5px] font-bold tracking-[-0.2px] text-[#0e1a16] leading-snug">Corporate Operating<br/>Account</h4>
+                {operatingBank ? (
+                  <span className="ml-auto text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">Active</span>
+                ) : (
+                  <span className="ml-auto text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[#fdf3e3] text-[#c8811f]">Pending</span>
+                )}
+              </div>
+              <div className="mt-[14px] grid gap-[9px]">
+                <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Holder</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">{operatingBank?.bankName || 'Not set'}</b></div>
+                <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Sort code</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">{operatingBank ? '04-00-••' : 'Not set'}</b></div>
+                <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Account</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">{operatingBank ? `•••• ${operatingBank.last4}` : 'Not set'}</b></div>
+                <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Purpose</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">Employer fees</b></div>
+              </div>
+            </div>
+
+            {/* Trust Account */}
+            <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px]">
+              <div className="flex items-center gap-[12px]">
+                <span className="w-[38px] h-[38px] rounded-[11px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b] flex-shrink-0">
+                  <svg className="w-[18px] h-[18px] stroke-current stroke-[1.8] fill-none" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M8 10V7a4 4 0 118 0v3"/></svg>
+                </span>
+                <h4 className="m-0 text-[14.5px] font-bold tracking-[-0.2px] text-[#0e1a16] leading-snug">Hajj Trust Account</h4>
+                {trustBank ? (
+                  <span className="ml-auto text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">Active</span>
+                ) : (
+                  <span className="ml-auto text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[#fdf3e3] text-[#c8811f]">Pending</span>
+                )}
+              </div>
+              <div className="mt-[14px] grid gap-[9px]">
+                <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Holder</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">{trustBank?.bankName || 'Not set'}</b></div>
+                <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Sort code</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">{trustBank ? '04-00-••' : 'Not set'}</b></div>
+                <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Account</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">{trustBank ? `•••• ${trustBank.last4}` : 'Not set'}</b></div>
+                <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Purpose</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">Member savings</b></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Update Form */}
+          <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden">
+            <div className="p-[16px_18px] border-b border-[#e6ecea]">
+              <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Update Routing Destination</h4>
+              <p className="m-0 mt-[3px] text-[12.5px] text-[#8a9994]">Securely push new bank details to the payout provider.</p>
             </div>
             
-            <form onSubmit={handleUpdateBank} className="p-6 space-y-5">
-              
-              {message && (
-                <div className={`p-4 rounded-lg text-sm font-medium ${isError ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
-                  {message}
+            <div className="p-[18px]">
+              <form onSubmit={handleUpdateBank} className="grid gap-[16px]">
+                
+                <div className="grid gap-[6px]">
+                  <label className="text-[12.5px] font-semibold text-[#5c6b65]">Which routing rule are you updating?</label>
+                  <select 
+                    value={accountType} 
+                    onChange={(e) => setAccountType(e.target.value)}
+                    className="w-full font-inherit text-[14px] p-[11px_13px] border border-[#e6ecea] rounded-[10px] bg-white text-[#0e1a16] outline-none appearance-none focus:border-[#17a377] focus:shadow-[0_0_0_3px_rgba(23,163,119,0.14)]"
+                    style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%238a9994%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right .7rem top 50%', backgroundSize: '.65rem auto', paddingRight: '2.5rem' }}
+                  >
+                    <option value="operating_revenue">Corporate Operating Account (Employer Fees)</option>
+                    <option value="hajj_trust_pool">Hajj Trust Account (Member Savings)</option>
+                  </select>
                 </div>
-              )}
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Which routing rule are you updating?</label>
-                <CustomSelect
-                  className="w-full"
-                  value={accountType}
-                  onChange={setAccountType}
-                  options={[
-                    { value: "operating_revenue", label: "Corporate Operating Account (Employer Fees)" },
-                    { value: "hajj_trust_pool", label: "Hajj Trust Account (Employee Savings)" }
-                  ]}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Account Holder Name</label>
-                <input 
-                  type="text" 
-                  required
-                  value={accountHolderName}
-                  onChange={(e) => setAccountHolderName(e.target.value)}
-                  placeholder="Eden Holdings Ltd"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Sort Code</label>
+                <div className="grid gap-[6px]">
+                  <label className="text-[12.5px] font-semibold text-[#5c6b65]">Account holder name</label>
                   <input 
                     type="text" 
                     required
-                    pattern="[0-9]{6}"
-                    maxLength="6"
-                    value={sortCode}
-                    onChange={(e) => setSortCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="123456"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono"
+                    value={accountHolderName}
+                    onChange={(e) => setAccountHolderName(e.target.value)}
+                    placeholder="Hajj Savings"
+                    className="w-full font-inherit text-[14px] p-[11px_13px] border border-[#e6ecea] rounded-[10px] bg-white text-[#0e1a16] outline-none placeholder:text-[#b3bfbb] focus:border-[#17a377] focus:shadow-[0_0_0_3px_rgba(23,163,119,0.14)]"
                   />
-                  <p className="text-xs text-slate-500 mt-1">6 digits, no dashes</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Account Number</label>
-                  <input 
-                    type="text" 
-                    required
-                    pattern="[0-9]{8}"
-                    maxLength="8"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                    placeholder="12345678"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">8 digits</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-[14px]">
+                  <div className="grid gap-[6px]">
+                    <label className="text-[12.5px] font-semibold text-[#5c6b65]">Sort code</label>
+                    <input 
+                      type="text" 
+                      required
+                      inputMode="numeric"
+                      maxLength="6"
+                      value={sortCode}
+                      onChange={(e) => setSortCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="123456"
+                      className="w-full font-inherit text-[14px] p-[11px_13px] border border-[#e6ecea] rounded-[10px] bg-white text-[#0e1a16] outline-none placeholder:text-[#b3bfbb] focus:border-[#17a377] focus:shadow-[0_0_0_3px_rgba(23,163,119,0.14)] font-mono"
+                    />
+                    <span className="text-[11.5px] text-[#8a9994]">6 digits, no dashes</span>
+                  </div>
+                  <div className="grid gap-[6px]">
+                    <label className="text-[12.5px] font-semibold text-[#5c6b65]">Account number</label>
+                    <input 
+                      type="text" 
+                      required
+                      inputMode="numeric"
+                      maxLength="8"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                      placeholder="12345678"
+                      className="w-full font-inherit text-[14px] p-[11px_13px] border border-[#e6ecea] rounded-[10px] bg-white text-[#0e1a16] outline-none placeholder:text-[#b3bfbb] focus:border-[#17a377] focus:shadow-[0_0_0_3px_rgba(23,163,119,0.14)] font-mono"
+                    />
+                    <span className="text-[11.5px] text-[#8a9994]">8 digits</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-3 mt-6">
-                <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <p className="text-sm text-blue-800">
-                  <strong>Security Notice:</strong> Your full bank details are immediately transmitted to Stripe via a secure API and are <strong>never stored</strong> in our database. We only store the last 4 digits for display purposes.
-                </p>
-              </div>
+                <div className="flex gap-[11px] p-[13px_14px] rounded-[11px] bg-[#eef4ff] border border-[#dbe6ff] text-[12.8px] leading-[1.55] text-[#1e3a8a]">
+                  <svg className="w-[17px] h-[17px] flex-shrink-0 mt-[1px] stroke-current stroke-[1.8] fill-none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 11v5M12 8h.01"/></svg>
+                  <div><b className="font-bold">Security notice:</b> full bank details are transmitted directly to the payout provider over a secure API and are <b className="font-bold">never stored</b> in our database. Only the last 4 digits are kept for display.</div>
+                </div>
 
-              <div className="pt-4 border-t border-slate-100 flex justify-end">
-                <button 
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isSaving ? 'Updating API...' : 'Update Routing via Stripe'}
-                </button>
-              </div>
-            </form>
-
+                <div className="flex items-center gap-[10px] pt-[16px] border-t border-[#e6ecea] mt-[2px]">
+                  <button 
+                    type="button" 
+                    onClick={() => { setAccountHolderName(''); setSortCode(''); setAccountNumber(''); }}
+                    className="bg-white border border-[#e6ecea] text-[#0e1a16] hover:bg-[#f2f6f5] cursor-pointer font-inherit font-semibold text-[13.5px] p-[11px_18px] rounded-[10px] inline-flex items-center gap-[8px] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <PrimaryButton 
+                    type="submit"
+                    isLoading={isSaving}
+                    icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12l5 5L20 7" /></svg>}
+                    className="ml-auto"
+                  >
+                    {isSaving ? 'Updating...' : 'Update routing'}
+                  </PrimaryButton>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>

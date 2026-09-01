@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../../context/ToastContext';
 import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
+import PrimaryButton from '../../components/PrimaryButton';
 import { superAdminNavigation } from '../../config/navigation';
 
 export const AwardsManagement = () => {
+  const { showToast } = useToast();
   const { getToken } = useAuth();
   const [draws, setDraws] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -12,7 +15,9 @@ export const AwardsManagement = () => {
   const [drawName, setDrawName] = useState('');
   const [numWinners, setNumWinners] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, action: "", drawId: null });
   const [errorMsg, setErrorMsg] = useState('');
+  const [expandedDrawId, setExpandedDrawId] = useState(null);
 
   const fetchDraws = async () => {
     try {
@@ -66,8 +71,13 @@ export const AwardsManagement = () => {
     }
   };
 
-  const handleAction = async (drawId, action) => {
-    if (!window.confirm(`Are you sure you want to ${action} this draw?`)) return;
+  const handleActionClick = (drawId, action) => {
+    setConfirmModal({ isOpen: true, action, drawId });
+  };
+
+  const executeAction = async () => {
+    const { drawId, action } = confirmModal;
+    setConfirmModal({ isOpen: false, action: "", drawId: null });
     try {
       const token = await getToken();
       const res = await fetch(`http://localhost:5000/api/awards/${action}-draw/${drawId}`, {
@@ -82,7 +92,7 @@ export const AwardsManagement = () => {
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred.');
+      showToast('An error occurred.', 'error');
     }
   };
 
@@ -122,72 +132,71 @@ export const AwardsManagement = () => {
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
           </div>
-          <button 
+          <PrimaryButton 
             type="submit"
-            disabled={isDrawing}
-            className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+            isLoading={isDrawing}
+            className="w-full sm:w-auto"
           >
             {isDrawing ? 'Executing...' : 'Run Random Draw'}
-          </button>
+          </PrimaryButton>
         </form>
         {errorMsg && <p className="text-red-500 text-sm mt-3 font-medium">{errorMsg}</p>}
       </div>
 
       {/* Pending Approvals */}
       {pendingDraws.length > 0 && (
-        <div className="mb-8 border-2 border-amber-400 bg-amber-50 rounded-xl overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-amber-200 bg-amber-100 flex justify-between items-center">
+        <div className="mb-8 border border-slate-200 bg-white rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
             <div>
-              <h2 className="text-lg font-bold text-amber-900">Pending Approvals</h2>
-              <p className="text-amber-700 text-sm mt-0.5">These draws have been executed but winners are not yet notified.</p>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-bold text-slate-900">Pending Approvals</h2>
+                
+              </div>
+              <p className="text-slate-500 text-sm mt-1">These draws have been executed but winners are not yet notified.</p>
             </div>
-            <span className="flex h-3 w-3 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
-            </span>
           </div>
           
-          <div className="divide-y divide-amber-200">
+          <div className="divide-y divide-slate-100">
             {pendingDraws.map(draw => (
-              <div key={draw._id} className="p-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+              <div key={draw._id} className="p-6 bg-slate-50/50">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-4">
                   <div>
-                    <h3 className="text-xl font-bold text-amber-900">{draw.drawName}</h3>
-                    <p className="text-amber-700 text-sm">Executed on {new Date(draw.createdAt).toLocaleString()}</p>
+                    <h3 className="text-lg font-bold text-slate-900">{draw.drawName}</h3>
+                    <p className="text-slate-500 text-sm mt-0.5">Executed on {new Date(draw.createdAt).toLocaleString('en-GB')}</p>
                   </div>
                   <div className="flex gap-3 w-full sm:w-auto">
                     <button 
-                      onClick={() => handleAction(draw._id, 'discard')}
-                      className="flex-1 px-4 py-2 bg-white text-red-600 border border-red-200 hover:bg-red-50 font-medium rounded-lg transition"
+                      onClick={() => handleActionClick(draw._id, 'discard')}
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-white text-slate-600 border border-slate-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 text-sm font-semibold rounded-lg transition"
                     >
                       Discard Draw
                     </button>
                     <button 
-                      onClick={() => handleAction(draw._id, 'approve')}
-                      className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg shadow-sm transition"
+                      onClick={() => handleActionClick(draw._id, 'approve')}
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition"
                     >
                       Approve Winners
                     </button>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-amber-200 overflow-hidden">
+                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-amber-50 text-amber-800 font-medium border-b border-amber-200">
+                    <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
                       <tr>
-                        <th className="px-4 py-2">#</th>
-                        <th className="px-4 py-2">Employee Name</th>
-                        <th className="px-4 py-2">Organisation</th>
-                        <th className="px-4 py-2">Email</th>
+                        <th className="px-5 py-3">#</th>
+                        <th className="px-5 py-3">Employee Name</th>
+                        <th className="px-5 py-3">Organisation</th>
+                        <th className="px-5 py-3">Email</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-amber-100">
+                    <tbody className="divide-y divide-slate-100">
                       {draw.winners.map((winner, idx) => (
                         <tr key={winner._id}>
-                          <td className="px-4 py-2 font-medium text-amber-900">{idx + 1}</td>
-                          <td className="px-4 py-2">{winner.firstName} {winner.lastName}</td>
-                          <td className="px-4 py-2">{winner.companyName || 'Unknown'}</td>
-                          <td className="px-4 py-2 text-slate-500">{winner.email}</td>
+                          <td className="px-5 py-3 font-medium text-slate-400">{idx + 1}</td>
+                          <td className="px-5 py-3 font-medium text-slate-900">{winner.firstName} {winner.lastName}</td>
+                          <td className="px-5 py-3 text-slate-600">{winner.organisationId?.name || 'Unknown'}</td>
+                          <td className="px-5 py-3 text-slate-500">{winner.email || 'Protected (Clerk)'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -225,28 +234,64 @@ export const AwardsManagement = () => {
                 </tr>
               ) : (
                 pastDraws.map(draw => (
-                  <tr key={draw._id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
-                      {draw.drawName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {new Date(draw.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {draw.numberOfWinners} Employees
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {draw.status === 'completed' ? (
-                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                           Approved
-                         </span>
-                      ) : (
-                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                           Discarded
-                         </span>
-                      )}
-                    </td>
-                  </tr>
+                  <React.Fragment key={draw._id}>
+                    <tr 
+                      className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                      onClick={() => setExpandedDrawId(expandedDrawId === draw._id ? null : draw._id)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900 group-hover:text-emerald-700">
+                        <div className="flex items-center gap-2">
+                          <svg className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDrawId === draw._id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                          {draw.drawName}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {new Date(draw.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {draw.numberOfWinners} Employees
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {draw.status === 'completed' ? (
+                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                             Approved
+                           </span>
+                        ) : (
+                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                             Discarded
+                           </span>
+                        )}
+                      </td>
+                    </tr>
+                    {expandedDrawId === draw._id && (
+                      <tr className="bg-slate-50/50">
+                        <td colSpan="4" className="px-6 py-4 border-b border-slate-200">
+                          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm animate-fade-in">
+                            <table className="w-full text-sm text-left">
+                              <thead className="bg-slate-100 text-slate-600 font-medium border-b border-slate-200">
+                                <tr>
+                                  <th className="px-4 py-2 w-16">#</th>
+                                  <th className="px-4 py-2">Winner Name</th>
+                                  <th className="px-4 py-2">Organisation</th>
+                                  <th className="px-4 py-2">Email Address</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {draw.winners.map((winner, idx) => (
+                                  <tr key={winner._id || idx}>
+                                    <td className="px-4 py-2.5 font-medium text-slate-500">{idx + 1}</td>
+                                    <td className="px-4 py-2.5 font-bold text-slate-900">{winner.firstName} {winner.lastName}</td>
+                                    <td className="px-4 py-2.5 text-slate-600">{winner.organisationId?.name || 'Unknown'}</td>
+                                    <td className="px-4 py-2.5 text-slate-500">{winner.email || 'Protected (Clerk)'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))
               )}
             </tbody>
@@ -254,6 +299,38 @@ export const AwardsManagement = () => {
         </div>
       </div>
 
+    
+      {/* Custom Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all border border-slate-100">
+            <div className="p-7">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">
+                {confirmModal.action === 'discard' ? 'Discard Draw' : 'Approve Winners'}
+              </h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                Are you sure you want to {confirmModal.action} this draw? 
+                {confirmModal.action === 'approve' ? ' The selected winners will be finalized and permanently recorded in the audit logs.' : ' This action will permanently delete the draw and cannot be undone.'}
+              </p>
+              <div className="mt-8 flex justify-end gap-3">
+                <button 
+                  onClick={() => setConfirmModal({ isOpen: false, action: "", drawId: null })}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={executeAction}
+                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-sm ${confirmModal.action === 'discard' ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'}`}
+                >
+                  {confirmModal.action === 'discard' ? 'Discard Draw' : 'Approve Winners'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </SidebarLayout>
+
   );
 };

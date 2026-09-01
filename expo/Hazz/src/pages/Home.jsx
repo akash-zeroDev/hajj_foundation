@@ -1,5 +1,5 @@
 /**
- * Eden — Hajj Savings Fund landing page.
+ * Hajj Savings landing page.
  * Entire UI (primitives + every section) in one file.
  *
  * Requires: motion/react, the brand tokens/utilities in src/styles.css,
@@ -273,7 +273,7 @@ function Navbar({ dashboardLink }) {
             </span>
             <div>
               <span className={`block font-serif text-[1.55rem] font-light tracking-[0.32em] transition-colors duration-700 ${inverted ? "text-ivory" : "text-olive"}`}>
-                EDEN
+                HAJJ SAVINGS
               </span>
               <span className={`mt-1 block text-[0.5625rem] font-medium uppercase tracking-[0.3em] transition-colors duration-700 ${inverted ? "text-green-pale/80" : "text-green"}`}>
                 Hajj Savings Fund
@@ -585,7 +585,7 @@ function PurposeSection() {
           </Reveal>
           <Reveal delay={0.35}>
             <p className="body-copy mt-6 text-charcoal/75">
-              Eden gives organisations and their people a shared framework for that preparation:
+              Hajj Savings gives organisations and their people a shared framework for that preparation:
               agreed contributions, honest records, and progress that can be seen rather than
               guessed at.
             </p>
@@ -595,7 +595,7 @@ function PurposeSection() {
           </div>
           <Reveal delay={0.45}>
             <p className="mt-6 font-serif text-xl font-light italic text-olive-muted">
-              Mercy Mission World / Eden Holdings Ltd
+              Hajj Savings
             </p>
           </Reveal>
         </div>
@@ -1111,13 +1111,13 @@ function Footer({ dashboardLink }) {
       <div className="mx-auto max-w-[1440px] px-6 md:px-10">
         <div className="grid grid-cols-12 gap-y-12">
           <div className="col-span-12 md:col-span-5">
-            <p className="font-serif text-3xl font-light tracking-[0.3em]">EDEN</p>
+            <p className="font-serif text-3xl font-light tracking-[0.3em]">HAJJ SAVINGS</p>
             <p className="mt-3 text-[0.625rem] uppercase tracking-[0.3em] text-ivory/55">
               Hajj Savings Fund
             </p>
             <span aria-hidden className="mt-8 block h-px w-16 bg-green-muted" />
             <p className="mt-8 max-w-xs text-sm font-light leading-relaxed text-ivory/50">
-              Mercy Mission World / Eden Holdings Ltd
+              Hajj Savings
             </p>
           </div>
 
@@ -1147,7 +1147,7 @@ function Footer({ dashboardLink }) {
         </div>
 
         <div className="mt-20 flex flex-col gap-3 border-t border-ivory/12 pt-8 text-[0.6875rem] uppercase tracking-[0.16em] text-ivory/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} Eden Holdings Ltd. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Hajj Savings All rights reserved.</p>
           <p>A structured approach to Hajj savings.</p>
         </div>
       </div>

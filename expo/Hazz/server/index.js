@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const { clerkMiddleware } = require('@clerk/express');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const organisationRoutes = require('./routes/organisationRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -16,7 +17,6 @@ const reportRoutes = require('./routes/reportRoutes');
 const auditRoutes = require('./routes/auditRoutes');
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 // Add Clerk middleware to parse incoming auth tokens from React
@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 
 // Routes
 // (Old custom auth routes removed since we now use Clerk)
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/organisations', organisationRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/users', userRoutes);

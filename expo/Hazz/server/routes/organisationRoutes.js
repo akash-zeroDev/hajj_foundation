@@ -1,7 +1,7 @@
 const { isAuthenticated, requireSuperAdmin, requireOrgAdmin } = require('../middleware/auth');
 const express = require('express');
 const multer = require('multer');
-const { onboardOrganisation, getOrganisations, getOrganisationById, getOrganisationEmployees, updateOrganisation, toggleSuspension, archiveOrganisation, getOrganisationByClerkId, acceptAgreement } = require('../controllers/organisationController');
+const { getEmployeeAgreements, onboardOrganisation, getOrganisations, getOrganisationById, getOrganisationEmployees, updateOrganisation, toggleSuspension, archiveOrganisation, getOrganisationByClerkId, acceptAgreement } = require('../controllers/organisationController');
 const { requireAuth } = require('@clerk/express'); 
 
 const router = express.Router();
@@ -13,6 +13,9 @@ router.get('/', requireSuperAdmin, getOrganisations);
 
 // GET organisation by Clerk ID (Used by Org Admin frontend)
 router.get('/clerk/:clerkId', isAuthenticated, getOrganisationByClerkId);
+
+// GET employee agreements tracking for an organisation
+router.get('/clerk/:clerkId/employee-agreements', requireOrgAdmin, getEmployeeAgreements);
 
 // PATCH accept agreement by Clerk ID
 router.patch('/clerk/:clerkId/accept-agreement', requireOrgAdmin, acceptAgreement);
