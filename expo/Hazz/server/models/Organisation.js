@@ -43,6 +43,10 @@ const organisationSchema = new mongoose.Schema({
   agreementUrl: {
     type: String,
     required: false
+  },
+  adminEmail: {
+    type: String,
+    required: false
   }
 }, { timestamps: true });
 

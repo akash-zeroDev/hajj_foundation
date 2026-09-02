@@ -218,10 +218,15 @@ export const UsersList = () => {
                         </div>
                       )}
                       <div>
-                        <div className="font-medium text-slate-900">
+                        <div className="font-medium text-slate-900 flex items-center gap-2">
                           {user.firstName || user.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : (
                             <span className="italic text-slate-500 font-normal">
                               {user.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'Awaiting setup'}
+                            </span>
+                          )}
+                          {user.publicMetadata?.isSuspended && (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wider whitespace-nowrap">
+                              Suspended
                             </span>
                           )}
                         </div>
@@ -287,8 +292,8 @@ export const UsersList = () => {
                       {activeUser.emailAddresses?.[0]?.emailAddress}
                     </a>
                     <div className="flex gap-[6px] mt-[4px] flex-wrap">
-                      <span className={`text-[9.5px] font-semibold px-[7px] py-[2px] rounded-full border ${activeUser.banned ? 'bg-white/10 text-red-200 border-white/20' : 'bg-white/10 text-[#dbe8e3] border-white/20'}`}>
-                        {activeUser.banned ? 'Suspended' : 'Active'}
+                      <span className={`text-[9.5px] font-semibold px-[7px] py-[2px] rounded-full border ${activeUser.publicMetadata?.isSuspended ? 'bg-white/10 text-red-200 border-white/20' : 'bg-white/10 text-[#dbe8e3] border-white/20'}`}>
+                        {activeUser.publicMetadata?.isSuspended ? 'Suspended' : 'Active'}
                       </span>
                     </div>
                   </div>
@@ -415,7 +420,7 @@ export const UsersList = () => {
               <div className="p-[13px_20px] border-t border-[#e8edeb] bg-white grid grid-cols-3 gap-[9px] shrink-0">
                 <button 
                   onClick={handleResetPassword}
-                  disabled={isResetting || activeUser.banned}
+                  disabled={isResetting || activeUser.publicMetadata?.isSuspended}
                   className="cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-white border border-[#e8edeb] text-[#0e1a16] hover:bg-[#f4f8f6] transition-colors disabled:opacity-50"
                 >
                   {isResetting && (
@@ -428,7 +433,7 @@ export const UsersList = () => {
                   onClick={handleToggleSuspend}
                   disabled={isSuspending}
                   className={`cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-white border transition-colors disabled:opacity-50 ${
-                    activeUser.banned 
+                    activeUser.publicMetadata?.isSuspended 
                       ? 'border-[#e8edeb] text-[#0e1a16] hover:bg-[#f4f8f6]' 
                       : 'border-[#f6cfcc] text-[#a3271f] hover:bg-[#fdeceb]'
                   }`}
@@ -436,7 +441,7 @@ export const UsersList = () => {
                   {isSuspending && (
                     <svg className="animate-spin h-[14px] w-[14px]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                   )}
-                  {isSuspending ? 'Updating...' : (activeUser.banned ? 'Unsuspend User' : 'Suspend User')}
+                  {isSuspending ? 'Updating...' : (activeUser.publicMetadata?.isSuspended ? 'Unsuspend User' : 'Suspend User')}
                 </button>
                 
                 <button 

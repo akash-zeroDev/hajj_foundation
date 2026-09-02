@@ -1,40 +1,11 @@
-import { useUser, useOrganization, RedirectToSignIn } from '@clerk/react';
-import { Navigate } from 'react-router-dom';
+import re
 
-export const RequireRole = ({ role, children }) => {
-  const { isLoaded: userLoaded, isSignedIn, user } = useUser();
-  const { isLoaded: orgLoaded, membership } = useOrganization();
+with open('src/components/RequireRole.jsx', 'r') as f:
+    content = f.read()
 
-  if (!userLoaded || (isSignedIn && !orgLoaded)) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-700"></div>
-      </div>
-    );
-  }
+anchor = "return children;"
 
-  if (!isSignedIn) {
-    return <RedirectToSignIn />;
-  }
-
-  // Handle Superadmin (Global Role)
-  if (role === 'superadmin') {
-    if (user.publicMetadata?.role !== 'superadmin') {
-      return <Navigate to="/unauthorized" replace />;
-    }
-  } 
-  // Handle Org Admin (Clerk B2B Role)
-  else if (role === 'org:admin') {
-    if (!membership || membership.role !== 'org:admin') {
-      // If they are a superadmin, gently redirect them to their own dashboard
-      if (user.publicMetadata?.role === 'superadmin') {
-         return <Navigate to="/superadmin" replace />;
-      }
-      return <Navigate to="/unauthorized" replace />;
-    }
-  }
-
-  
+lock_screen = """
   // Check for User Suspension
   if (user?.publicMetadata?.isSuspended) {
     return (
@@ -70,5 +41,10 @@ export const RequireRole = ({ role, children }) => {
   }
 
   return children;
+"""
 
-};
+if "Account Suspended" not in content:
+    content = content.replace(anchor, lock_screen)
+
+with open('src/components/RequireRole.jsx', 'w') as f:
+    f.write(content)

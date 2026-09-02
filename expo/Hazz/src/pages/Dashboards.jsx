@@ -65,7 +65,7 @@ export const EmployeeDashboard = () => {
     }
   }, [employeeData]);
 
-  const handleSaveBankSettings = async (triggerFailure = false) => {
+  const handleSaveBankSettings = async () => {
     setIsSavingBank(true);
     try {
       const token = await getToken();
@@ -75,12 +75,12 @@ export const EmployeeDashboard = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ autoPayEnabled, bankDetails, triggerFailure })
+        body: JSON.stringify({ autoPayEnabled, bankDetails })
       });
       const data = await res.json();
       if (data.success) {
         setEmployeeData(data.data);
-        showToast(triggerFailure ? 'Simulated failed payment' : 'Bank settings saved successfully', triggerFailure ? 'error' : 'success');
+        showToast('Bank settings saved successfully', 'success');
         
         // Reload transactions
         const txRes = await fetch('http://localhost:5000/api/financials/my-transactions', {
@@ -507,7 +507,7 @@ export const EmployeeDashboard = () => {
         .hs-portal .top { background: radial-gradient(120% 180% at 0% 0%, rgba(23,163,119,.35), transparent 60%), linear-gradient(180deg,var(--green),var(--green-600)); color: #fff; }
         .hs-portal .top-in { max-width: 1120px; margin: 0 auto; padding: 0 24px; height: 66px; display: flex; align-items: center; gap: 14px; }
         .hs-portal .logo { display: flex; align-items: center; gap: 11px; font-weight: 700; font-size: 17px; letter-spacing: -.3px; }
-        .hs-portal .logo .mark { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.16); font-size: 13px; font-weight: 800; }
+        
         .hs-portal .top .right { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 13.5px; color: rgba(255,255,255,.82); }
         .hs-portal .top .right b { color: #fff; font-weight: 600; }
         .hs-portal .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; }
@@ -584,7 +584,7 @@ export const EmployeeDashboard = () => {
 
       <header className="top">
         <div className="top-in">
-          <div className="logo"><span className="mark">HS</span>Hajj Savings Fund</div>
+          <div className="logo">Hajj Savings Fund</div>
           <div className="right">
             <span className="hide">Welcome, <b id="who">
               {[employeeData?.firstName, employeeData?.lastName].filter(Boolean).join(' ') || 
@@ -703,8 +703,14 @@ export const EmployeeDashboard = () => {
                   </div>
                   <div className="r">
                     <span className="k">Shariah agreement</span>
-                    <span className="v">Signed</span>
-                    <span className="a"><span className="pill"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Done</span></span>
+                    <span className="v">{employeeData?.agreementStatus === 'signed' ? 'Signed' : 'Pending'}</span>
+                    <span className="a">
+                      {employeeData?.agreementStatus === 'signed' ? (
+                        <span className="pill"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Done</span>
+                      ) : (
+                        <span className="pill warn">Action Required</span>
+                      )}
+                    </span>
                   </div>
                   <div className="r">
                     <span className="k">Direct debit mandate</span>
@@ -825,8 +831,8 @@ export const EmployeeDashboard = () => {
                   <span className="ic"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M10 13h7M10 17h5"/></svg></span>
                   <h3>My signed agreement</h3>
                   <p>View the version of the Shariah Master Agreement you digitally signed.</p>
-                  {employeeData?.agreementUrl ? (
-                    <a href={employeeData.agreementUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" onClick={() => trackDocumentActivity('VIEWED_SIGNED_CONTRACT', `Employee viewed their signed agreement`)}>
+                  {employeeData?.signedDocumentId?.fileUrl && employeeData?.agreementStatus === 'signed' ? (
+                    <a href={employeeData.signedDocumentId.fileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" onClick={() => trackDocumentActivity('VIEWED_SIGNED_CONTRACT', `Employee viewed their signed agreement`)}>
                       <svg viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></svg>View contract
                     </a>
                   ) : (
@@ -907,14 +913,9 @@ export const EmployeeDashboard = () => {
                   </div>
                 </div>
                 <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
-                  <button className="btn btn-primary" onClick={() => handleSaveBankSettings(false)} disabled={isSavingBank}>
+                  <button className="btn btn-primary" onClick={handleSaveBankSettings} disabled={isSavingBank}>
                     {isSavingBank ? 'Saving...' : 'Save Settings & Setup'}
                   </button>
-                  {autoPayEnabled && (
-                    <button className="btn btn-ghost" style={{ color: 'var(--amber)', borderColor: 'var(--amber-soft)' }} onClick={() => handleSaveBankSettings(true)} disabled={isSavingBank}>
-                      Simulate Failed Payment
-                    </button>
-                  )}
                 </div>
               </div>
             </div>

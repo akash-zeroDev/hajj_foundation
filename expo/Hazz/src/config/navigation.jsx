@@ -2,10 +2,10 @@
 
 export const superAdminNavigation = [
   { name: 'Dashboard Overview', href: '/superadmin', category: 'Overview' },
-  { name: 'Organisations', href: '/superadmin/organisations', badge: '12', category: 'Overview' },
+  { name: 'Organisations', href: '/superadmin/organisations', category: 'Overview' },
   { name: 'Users', href: '/superadmin/users', category: 'Overview' },
   { name: 'Payments & Revenues', href: '/superadmin/payments', category: 'Finance' },
-  { name: 'Awards', href: '/superadmin/awards', badge: '3', category: 'Finance' },
+  { name: 'Awards', href: '/superadmin/awards', category: 'Finance' },
   { name: 'Bank Accounts', href: '/superadmin/banks', category: 'Finance' },
   { name: 'Documents', href: '/superadmin/documents', category: 'Records' },
   { name: 'Reports & Audit', href: '/superadmin/reports', category: 'Records' },

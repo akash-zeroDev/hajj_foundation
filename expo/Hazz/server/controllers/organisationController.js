@@ -62,7 +62,8 @@ exports.onboardOrganisation = async (req, res) => {
       companyNumber,
       registeredAddress: address,
       annualFee: Number(annualFee),
-      agreementUrl
+      agreementUrl,
+      adminEmail
     });
 
     await newOrg.save();
@@ -202,6 +203,15 @@ exports.toggleSuspension = async (req, res) => {
 
     org.isSuspended = !org.isSuspended;
     await org.save();
+
+    try {
+        await clerk.organizations.updateOrganization({
+            organizationId: org.clerkOrganizationId,
+            publicMetadata: { isSuspended: org.isSuspended }
+        });
+    } catch (clerkErr) {
+        console.error('Failed to sync suspension to Clerk:', clerkErr);
+    }
 
     res.status(200).json(org);
   } catch (error) {

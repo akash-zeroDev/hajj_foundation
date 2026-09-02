@@ -164,7 +164,7 @@ const Transaction = require('../models/Transaction');
 exports.updateBankSettings = async (req, res) => {
   try {
     const { id } = req.params;
-    const { autoPayEnabled, bankDetails, triggerFailure } = req.body;
+    const { autoPayEnabled, bankDetails } = req.body;
     
     const employee = await Employee.findById(id);
     if (!employee) return res.status(404).json({ success: false, message: 'Employee not found' });
@@ -174,37 +174,22 @@ exports.updateBankSettings = async (req, res) => {
       employee.bankDetails = bankDetails;
     }
     
-    // Simulate activation & debit
+    // Simulate activation & debit (Success only)
     if (autoPayEnabled) {
       employee.subscriptionStatus = 'active';
       
-      if (triggerFailure) {
-        // Create a fake failed transaction
-        await Transaction.create({
-          amount: employee.monthlyContribution,
-          currency: 'GBP',
-          type: 'employee_contribution',
-          status: 'failed',
-          payerId: employee._id,
-          payerModel: 'Employee',
-          orgId: employee.organisationId,
-          stripeSessionId: 'simulated_failure_' + Date.now()
-        });
-        employee.subscriptionStatus = 'past_due';
-      } else {
-        // Create a successful transaction
-        await Transaction.create({
-          amount: employee.monthlyContribution,
-          currency: 'GBP',
-          type: 'employee_contribution',
-          status: 'succeeded',
-          payerId: employee._id,
-          payerModel: 'Employee',
-          orgId: employee.organisationId,
-          stripeSessionId: 'simulated_success_' + Date.now()
-        });
-        employee.balance = (employee.balance || 0) + employee.monthlyContribution;
-      }
+      // Create a successful transaction
+      await Transaction.create({
+        amount: employee.monthlyContribution,
+        currency: 'GBP',
+        type: 'employee_contribution',
+        status: 'succeeded',
+        payerId: employee._id,
+        payerModel: 'Employee',
+        orgId: employee.organisationId,
+        stripeSessionId: 'simulated_success_' + Date.now()
+      });
+      employee.balance = (employee.balance || 0) + employee.monthlyContribution;
     } else {
       employee.subscriptionStatus = 'pending';
     }

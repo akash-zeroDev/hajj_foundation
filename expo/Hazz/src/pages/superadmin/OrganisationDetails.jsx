@@ -359,6 +359,21 @@ export const OrganisationDetails = () => {
                 <p className="text-sm font-mono text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 break-all">{org._id}</p>
               </div>
               <div className="border-t border-slate-100 pt-6">
+                <p className="text-xs text-slate-500 mb-1">Admin Contact Email</p>
+                <p className="text-sm font-medium text-slate-800 break-all">
+                  {org.adminEmail ? (
+                    <span className="flex items-center gap-2">
+                      {org.adminEmail}
+                      {org.agreementStatus === 'pending' && (
+                        <span className="text-xs font-normal text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Invite Pending</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 italic">Not recorded</span>
+                  )}
+                </p>
+              </div>
+              <div className="border-t border-slate-100 pt-6">
                 <p className="text-xs text-slate-500 mb-1">Registered Address</p>
                 <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">{org.registeredAddress}</p>
               </div>
