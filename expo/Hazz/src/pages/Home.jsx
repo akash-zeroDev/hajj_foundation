@@ -239,12 +239,6 @@ function Navbar({ dashboardLink }) {
           className="mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-6 md:px-10"
         >
           <a href="#top" className="block leading-none flex items-center gap-3">
-            <span className={`flex-shrink-0 transition-colors duration-700 ${inverted ? "text-ivory" : "text-green"}`}>
-              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z" opacity="0.8"/>
-                <circle cx="12" cy="12" r="3" fill="white" />
-              </svg>
-            </span>
             <div>
               <span className={`block font-serif text-[1.55rem] font-light tracking-[0.32em] transition-colors duration-700 ${inverted ? "text-ivory" : "text-olive"}`}>
                 HAJJ SAVINGS
