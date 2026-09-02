@@ -5,7 +5,8 @@ const Transaction = require('../models/Transaction');
 exports.getOperationalStats = async (req, res) => {
   try {
     const totalOrgs = await Organisation.countDocuments();
-    const suspendedOrgs = await Organisation.countDocuments({ isSuspended: true });
+    const archivedOrgs = await Organisation.countDocuments({ isArchived: true });
+    const suspendedOrgs = await Organisation.countDocuments({ isSuspended: true, isArchived: { $ne: true } });
     
     const totalEmployees = await Employee.countDocuments();
     const activeEmployees = await Employee.countDocuments({ isRemoved: { $ne: true } });
@@ -24,8 +25,9 @@ exports.getOperationalStats = async (req, res) => {
     const stats = {
       organizations: {
         total: totalOrgs,
-        active: totalOrgs - suspendedOrgs,
-        suspended: suspendedOrgs
+        active: totalOrgs - suspendedOrgs - archivedOrgs,
+        suspended: suspendedOrgs,
+        archived: archivedOrgs
       },
       employees: {
         total: totalEmployees,

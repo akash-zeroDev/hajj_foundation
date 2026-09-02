@@ -1,15 +1,35 @@
+import { OnboardOrgModal } from '../../components/OnboardOrgModal';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@clerk/react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import CustomSelect from '../../components/CustomSelect';
 import PrimaryButton from '../../components/PrimaryButton';
+import { Plus, Search } from 'lucide-react';
+
 import SearchFilterBar from '../../components/SearchFilterBar';
 import { superAdminNavigation } from '../../config/navigation';
 
 export const OrganisationsList = () => {
   const { getToken } = useAuth(); // OrganisationsList
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const location = useLocation();
+  
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('onboard') === 'true') {
+      setShowModal(true);
+    }
+  }, [location]);
+
+  const handleCloseModal = (success) => {
+    setShowModal(false);
+    navigate('/superadmin/organisations', { replace: true });
+    if (success) fetchOrganisations();
+  };
+
   const [organisations, setOrganisations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -83,8 +103,8 @@ export const OrganisationsList = () => {
       
       <div className="flex justify-end mb-6">
         <PrimaryButton 
-          onClick={() => navigate('/superadmin?onboard=true')}
-          icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>}
+          onClick={() => setShowModal(true)}
+          icon={<Plus className="w-5 h-5" />}
         >
           Onboard Organisation
         </PrimaryButton>
@@ -92,18 +112,13 @@ export const OrganisationsList = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
         <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row gap-4 justify-between items-center">
-          <div className="relative w-full sm:w-64">
-            <input 
-              type="text" 
-              placeholder="Search by name or ID..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500" 
-            />
-            <svg className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+          <SearchFilterBar 
+            searchTerm={searchQuery} 
+            setSearchTerm={setSearchQuery} 
+            placeholder="Search by name or ID..." 
+            containerClassName="w-full sm:w-64"
+            inputClassName="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
           
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
             
@@ -238,6 +253,7 @@ export const OrganisationsList = () => {
           </div>
         </div>
       </div>
+      <OnboardOrgModal isOpen={showModal} onClose={handleCloseModal} />
     </SidebarLayout>
   );
 };

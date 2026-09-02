@@ -630,7 +630,7 @@ function JourneyTimeline() {
                 <motion.span
                   aria-hidden
                   className="absolute left-0 top-[6px] h-[7px] w-[7px] rounded-full bg-olive/25 md:top-0"
-                  whileInView={{ backgroundColor: "var(--green)", scale: 1.15 }}
+                  whileInView={{ backgroundColor: "#286142", scale: 1.15 }}
                   viewport={{ once: true, margin: "-20% 0px -20% 0px" }}
                   transition={{ duration: 0.6, delay: 0.15 + i * 0.1 }}
                 />
@@ -691,7 +691,7 @@ function EcosystemSection() {
                   <span className="relative block py-3">
                     <span
                       aria-hidden
-                      className="absolute -left-[27px] top-[18px] h-[7px] w-[7px] rounded-full bg-green"
+                      className="absolute -left-[27.5px] top-1/2 -translate-y-1/2 h-[7px] w-[7px] rounded-full bg-green"
                     />
                     <span
                       className={`text-[0.875rem] uppercase tracking-[0.18em] ${
@@ -722,10 +722,10 @@ function EcosystemSection() {
                   <ul className="space-y-4">
                     {side.points.map((p, i) => (
                       <Reveal as="li" key={p} delay={0.2 + i * 0.07}>
-                        <span className="flex items-baseline gap-3 text-[1.05rem] font-light text-charcoal/80">
+                        <span className="flex items-center gap-3 text-[1.05rem] font-light text-charcoal/80">
                           <span
                             aria-hidden
-                            className="h-[6px] w-[6px] shrink-0 translate-y-[-3px] rounded-full bg-green"
+                            className="h-[6px] w-[6px] shrink-0 rounded-full bg-green"
                           />
                           {p}
                         </span>
@@ -844,83 +844,6 @@ function OrganisationEmployeeSection() {
 /* Contribution statement                                              */
 /* ------------------------------------------------------------------ */
 
-function ContributionSection() {
-  return (
-    <section id="clarity" className="bg-ivory py-28 md:py-44">
-      <div className="mx-auto max-w-[1440px] px-6 md:px-10">
-        <div className="grid grid-cols-12 gap-y-14 lg:gap-x-16">
-          <div className="col-span-12 lg:col-span-4">
-            <Reveal>
-              <Eyebrow tone="green">Clarity</Eyebrow>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <h2 className="display mt-7 text-[2.35rem] text-olive sm:text-[3.4rem]">
-                Know where
-                <br />
-                you stand.
-              </h2>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <p className="body-copy mt-7 max-w-sm text-charcoal/70">
-                No guesswork, no vague balances. A plain statement of what has been contributed and
-                what remains ahead — the way a serious commitment deserves to be recorded.
-              </p>
-            </Reveal>
-            <Reveal delay={0.3}>
-              <p className="mt-10 text-[0.75rem] uppercase tracking-[0.2em] text-olive-muted">
-                Illustrative example
-              </p>
-            </Reveal>
-          </div>
-
-          <div className="col-span-12 lg:col-span-7 lg:col-start-6">
-            <Reveal delay={0.15}>
-              <figure className="border border-olive/12 bg-stone/35 p-8 md:p-14">
-                <figcaption className="flex items-baseline justify-between border-b border-olive/15 pb-6">
-                  <span className="font-serif text-2xl font-light text-olive">
-                    Contribution record
-                  </span>
-                  <span className="eyebrow text-green">Statement</span>
-                </figcaption>
-
-                <dl className="grid grid-cols-1 sm:grid-cols-2">
-                  <div className="border-b border-olive/12 py-8 sm:border-r sm:pr-10">
-                    <dt className="eyebrow text-olive-muted">Monthly contribution</dt>
-                    <dd className="mt-4 font-serif text-6xl font-light text-green-deep">£250</dd>
-                  </div>
-                  <div className="border-b border-olive/12 py-8 sm:pl-10">
-                    <dt className="eyebrow text-olive-muted">Contributions made</dt>
-                    <dd className="mt-4 font-serif text-6xl font-light text-green-deep">12</dd>
-                  </div>
-                  <div className="border-b border-olive/12 py-8 sm:border-b-0 sm:border-r sm:pr-10">
-                    <dt className="eyebrow text-olive-muted">Progress</dt>
-                    <dd className="mt-6 flex flex-wrap gap-[6px]" aria-label="12 of 18 completed">
-                      {Array.from({ length: 18 }).map((_, i) => (
-                        <span
-                          key={i}
-                          className={`h-[7px] w-[7px] rounded-full ${
-                            i < 12 ? "bg-green" : "bg-green/20"
-                          }`}
-                        />
-                      ))}
-                    </dd>
-                  </div>
-                  <div className="py-8 sm:pl-10">
-                    <dt className="eyebrow text-olive-muted">Status</dt>
-                    <dd className="mt-4 flex items-center gap-3 font-serif text-4xl font-light italic text-green">
-                      <span aria-hidden className="h-2 w-2 rounded-full bg-green" />
-                      On track
-                    </dd>
-                  </div>
-                </dl>
-              </figure>
-            </Reveal>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /* Trust                                                               */
@@ -928,7 +851,7 @@ function ContributionSection() {
 
 function TrustSection() {
   return (
-    <section id="trust" className="geo-veil bg-green-deep py-28 text-ivory md:py-44">
+    <section id="trust" className="geo-veil bg-green-forest py-28 text-ivory md:py-44">
       <div className="mx-auto max-w-[1440px] px-6 md:px-10">
         <div className="grid grid-cols-12 gap-y-8">
           <div className="col-span-12 md:col-span-4">
@@ -1117,11 +1040,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (isLoaded && user) {
-      if (user.publicMetadata.role === 'superadmin') {
-        setDashboardLink('/superadmin');
-      } else if (user.publicMetadata.role === 'admin') {
-        setDashboardLink('/org-admin');
-      }
+      setDashboardLink('/dashboard');
     }
   }, [isLoaded, user]);
 
@@ -1134,7 +1053,6 @@ export default function LandingPage() {
         <JourneyTimeline />
         <EcosystemSection />
         <OrganisationEmployeeSection />
-        <ContributionSection />
         <TrustSection />
         <FinalCTA dashboardLink={dashboardLink} />
       </main>

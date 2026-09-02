@@ -96,9 +96,9 @@ exports.deleteUser = async (req, res) => {
     // Delete from Clerk
     await clerk.users.deleteUser(id);
     
-    // Delete from MongoDB Employee collection to keep things clean
+    // Soft delete from MongoDB Employee collection so history remains in Org view
     const Employee = require('../models/Employee');
-    await Employee.deleteMany({ clerkUserId: id });
+    await Employee.updateMany({ clerkUserId: id }, { $set: { isRemoved: true } });
     
     res.status(200).json({ success: true, message: 'User deleted successfully' });
   } catch (error) {

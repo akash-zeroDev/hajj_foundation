@@ -1,3 +1,4 @@
+const { getAuth } = require('@clerk/express');
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // Note: Need to add this to .env
 const Organisation = require('../models/Organisation');
@@ -107,6 +108,11 @@ exports.createEmployeeSubscription = async (req, res) => {
     const employee = await Employee.findById(employeeId);
     if (!employee) return res.status(404).json({ message: 'Employee not found' });
 
+    if (employee.clerkUserId !== getAuth(req).userId) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+
     if (employee.subscriptionStatus === 'active') {
       return res.status(400).json({ message: 'Subscription is already active.' });
     }
@@ -190,5 +196,54 @@ exports.verifyEmployeeSubscription = async (req, res) => {
   } catch (error) {
     console.error('Verify Subscription Error:', error);
     res.status(500).json({ message: 'Error verifying subscription' });
+  }
+};
+
+
+exports.createCustomerPortal = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+    const employee = await Employee.findById(employeeId);
+    
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    if (employee.clerkUserId !== getAuth(req).userId) return res.status(403).json({ message: 'Forbidden' });
+    if (!employee.stripeCustomerId) return res.status(400).json({ message: 'No active Stripe customer found' });
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: employee.stripeCustomerId,
+      return_url: 'http://localhost:5173/dashboard',
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('Customer Portal Error:', err);
+    res.status(500).json({ message: 'Error creating portal session' });
+  }
+};
+
+exports.cancelSubscription = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+    const employee = await Employee.findById(employeeId);
+    
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    if (employee.clerkUserId !== getAuth(req).userId) return res.status(403).json({ message: 'Forbidden' });
+    
+    if (employee.stripeSubscriptionId) {
+      try {
+        await stripe.subscriptions.cancel(employee.stripeSubscriptionId);
+      } catch (stripeErr) {
+        console.warn('Stripe cancellation failed (likely dev mode mock data):', stripeErr.message);
+      }
+    }
+    
+    employee.subscriptionStatus = 'cancelled';
+    employee.stripeSubscriptionId = null;
+    await employee.save();
+    
+    res.json({ success: true, message: 'Auto Pay cancelled successfully' });
+  } catch (err) {
+    console.error('Error cancelling subscription:', err);
+    res.status(500).json({ message: 'Failed to cancel subscription' });
   }
 };

@@ -8,19 +8,19 @@ export default {
     extend: {
       colors: {
         olive: {
-          DEFAULT: '#2a3b34',
+          DEFAULT: '#333333',
           deep: '#18241f',
           muted: '#69877b'
         },
-        ivory: '#fcfcfb',
-        stone: '#f4f4f2',
+        ivory: '#f6f4ec',
+        stone: '#eeebe4',
         brass: '#d8aa54',
         charcoal: '#1a1f1d',
         green: {
-          DEFAULT: '#259678',
-          deep: '#176651',
+          DEFAULT: '#286142',
+          deep: '#1c422e',
           muted: '#4ab498',
-          forest: '#114a3a',
+          forest: '#0e2c1e',
           pale: '#e3f3ef'
         },
         emerald: {
@@ -29,11 +29,11 @@ export default {
           200: '#a1e3d1',
           300: '#6dceb5',
           400: '#4ab498',
-          500: '#259678',
+          500: '#286142',
           600: '#1c7a60',
-          700: '#176651',
+          700: '#1c422e',
           800: '#135041',
-          900: '#114a3a',
+          900: '#0e2c1e',
         }
       },
       fontFamily: {

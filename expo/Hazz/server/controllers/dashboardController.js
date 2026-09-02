@@ -6,20 +6,20 @@ const AwardDraw = require('../models/AwardDraw');
 exports.getSuperAdminOverview = async (req, res) => {
   try {
     // 1. Core Metrics
-    const totalOrganisations = await Organisation.countDocuments();
-    const totalEmployees = await Employee.countDocuments();
+    const totalOrganisations = await Organisation.countDocuments({ isArchived: { $ne: true }, isSuspended: { $ne: true } });
+    const totalEmployees = await Employee.countDocuments({ isRemoved: { $ne: true } });
     
-    // Aggregate Total Savings Pool (only successful monthly contributions)
-    const savingsResult = await Transaction.aggregate([
-      { $match: { type: 'monthly_contribution', status: { $in: ['succeeded', 'completed'] } } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+    // Aggregate Total Savings Pool (Match AUM from Employee balances)
+    const savingsResult = await Employee.aggregate([
+      { $match: { isRemoved: { $ne: true } } },
+      { $group: { _id: null, total: { $sum: '$balance' } } }
     ]);
     const totalSavingsPool = savingsResult.length > 0 ? savingsResult[0].total : 0;
 
-    // Aggregate Platform Revenue (only successful annual fees)
-    const revenueResult = await Transaction.aggregate([
-      { $match: { type: 'annual_fee', status: { $in: ['succeeded', 'completed'] } } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
+    // Aggregate Platform Revenue (Match Reports - Sum of Paid Annual Fees)
+    const revenueResult = await Organisation.aggregate([
+      { $match: { annualFeeStatus: 'paid' } },
+      { $group: { _id: null, total: { $sum: "$annualFee" } } }
     ]);
     const platformRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
 
@@ -31,7 +31,7 @@ exports.getSuperAdminOverview = async (req, res) => {
     const monthlySavings = await Transaction.aggregate([
       { 
         $match: { 
-          type: 'monthly_contribution', 
+          type: 'employee_contribution', 
           status: { $in: ['succeeded', 'completed'] },
           createdAt: { $gte: sixMonthsAgo } 
         } 
@@ -95,7 +95,7 @@ exports.getSuperAdminOverview = async (req, res) => {
 
     // 3. Alerts
     const pendingDraws = await AwardDraw.countDocuments({ status: 'pending_approval' });
-    const unpaidOrgs = await Organisation.countDocuments({ feeStatus: { $ne: 'paid' } });
+    const unpaidOrgs = await Organisation.countDocuments({ annualFeeStatus: { $ne: 'paid' } });
     
     
     const startOfMonth = new Date();
@@ -121,14 +121,14 @@ exports.getSuperAdminOverview = async (req, res) => {
         $project: {
           name: 1,
           createdAt: 1,
-          feeStatus: 1,
+          annualFeeStatus: 1,
           employeeCount: { $size: '$employees' }
         }
       }
     ]);
 
 
-    res.json({
+    console.log("DASHBOARD DATA:", { totalOrganisations, totalEmployees, totalSavingsPool }); res.json({
       success: true,
       data: {
         totalOrganisations,

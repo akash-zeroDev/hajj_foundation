@@ -49,6 +49,7 @@ exports.onboardOrganisation = async (req, res) => {
       organizationId: clerkOrg.id,
       emailAddress: adminEmail,
       role: 'org:admin',
+      redirectUrl: 'http://localhost:5173/dashboard',
       publicMetadata: {
         firstName: adminFirstName,
         lastName: adminLastName,
@@ -63,12 +64,16 @@ exports.onboardOrganisation = async (req, res) => {
       registeredAddress: address,
       annualFee: Number(annualFee),
       agreementUrl,
-      adminEmail
+      adminEmail,
+      adminFirstName,
+      adminLastName,
+      adminPhone
     });
 
     await newOrg.save();
 
     res.status(201).json({
+      success: true,
       message: 'Organisation successfully onboarded and invitation sent!',
       organisation: newOrg
     });

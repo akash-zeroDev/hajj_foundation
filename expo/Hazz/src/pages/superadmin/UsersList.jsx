@@ -1,6 +1,8 @@
 import { useAuth } from '@clerk/react';
 import React, { useState, useEffect } from 'react';
 import SidebarLayout from '../../layouts/SidebarLayout';
+import SearchFilterBar from '../../components/SearchFilterBar';
+import CustomSelect from '../../components/CustomSelect';
 import { superAdminNavigation } from '../../config/navigation';
 import { useToast } from '../../context/ToastContext';
 
@@ -11,6 +13,7 @@ export const UsersList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [sortOrder, setSortOrder] = useState('newest');
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeUser, setActiveUser] = useState(null); // Controls the Sidecard
   
@@ -18,6 +21,7 @@ export const UsersList = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [isSuspending, setIsSuspending] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [employeeProfile, setEmployeeProfile] = useState(null);
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const [tempPassword, setTempPassword] = useState(null);
@@ -73,7 +77,12 @@ export const UsersList = () => {
 
 
   const handleDeleteUser = async () => {
-    if (!activeUser || !window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
+    if (!activeUser) return;
+    setIsConfirmingDelete(true);
+  };
+  
+  const confirmDeleteUser = async () => {
+    setIsConfirmingDelete(false);
     setIsDeleting(true);
     try {
       const token = await getToken();
@@ -161,7 +170,14 @@ export const UsersList = () => {
     const name = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
     const email = (u.emailAddresses?.[0]?.emailAddress || '').toLowerCase();
     const matchesSearch = name.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    
+    const isSuspended = u.banned || u.publicMetadata?.isSuspended;
+    const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' && !isSuspended) || (filterStatus === 'suspended' && isSuspended);
+    
+    return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    if (sortOrder === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+    return new Date(a.createdAt) - new Date(b.createdAt);
   });
 
   return (
@@ -173,17 +189,32 @@ export const UsersList = () => {
         </div>
       </div>
 
-      <div className="flex mb-6">
-        <div className="flex-1 relative">
-          <svg className="w-[18px] h-[18px] absolute left-3 top-[11px] text-slate-400 stroke-current stroke-[1.8] fill-none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input 
-            type="text" 
-            placeholder="Search users by name or email..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm transition-shadow"
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <SearchFilterBar 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          placeholder="Search users by name or email..." 
+          containerClassName="flex-1" 
+        />
+        <div className="flex flex-wrap gap-3">
+          <CustomSelect
+            className="min-w-[140px]"
+            value={filterStatus}
+            onChange={setFilterStatus}
+            options={[
+              { value: "all", label: "All Status" },
+              { value: "active", label: "Active" },
+              { value: "suspended", label: "Suspended" }
+            ]}
+          />
+          <CustomSelect
+            className="min-w-[140px]"
+            value={sortOrder}
+            onChange={setSortOrder}
+            options={[
+              { value: "newest", label: "Newest First" },
+              { value: "oldest", label: "Oldest First" }
+            ]}
           />
         </div>
       </div>
@@ -417,11 +448,11 @@ export const UsersList = () => {
               
               
               {/* Action Footer */}
-              <div className="p-[13px_20px] border-t border-[#e8edeb] bg-white grid grid-cols-3 gap-[9px] shrink-0">
+              <div className="p-[12px_16px] border-t border-[#e8edeb] bg-white grid grid-cols-3 gap-[6px] shrink-0">
                 <button 
                   onClick={handleResetPassword}
                   disabled={isResetting || activeUser.publicMetadata?.isSuspended}
-                  className="cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-white border border-[#e8edeb] text-[#0e1a16] hover:bg-[#f4f8f6] transition-colors disabled:opacity-50"
+                  className="cursor-pointer font-inherit font-semibold text-[12.5px] p-[8px_8px] rounded-[9px] inline-flex items-center justify-center gap-[4px] w-full bg-white border border-[#e8edeb] text-[#0e1a16] hover:bg-[#f4f8f6] transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
                   {isResetting && (
                     <svg className="animate-spin h-[14px] w-[14px]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -432,7 +463,7 @@ export const UsersList = () => {
                 <button 
                   onClick={handleToggleSuspend}
                   disabled={isSuspending}
-                  className={`cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-white border transition-colors disabled:opacity-50 ${
+                  className={`cursor-pointer font-inherit font-semibold text-[12.5px] p-[8px_8px] rounded-[9px] inline-flex items-center justify-center gap-[4px] w-full bg-white border transition-colors disabled:opacity-50 whitespace-nowrap ${
                     activeUser.publicMetadata?.isSuspended 
                       ? 'border-[#e8edeb] text-[#0e1a16] hover:bg-[#f4f8f6]' 
                       : 'border-[#f6cfcc] text-[#a3271f] hover:bg-[#fdeceb]'

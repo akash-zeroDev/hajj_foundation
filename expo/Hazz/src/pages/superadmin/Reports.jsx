@@ -141,9 +141,10 @@ export const Reports = () => {
         startY: doc.lastAutoTable.finalY + 15,
         head: [['Operational Metric', 'Count']],
         body: [
-          ['Total Enrolled Organisations', stats.organizations.total.toString()],
+          ['Total Enrolled Organisations (Historical)', stats.organizations.total.toString()],
           ['Active Organisations', stats.organizations.active.toString()],
           ['Suspended Organisations', stats.organizations.suspended.toString()],
+          ['Archived Organisations', (stats.organizations.archived || 0).toString()],
           ['Total Employees (Historical)', stats.employees.total.toString()],
           ['Active Employees', stats.employees.active.toString()],
           ['Compliant Employees (Agreements Signed)', stats.employees.compliant.toString()],
@@ -177,7 +178,8 @@ export const Reports = () => {
 
     const orgBarData = [
       { name: 'Active', count: stats.organizations.active },
-      { name: 'Suspended', count: stats.organizations.suspended }
+      { name: 'Suspended', count: stats.organizations.suspended },
+      { name: 'Archived', count: stats.organizations.archived || 0 }
     ];
 
     return (
@@ -240,8 +242,12 @@ export const Reports = () => {
                 <td className="px-6 py-4 text-slate-900 font-bold">£{stats.financials.revenue.toLocaleString()}</td>
               </tr>
               <tr className="hover:bg-slate-50">
-                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Organisations</td>
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Organisations (Historical)</td>
                 <td className="px-6 py-4 text-slate-600">{stats.organizations.total}</td>
+              </tr>
+              <tr className="hover:bg-slate-50">
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Active Organisations</td>
+                <td className="px-6 py-4 text-sky-600 font-semibold">{stats.organizations.active}</td>
               </tr>
               <tr className="hover:bg-slate-50">
                 <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Employees (Historical)</td>

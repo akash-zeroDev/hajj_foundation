@@ -85,7 +85,8 @@ export const AdminEmployees = () => {
     try {
       await organization.inviteMember({ 
         emailAddress: inviteEmail, 
-        role: 'org:member' 
+        role: 'org:member',
+        redirectUrl: 'http://localhost:5173/dashboard'
       });
       setInviteEmail('');
       setIsInviteModalOpen(false);

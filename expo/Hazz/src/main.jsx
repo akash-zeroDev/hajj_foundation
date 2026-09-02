@@ -10,8 +10,10 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ClerkProvider 
       afterSignOutUrl="/" 
-      signInFallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
+      signInFallbackRedirectUrl="/dashboard"
+      signInForceRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+      signUpForceRedirectUrl="/dashboard"
     >
       <BrowserRouter>
         <ToastProvider>

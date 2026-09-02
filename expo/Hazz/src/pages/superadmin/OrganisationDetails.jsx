@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/react';
+import { ArrowLeft, FileDown, TrendingUp, Coins, Check, AlertTriangle, Archive } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SidebarLayout from '../../layouts/SidebarLayout';
@@ -271,9 +272,7 @@ export const OrganisationDetails = () => {
         onClick={() => navigate('/superadmin/organisations')}
         className="mb-6 flex items-center text-sm font-medium text-slate-500 hover:text-emerald-700 transition"
       >
-        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
+        <ArrowLeft className="w-4 h-4 mr-1" />
         Back to Organisations
       </button>
 
@@ -337,7 +336,7 @@ export const OrganisationDetails = () => {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded text-sm font-medium text-emerald-700 bg-white hover:bg-slate-50 transition"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      <FileDown className="w-4 h-4" />
                       View PDF
                     </a>
                   ) : (
@@ -476,18 +475,18 @@ export const OrganisationDetails = () => {
                 </div>
                 {org?.annualFeeStatus === 'paid' ? (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active & Paid
+                    Active & Paid
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending Payment
+                    Pending Payment
                   </span>
                 )}
               </div>
               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                  <span className="text-sm font-medium text-slate-600">Total Employee Funds Routed</span>
+                  <Coins className="w-4 h-4 text-emerald-600" />
+                  <span className="text-sm font-medium text-slate-600">Total Employee Funds</span>
                 </div>
                 <span className="text-sm font-bold text-emerald-600">£{totalEmployeeFunds.toLocaleString()}</span>
               </div>
@@ -558,15 +557,15 @@ export const OrganisationDetails = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {tx.status === 'succeeded' ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Paid
+                              Paid
                             </span>
                           ) : tx.status === 'pending' ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
+                              Pending
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Failed
+                              Failed
                             </span>
                           )}
                         </td>
@@ -619,7 +618,7 @@ export const OrganisationDetails = () => {
                           </span>
                         ) : draw.status === 'pending_approval' ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending Approval
+                            Pending Approval
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
@@ -799,13 +798,9 @@ export const OrganisationDetails = () => {
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
             <div className={`mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 ${org.isSuspended ? 'bg-emerald-100' : 'bg-red-100'}`}>
               {org.isSuspended ? (
-                <svg className="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="h-7 w-7 text-emerald-600" />
               ) : (
-                <svg className="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+                <AlertTriangle className="h-7 w-7 text-red-600" />
               )}
             </div>
             
@@ -849,9 +844,7 @@ export const OrganisationDetails = () => {
           ></div>
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
             <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-orange-100">
-              <svg className="h-7 w-7 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
+              <Archive className="h-7 w-7 text-orange-600" />
             </div>
             
             <h3 className="text-xl font-bold text-slate-900">Archive Organisation?</h3>

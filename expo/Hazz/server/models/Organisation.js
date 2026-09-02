@@ -47,6 +47,18 @@ const organisationSchema = new mongoose.Schema({
   adminEmail: {
     type: String,
     required: false
+  },
+  adminFirstName: {
+    type: String,
+    required: false
+  },
+  adminLastName: {
+    type: String,
+    required: false
+  },
+  adminPhone: {
+    type: String,
+    required: false
   }
 }, { timestamps: true });
 

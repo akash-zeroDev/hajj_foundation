@@ -43,9 +43,10 @@ body {
   .link-rule:hover::after {
     width: 100%;
   }
+
   .geo-veil {
-    /* background-image removed */
-    /* background-blend-mode removed */
-    background-size: cover;
-  }
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0L80 80M80 0L0 80' stroke='rgba(255,255,255,0.06)' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 80px 80px;
+}
+
 }

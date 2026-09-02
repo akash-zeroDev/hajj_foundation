@@ -1,3 +1,4 @@
+import { OnboardOrgModal } from '../components/OnboardOrgModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { useToast } from '../context/ToastContext';
 import { useState, useEffect } from 'react';
@@ -29,6 +30,7 @@ const OldLayout = ({ title, children, description }) => {
       </header>
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {children}
+
       </main>
     </div>
   );
@@ -55,6 +57,8 @@ export const EmployeeDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   
   const [autoPayEnabled, setAutoPayEnabled] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [bankDetails, setBankDetails] = useState({ accountName: '', accountNumber: '', sortCode: '' });
   const [isSavingBank, setIsSavingBank] = useState(false);
   
@@ -64,6 +68,84 @@ export const EmployeeDashboard = () => {
       if (employeeData.bankDetails) setBankDetails(employeeData.bankDetails);
     }
   }, [employeeData]);
+
+
+  
+  const handleCancelAutoPay = () => {
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelAutoPay = async () => {
+    setIsCancelling(true);
+    try {
+      const token = await getToken();
+      const res = await fetch('http://localhost:5000/api/payments/cancel-employee-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ employeeId: employeeData._id })
+      });
+      if (res.ok) {
+        showToast('Auto Pay cancelled successfully.', 'success');
+        setShowCancelModal(false);
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        throw new Error('Failed to cancel Auto Pay');
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleManageAutoPay = async () => {
+    try {
+      const token = await getToken();
+      const res = await fetch('http://localhost:5000/api/payments/customer-portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ employeeId: employeeData._id })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        showToast(data.message || 'Error opening Stripe Portal', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error', 'error');
+    }
+  };
+
+  const handleSetupStripeAutoPay = async () => {
+    setIsSavingBank(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`http://localhost:5000/api/payments/create-employee-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ employeeId: employeeData._id })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        showToast(data.message || 'Error starting Stripe Checkout', 'error');
+        setIsSavingBank(false);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error', 'error');
+      setIsSavingBank(false);
+    }
+  };
 
   const handleSaveBankSettings = async () => {
     setIsSavingBank(true);
@@ -690,10 +772,11 @@ export const EmployeeDashboard = () => {
             </div>
 
             <div className="grid g2">
-              <div className="card">
-                <div className="card-head">
-                  <span className="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
-                  <h2>Enrolment checklist</h2>
+              {!(employeeData?.agreementStatus === 'signed' && employeeData?.subscriptionStatus === 'active') && (
+                <div className="card">
+                  <div className="card-head">
+                    <span className="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
+                    <h2>Enrolment checklist</h2>
                 </div>
                 <div className="dl">
                   <div className="r">
@@ -725,6 +808,38 @@ export const EmployeeDashboard = () => {
                   </div>
                 </div>
               </div>
+              )}
+
+              <div className="card">
+                <div className="card-head">
+                  <span className="ic"><svg viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" /></svg></span>
+                  <h2>Your Employer</h2>
+                </div>
+                <div className="dl">
+                  <div className="r">
+                    <span className="k">Organisation</span>
+                    <span className="v font-medium text-slate-900">{employeeData?.organisationId?.name || 'Loading...'}</span>
+                  </div>
+                  <div className="r">
+                    <span className="k">Contact</span>
+                    <span className="v">
+                      {employeeData?.organisationId?.adminFirstName} {employeeData?.organisationId?.adminLastName}
+                      {employeeData?.organisationId?.adminPhone && (
+                        <span className="block text-slate-500 text-xs mt-0.5">{employeeData?.organisationId?.adminPhone}</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="r">
+                    <span className="k">Support Email</span>
+                    <span className="v"><a href={`mailto:${employeeData?.organisationId?.adminEmail}`} className="text-emerald-600 font-medium hover:underline">{employeeData?.organisationId?.adminEmail}</a></span>
+                  </div>
+                  <div className="r">
+                    <span className="k">Enrolment Date</span>
+                    <span className="v">{employeeData?.createdAt ? new Date(employeeData.createdAt).toLocaleDateString() : 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="card">
                 <div className="card-head">
                   <span className="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></span>
@@ -870,57 +985,50 @@ export const EmployeeDashboard = () => {
 
             <div className="card" style={{marginTop: 16}}>
               <div className="card-head">
-                <h2>Bank details & Auto Pay</h2>
-                <div className="sub" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '6px' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={autoPayEnabled} 
-                      onChange={e => setAutoPayEnabled(e.target.checked)} 
-                      style={{ transform: 'scale(1.2)' }}
-                    />
-                    <span style={{ fontWeight: 600, color: autoPayEnabled ? 'var(--green)' : 'var(--ink-3)' }}>
-                      {autoPayEnabled ? 'Auto Pay Enabled' : 'Auto Pay Disabled'}
-                    </span>
-                  </label>
-                </div>
+                <h2>Auto Pay Setup</h2>
               </div>
               <div className="panel">
-                <div className="grid g3" style={{ opacity: autoPayEnabled ? 1 : 0.5, pointerEvents: autoPayEnabled ? 'auto' : 'none' }}>
-                  <div className="field">
-                    <label>Account Name</label>
-                    <input 
-                      placeholder="e.g. John Doe"
-                      value={bankDetails.accountName || ''} 
-                      onChange={e => setBankDetails({...bankDetails, accountName: e.target.value})} 
-                    />
+                <p style={{ color: 'var(--ink-2)', marginBottom: 16 }}>
+                  Set up a direct debit to automatically contribute £{employeeData?.monthlyContribution || 0} per month to your Hajj Savings Fund.
+                </p>
+                {employeeData?.subscriptionStatus === 'active' ? (
+                  <div style={{ padding: '16px', backgroundColor: 'var(--green-pale)', color: 'var(--green-deep)', borderRadius: '8px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Auto Pay is currently Active.</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="btn btn-ghost" onClick={handleManageAutoPay}>Manage</button>
+                      <button className="btn btn-ghost" style={{ color: '#d92d20' }} onClick={handleCancelAutoPay}>Cancel</button>
+                    </div>
                   </div>
-                  <div className="field">
-                    <label>Sort Code</label>
-                    <input 
-                      placeholder="12-34-56"
-                      value={bankDetails.sortCode || ''} 
-                      onChange={e => setBankDetails({...bankDetails, sortCode: e.target.value})} 
-                    />
-                  </div>
-                  <div className="field">
-                    <label>Account Number</label>
-                    <input 
-                      placeholder="12345678"
-                      value={bankDetails.accountNumber || ''} 
-                      onChange={e => setBankDetails({...bankDetails, accountNumber: e.target.value})} 
-                    />
-                  </div>
-                </div>
-                <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
-                  <button className="btn btn-primary" onClick={handleSaveBankSettings} disabled={isSavingBank}>
-                    {isSavingBank ? 'Saving...' : 'Save Settings & Setup'}
+                ) : (
+                  <button className="btn btn-primary" onClick={handleSetupStripeAutoPay} disabled={isSavingBank}>
+                    {isSavingBank ? 'Redirecting...' : 'Setup Auto Pay with Stripe'}
                   </button>
-                </div>
+                )}
               </div>
             </div>
           </section>
         )}
+
+      {showCancelModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => !isCancelling && setShowCancelModal(false)}></div>
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all text-center">
+            <div className="px-6 py-6 border-b border-slate-200">
+              <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg viewBox="0 0 24 24" className="w-7 h-7 stroke-current stroke-[2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Cancel Auto Pay?</h3>
+              <p className="text-sm text-slate-500 mb-2">Are you sure you want to cancel your monthly contribution? Your savings will pause and you may be excluded from upcoming Hajj draws.</p>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 flex gap-3 justify-center">
+              <button disabled={isCancelling} onClick={() => setShowCancelModal(false)} className="px-6 py-2.5 rounded-xl font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 transition-colors cursor-pointer">Keep Active</button>
+              <button disabled={isCancelling} onClick={confirmCancelAutoPay} className="px-6 py-2.5 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer">
+                {isCancelling ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </main>
     </div>
   );
@@ -935,6 +1043,23 @@ export const AdminDashboard = () => {
   const [isAccepting, setIsAccepting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('onboard') === 'true') {
+      setShowModal(true);
+    }
+  }, [location]);
+
+  const handleCloseModal = (success) => {
+    setShowModal(false);
+    navigate('/superadmin', { replace: true });
+    if (success) {
+      fetchOverview();
+    }
+  };
 
   const handlePayAnnualFee = async () => {
     setIsRedirecting(true);
@@ -960,16 +1085,16 @@ export const AdminDashboard = () => {
     setIsAccepting(true);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/organisations/${organization.id}/accept`, {
-        method: 'POST',
+      const res = await fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}/accept-agreement`, {
+        method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (res.ok) {
         showToast("Agreement signed successfully!", "success");
-        setOrgData(data);
+        setTimeout(() => window.location.reload(), 1000);
       } else {
-        throw new Error(data.message);
+        throw new Error(data.message || 'Failed to sign agreement');
       }
     } catch (error) {
       showToast(error.message, "error");
@@ -1028,9 +1153,13 @@ export const AdminDashboard = () => {
             <p className="text-[15px] text-[#5c6b65]">Before managing your employees, you must review and accept your organisation's financial agreement.</p>
           </div>
           <div className="bg-white rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden border border-[#e6ecea]">
-            <div className="bg-[#fdf3e3] px-8 py-6 border-b border-[#f2e3c2] flex justify-between items-center">
+            <div className="bg-white px-8 py-6 border-b border-[#e6ecea] flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-current stroke-[2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </span>
               <div>
-                <h2 className="text-[18px] font-bold text-[#c8811f] m-0 tracking-[-0.2px]">{orgData.name} - Master Agreement</h2>
+                <h2 className="text-[18px] font-bold text-[#0e1a16] m-0 tracking-[-0.2px]">Master Agreement</h2>
+                <p className="text-[13.5px] text-[#5c6b65] m-0 mt-0.5">{orgData.name}</p>
               </div>
             </div>
             <div className="p-8 bg-[#fcfdfd]">
@@ -1046,9 +1175,26 @@ export const AdminDashboard = () => {
                 <div className="text-center py-12 border border-[#e6ecea] rounded-xl"><p className="text-[#8a9994] text-[13.5px]">No document available.</p></div>
               )}
             </div>
-            <div className="px-8 py-6 bg-white border-t border-[#e6ecea] flex items-center justify-between">
-              <button onClick={handleAcceptAgreement} disabled={isAccepting} className="px-8 py-3 bg-[#0b7a5b] text-white rounded-[10px] text-[14px] font-bold hover:bg-[#17a377] transition-colors disabled:opacity-50 ml-auto">
-                {isAccepting ? 'Processing...' : 'I Accept & Sign Document'}
+            <div className="px-8 py-6 bg-white border-t border-[#e6ecea] flex flex-col gap-6">
+              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <span className="text-slate-600 font-medium">Annual Contribution Amount</span>
+                <span className="text-xl font-bold text-slate-900">£{orgData?.annualFee?.toLocaleString() || 0}</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <input type="checkbox" id="agree" className="mt-1 w-5 h-5 rounded border-slate-300 text-[#0b7a5b] focus:ring-[#0b7a5b] cursor-pointer" required />
+                <label htmlFor="agree" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
+                  I confirm that I am an authorised representative of <strong>{orgData.name}</strong>, and I accept the terms of this Master Agreement. I also acknowledge the annual contribution amount shown above.
+                </label>
+              </div>
+              <button onClick={() => {
+                const cb = document.getElementById('agree');
+                if(!cb.checked) {
+                  alert('Please check the box to accept the agreement.');
+                  return;
+                }
+                handleAcceptAgreement();
+              }} disabled={isAccepting} className="w-full px-8 py-3.5 bg-[#0b7a5b] text-white rounded-[10px] text-[15px] font-bold hover:bg-[#17a377] transition-colors disabled:opacity-50">
+                {isAccepting ? 'Processing...' : 'Accept & Sign Master Agreement'}
               </button>
             </div>
           </div>
@@ -1271,6 +1417,9 @@ export const AdminDashboard = () => {
 };
 
 
+
+
+
 export const SuperAdminDashboard = () => {
   const [overviewData, setOverviewData] = useState({
     recentOrgs: [],
@@ -1280,21 +1429,47 @@ export const SuperAdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { getToken } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('onboard') === 'true') {
+      setShowModal(true);
+    }
+  }, [location]);
+
+  const handleCloseModal = (success) => {
+    setShowModal(false);
+    navigate('/superadmin', { replace: true });
+    if (success) {
+      fetchOverview();
+    }
+  };
   
   useEffect(() => {
     const fetchOverview = async () => {
       try {
         const token = await getToken();
-        const res = await fetch('http://localhost:5000/api/organisations?limit=5', {
+        const res = await fetch('http://localhost:5000/api/dashboard/superadmin', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
         
-        setOverviewData({
-          recentOrgs: data.organisations || [],
-          stats: { totalOrgs: data.totalOrganisations || 0, activeMembers: 0, totalSavings: 0 },
-          alerts: { pendingDraws: 0, unpaidOrgs: 0 }
-        });
+        if (data.success) {
+          setOverviewData({
+            recentOrgs: data.data.recentOrgs || [],
+            stats: { 
+              totalOrgs: data.data.totalOrganisations || 0, 
+              activeMembers: data.data.totalEmployees || 0, 
+              totalSavings: data.data.totalSavingsPool || 0 
+            },
+            alerts: { 
+              pendingDraws: data.data.alerts.pendingDraws || 0, 
+              unpaidOrgs: data.data.alerts.unpaidOrgs || 0 
+            }
+          });
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -1313,16 +1488,16 @@ export const SuperAdminDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-sm font-medium text-slate-500 mb-1">Total Organisations</h3>
+          <h3 className="text-sm font-medium text-slate-500 mb-1">Active Organisations</h3>
           <p className="text-3xl font-bold text-slate-900">{overviewData.stats.totalOrgs}</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-sm font-medium text-slate-500 mb-1">Active Members</h3>
-          <p className="text-3xl font-bold text-slate-900">0</p>
+          <p className="text-3xl font-bold text-slate-900">{overviewData.stats.activeMembers}</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-sm font-medium text-slate-500 mb-1">Total Savings (Platform)</h3>
-          <p className="text-3xl font-bold text-emerald-600">£0</p>
+          <p className="text-3xl font-bold text-emerald-600">£{overviewData.stats.totalSavings.toLocaleString()}</p>
         </div>
       </div>
 
@@ -1381,6 +1556,7 @@ export const SuperAdminDashboard = () => {
           </div>
         </div>
       </div>
+      <OnboardOrgModal isOpen={showModal} onClose={handleCloseModal} />
     </SidebarLayout>
   );
 };

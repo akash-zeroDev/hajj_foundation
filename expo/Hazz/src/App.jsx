@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Show, RedirectToSignIn } from '@clerk/react';
+import { Show, RedirectToSignIn, useUser, useOrganization } from '@clerk/react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import { EmployeeDashboard, AdminDashboard, SuperAdminDashboard, Unauthorized } from './pages/Dashboards';
@@ -25,6 +25,19 @@ const ProtectedRoute = ({ children }) => (
     <Show when="signed-out"><RedirectToSignIn /></Show>
   </>
 );
+
+
+const DashboardRouter = () => {
+  const { user, isLoaded: userLoaded } = useUser();
+  const { isLoaded: orgLoaded, membership } = useOrganization();
+  
+  if (!userLoaded || !orgLoaded) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  
+  if (user?.publicMetadata?.role === 'superadmin') return <Navigate to="/superadmin" replace />;
+  if (membership?.role === 'org:admin') return <Navigate to="/admin" replace />;
+  
+  return <EmployeeDashboard />;
+};
 
 function App() {
   return (
@@ -163,11 +176,10 @@ function App() {
             } 
           />
 
-          {/* Other Protected Routes (Legacy layout) */}
+          {/* Unified Dashboard Router */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              {/* Temporary routing logic until Organization roles are fully set up */}
-              <EmployeeDashboard />
+              <DashboardRouter />
             </ProtectedRoute>
           } />
 
