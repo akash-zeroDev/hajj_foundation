@@ -17,6 +17,7 @@ export const UsersList = () => {
   // Action states
   const [isResetting, setIsResetting] = useState(false);
   const [isSuspending, setIsSuspending] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [employeeProfile, setEmployeeProfile] = useState(null);
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const [tempPassword, setTempPassword] = useState(null);
@@ -27,7 +28,12 @@ export const UsersList = () => {
       const res = await fetch('http://localhost:5000/api/users', { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to fetch users');
-      setUsers(Array.isArray(data) ? data : (data.data || []));
+      
+      const allUsers = Array.isArray(data) ? data : (data.data || []);
+      // Filter out 'Independent / Unassigned' users for the superadmin view
+      const activeUsers = allUsers.filter(u => u.injectedOrgName);
+      setUsers(activeUsers);
+
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -62,6 +68,29 @@ export const UsersList = () => {
       showToast('Network error while resetting password', 'error');
     } finally {
       setIsResetting(false);
+    }
+  };
+
+
+  const handleDeleteUser = async () => {
+    if (!activeUser || !window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
+    setIsDeleting(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`http://localhost:5000/api/users/${activeUser.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to delete user');
+      
+      showToast('User permanently deleted', 'success');
+      setActiveUser(null);
+      fetchUsers(); // Refresh list
+    } catch (error) {
+      showToast('Error deleting user', 'error');
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -383,7 +412,7 @@ export const UsersList = () => {
               
               
               {/* Action Footer */}
-              <div className="p-[13px_20px] border-t border-[#e8edeb] bg-white grid grid-cols-2 gap-[9px] shrink-0">
+              <div className="p-[13px_20px] border-t border-[#e8edeb] bg-white grid grid-cols-3 gap-[9px] shrink-0">
                 <button 
                   onClick={handleResetPassword}
                   disabled={isResetting || activeUser.banned}
@@ -408,6 +437,17 @@ export const UsersList = () => {
                     <svg className="animate-spin h-[14px] w-[14px]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                   )}
                   {isSuspending ? 'Updating...' : (activeUser.banned ? 'Unsuspend User' : 'Suspend User')}
+                </button>
+                
+                <button 
+                  onClick={handleDeleteUser}
+                  disabled={isDeleting}
+                  className="cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-red-600 border border-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {isDeleting && (
+                    <svg className="animate-spin h-[14px] w-[14px]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  )}
+                  {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </>

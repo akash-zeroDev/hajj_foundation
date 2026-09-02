@@ -8,8 +8,9 @@ exports.getOperationalStats = async (req, res) => {
     const suspendedOrgs = await Organisation.countDocuments({ isSuspended: true });
     
     const totalEmployees = await Employee.countDocuments();
-    const compliantEmployees = await Employee.countDocuments({ agreementStatus: 'signed' });
-    const pendingEmployees = totalEmployees - compliantEmployees;
+    const activeEmployees = await Employee.countDocuments({ isRemoved: { $ne: true } });
+    const compliantEmployees = await Employee.countDocuments({ agreementStatus: 'signed', isRemoved: { $ne: true } });
+    const pendingEmployees = activeEmployees - compliantEmployees;
     
     const totalAUM = await Employee.aggregate([
       { $group: { _id: null, total: { $sum: "$balance" } } }
@@ -28,6 +29,7 @@ exports.getOperationalStats = async (req, res) => {
       },
       employees: {
         total: totalEmployees,
+        active: activeEmployees,
         compliant: compliantEmployees,
         pending: pendingEmployees
       },

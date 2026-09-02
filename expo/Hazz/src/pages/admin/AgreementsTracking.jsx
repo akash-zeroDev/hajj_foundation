@@ -50,9 +50,10 @@ export const AgreementsTracking = () => {
     fetchAgreements();
   }, [orgLoaded, organization]);
 
-  const signedCount = employees.filter(e => e.agreementStatus === 'signed').length;
-  const pendingCount = employees.filter(e => e.agreementStatus !== 'signed').length;
-  const totalCount = employees.length;
+  const activeEmployees = employees.filter(e => !e.isRemoved);
+  const signedCount = activeEmployees.filter(e => e.agreementStatus === 'signed').length;
+  const pendingCount = activeEmployees.filter(e => e.agreementStatus !== 'signed').length;
+  const totalCount = activeEmployees.length;
   const pct = totalCount ? Math.round((signedCount / totalCount) * 100) : 0;
 
   const filteredEmployees = employees.filter(emp => {
@@ -187,13 +188,13 @@ export const AgreementsTracking = () => {
 
           <table className="agt-table">
             <thead>
-              <tr><th>Employee</th><th>Email address</th><th>Legal status</th><th>Date signed</th><th></th></tr>
+              <tr><th>Employee</th><th>Email address</th><th>Legal status</th><th>Date signed</th></tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan="5" className="agt-empty">Loading tracking data...</td></tr>
+                <tr><td colSpan="4" className="agt-empty">Loading tracking data...</td></tr>
               ) : filteredEmployees.length === 0 ? (
-                <tr><td colSpan="5" className="agt-empty">No employees match this filter.</td></tr>
+                <tr><td colSpan="4" className="agt-empty">No employees match this filter.</td></tr>
               ) : (
                 filteredEmployees.map(emp => (
                   <tr key={emp._id}>
@@ -205,6 +206,7 @@ export const AgreementsTracking = () => {
                           <span className="agt-mini agt-mute">—</span>
                         )}
                         {emp.firstName ? `${emp.firstName} ${emp.lastName}` : <span className="agt-muted">Not yet onboarded</span>}
+                        {emp.isRemoved && <span style={{fontSize: '9px', fontWeight: 'bold', padding: '2px 5px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', backgroundColor: '#f1f4f3', color: '#8a9994', border: '1px solid #e6ecea', marginLeft: '6px'}}>Removed</span>}
                       </span>
                     </td>
                     <td className="agt-muted">{emp.email || '—'}</td>
@@ -217,9 +219,6 @@ export const AgreementsTracking = () => {
                     </td>
                     <td className="agt-mono">
                       {emp.agreementStatus === 'signed' ? new Date(emp.updatedAt).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : <span className="agt-muted">—</span>}
-                    </td>
-                    <td>
-                      <button className="agt-row-act">{emp.agreementStatus === 'signed' ? 'View' : 'Send reminder'}</button>
                     </td>
                   </tr>
                 ))

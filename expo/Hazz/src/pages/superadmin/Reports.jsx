@@ -144,7 +144,8 @@ export const Reports = () => {
           ['Total Enrolled Organisations', stats.organizations.total.toString()],
           ['Active Organisations', stats.organizations.active.toString()],
           ['Suspended Organisations', stats.organizations.suspended.toString()],
-          ['Total Employees', stats.employees.total.toString()],
+          ['Total Employees (Historical)', stats.employees.total.toString()],
+          ['Active Employees', stats.employees.active.toString()],
           ['Compliant Employees (Agreements Signed)', stats.employees.compliant.toString()],
           ['Pending Employees (Not Signed)', stats.employees.pending.toString()]
         ],
@@ -243,8 +244,12 @@ export const Reports = () => {
                 <td className="px-6 py-4 text-slate-600">{stats.organizations.total}</td>
               </tr>
               <tr className="hover:bg-slate-50">
-                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Employees</td>
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Employees (Historical)</td>
                 <td className="px-6 py-4 text-slate-600">{stats.employees.total}</td>
+              </tr>
+              <tr className="hover:bg-slate-50">
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Active Employees</td>
+                <td className="px-6 py-4 text-slate-600 font-bold">{stats.employees.active}</td>
               </tr>
             </tbody>
           </table>

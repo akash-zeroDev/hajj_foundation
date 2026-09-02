@@ -100,3 +100,20 @@ exports.toggleSuspend = async (req, res) => {
     res.status(500).json({ success: false, message: error.message || 'Failed to toggle suspend status' });
   }
 };
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Delete from Clerk
+    await clerk.users.deleteUser(id);
+    
+    // Delete from MongoDB Employee collection to keep things clean
+    const Employee = require('../models/Employee');
+    await Employee.deleteMany({ clerkUserId: id });
+    
+    res.status(200).json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Error deleting user' });
+  }
+};

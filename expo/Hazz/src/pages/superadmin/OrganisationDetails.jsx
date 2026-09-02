@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import HorizontalTabs from '../../components/HorizontalTabs';
 import SearchFilterBar from '../../components/SearchFilterBar';
+import EmployeeProfileSidecar from '../../components/EmployeeProfileSidecar';
 import { superAdminNavigation } from '../../config/navigation';
 
 export const OrganisationDetails = () => {
@@ -26,6 +27,9 @@ export const OrganisationDetails = () => {
 
   // Employees State
   const [employees, setEmployees] = useState(null);
+  const [allDbEmployees, setAllDbEmployees] = useState([]);
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [employeeTab, setEmployeeTab] = useState('active');
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [activeMember, setActiveMember] = useState(null);
@@ -127,11 +131,35 @@ export const OrganisationDetails = () => {
       const fetchEmployees = async () => {
         setIsLoadingEmployees(true);
         try {
-          const res = await fetch(`http://localhost:5000/api/organisations/${id}/employees`, { headers: { Authorization: `Bearer ${await getToken()}` } });
-          if (!res.ok) throw new Error('Failed to fetch employees');
+          const token = await getToken();
+          const res = await fetch(`http://localhost:5000/api/organisations/${id}/employees`, { headers: { Authorization: `Bearer ${token}` } });
+          if (!res.ok) throw new Error('Failed to fetch active employees');
           const data = await res.json();
-          if (!res.ok) throw new Error(data.message || 'Failed');
-          setEmployees(Array.isArray(data) ? data : []);
+          let activeEmployees = Array.isArray(data) ? data : [];
+          
+          if (org?.clerkOrganizationId) {
+             const dbRes = await fetch(`http://localhost:5000/api/organisations/clerk/${org.clerkOrganizationId}/employee-agreements`, { headers: { Authorization: `Bearer ${token}` } });
+             if (dbRes.ok) {
+                 const dbData = await dbRes.json();
+                 const allDb = dbData.data || [];
+                 setAllDbEmployees(allDb);
+                 const removedDb = allDb.filter(emp => emp.isRemoved);
+                 const removedMocks = removedDb.map(emp => ({
+                    id: 'removed_' + emp._id,
+                    role: 'org:member',
+                    isRemoved: true,
+                    createdAt: emp.createdAt,
+                    publicUserData: {
+                       firstName: emp.firstName || '',
+                       lastName: emp.lastName || '',
+                       identifier: emp.email || '',
+                       hasImage: false
+                    }
+                 }));
+                 activeEmployees = [...activeEmployees, ...removedMocks];
+             }
+          }
+          setEmployees(activeEmployees);
         } catch (error) {
           console.error(error);
         } finally {
@@ -231,6 +259,9 @@ export const OrganisationDetails = () => {
     { id: 'awards', name: 'Awards History' },
     { id: 'settings', name: 'Settings' }
   ];
+
+
+  const employeeProfile = activeMember ? allDbEmployees.find(e => e.clerkUserId === (activeMember.publicUserData?.userId || activeMember.clerkUserId)) : null;
 
   return (
     <SidebarLayout navigation={superAdminNavigation} title="Organisation Details">
@@ -340,8 +371,19 @@ export const OrganisationDetails = () => {
       {/* Tab Content: EMPLOYEES */}
       {activeTab === 'employees' && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
-            <h3 className="font-bold text-slate-800">Organisation Members</h3>
+          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-slate-800">Organisation Members</h3>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="flex-1 w-full">
+                <SearchFilterBar searchTerm={employeeSearch} setSearchTerm={setEmployeeSearch} placeholder="Search employees..." />
+              </div>
+              <div className="flex bg-slate-200/50 p-1 rounded-lg shrink-0" style={{ marginBottom: '24px' }}>
+                <button className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${employeeTab === 'active' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`} onClick={() => setEmployeeTab('active')}>Active</button>
+                <button className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${employeeTab === 'removed' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`} onClick={() => setEmployeeTab('removed')}>Removed</button>
+              </div>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -356,10 +398,10 @@ export const OrganisationDetails = () => {
               <tbody className="divide-y divide-slate-100">
                 {isLoadingEmployees ? (
                   <tr><td colSpan="4" className="text-center py-8 text-slate-500">Loading employees...</td></tr>
-                ) : (employees || []).length === 0 ? (
-                  <tr><td colSpan="4" className="text-center py-8 text-slate-500">No employees found.</td></tr>
+                ) : (employees || []).filter(e => (employeeTab === 'active' ? !e.isRemoved : e.isRemoved)).filter(e => !employeeSearch || (e.publicUserData?.firstName || '').toLowerCase().includes(employeeSearch.toLowerCase()) || (e.publicUserData?.lastName || '').toLowerCase().includes(employeeSearch.toLowerCase()) || (e.publicUserData?.identifier || '').toLowerCase().includes(employeeSearch.toLowerCase())).length === 0 ? (
+                  <tr><td col colSpan="4" className="text-center py-8 text-slate-500">No {employeeTab} employees found.</td></tr>
                 ) : (
-                  (employees || []).map((member) => (
+                  (employees || []).filter(e => (employeeTab === 'active' ? !e.isRemoved : e.isRemoved)).filter(e => !employeeSearch || (e.publicUserData?.firstName || '').toLowerCase().includes(employeeSearch.toLowerCase()) || (e.publicUserData?.lastName || '').toLowerCase().includes(employeeSearch.toLowerCase()) || (e.publicUserData?.identifier || '').toLowerCase().includes(employeeSearch.toLowerCase())).map((member) => (
                     <tr key={member.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => { setActiveMember(member); setSelectedMember(member); }}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -372,12 +414,13 @@ export const OrganisationDetails = () => {
                             </div>
                           )}
                           <div>
-                            <div className="font-medium text-slate-900">
+                            <div className="font-medium text-slate-900 flex items-center gap-2">
                               {member.publicUserData.firstName || member.publicUserData.lastName || member.publicMetadata?.firstName || member.publicMetadata?.lastName ? `${member.publicUserData.firstName || member.publicMetadata?.firstName || ''} ${member.publicUserData.lastName || member.publicMetadata?.lastName || ''}`.trim() : (
   <span className="italic text-slate-500 font-normal">
     {member.publicUserData.identifier?.split('@')[0] || 'Awaiting setup'}
   </span>
 )}
+                              {member.isRemoved && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">Removed</span>}
                             </div>
                           </div>
                         </div>
@@ -820,74 +863,14 @@ export const OrganisationDetails = () => {
       )}
 
 
-      {/* Employee Details Side Panel */}
-      <>
-        <div 
-          className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${selectedMember ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-          onClick={() => setSelectedMember(null)}
-        ></div>
-        <div className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[70] overflow-y-auto transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col ${selectedMember ? 'translate-x-0' : 'translate-x-full'}`}>
-          
-          <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-            <h2 className="text-lg font-bold text-slate-900">Employee Profile</h2>
-            <button onClick={() => setSelectedMember(null)} className="text-slate-400 hover:text-slate-600 p-2">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          </div>
-
-          <div className="p-6 flex-grow flex flex-col items-center">
-            {activeMember && (
-              <>
-                {activeMember.publicUserData.imageUrl && (
-                  <img src={activeMember.publicUserData.imageUrl} alt="" className="w-24 h-24 rounded-full border-4 border-white shadow-md mb-4" />
-                )}
-                <h3 className="text-2xl font-bold text-slate-900">
-                  {activeMember.publicUserData.firstName || activeMember.publicUserData.lastName 
-                    ? `${activeMember.publicUserData.firstName || ''} ${activeMember.publicUserData.lastName || ''}`.trim() 
-                    : (
-                      <span className="italic text-slate-400 font-normal">
-                        {activeMember.publicUserData.identifier?.split('@')[0] || 'Awaiting setup'}
-                      </span>
-                    )
-                  }
-                </h3>
-                <p className="text-emerald-600 font-medium mb-8">{activeMember.publicUserData.identifier}</p>
-
-                <div className="w-full space-y-4">
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Clerk User ID</p>
-                    <p className="text-sm font-mono text-slate-800 break-all">{activeMember.publicUserData.userId}</p>
-                  </div>
-                  
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Role in Organisation</p>
-                    <p className="text-sm text-slate-800 capitalize">
-                      {activeMember.role === 'org:admin' ? 'Administrator' : 'Employee'}
-                    </p>
-                  </div>
-
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Joined Date</p>
-                    <p className="text-sm text-slate-800">
-                      {new Date(activeMember.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-          
-          <div className="p-6 border-t border-slate-200 bg-slate-50">
-            <button 
-              onClick={() => setSelectedMember(null)}
-              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm"
-            >
-              Close Profile
-            </button>
-          </div>
-        </div>
-      </>
-
-    </SidebarLayout>
+            {/* Employee Details Side Panel */}
+      <EmployeeProfileSidecar
+        isOpen={!!selectedMember}
+        onClose={() => setSelectedMember(null)}
+        activeMember={selectedMember}
+        employeeProfile={employeeProfile}
+        isFetchingProfile={false}
+      />
+</SidebarLayout>
   );
 };

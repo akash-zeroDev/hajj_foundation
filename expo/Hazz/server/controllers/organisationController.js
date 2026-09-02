@@ -159,8 +159,7 @@ exports.getOrganisationEmployees = async (req, res) => {
       organizationId: org.clerkOrganizationId,
     });
 
-    // In Clerk SDK v4, memberships is an array directly
-    res.status(200).json(Array.isArray(memberships) ? memberships : memberships.data);
+    res.status(200).json(Array.isArray(memberships) ? memberships : (memberships?.data || []));
   } catch (error) {
     console.error('Error fetching organisation employees:', error);
     res.status(500).json({ message: 'Internal server error fetching employees' });
@@ -236,8 +235,21 @@ exports.getOrganisationByClerkId = async (req, res) => {
       return res.status(404).json({ message: 'Organisation not found' });
     }
 
+    // Sync with clerk to remove orphaned employees
+    try {
+      const memberships = await clerk.organizations.getOrganizationMembershipList({ organizationId: req.params.clerkId });
+      const membersArray = Array.isArray(memberships) ? memberships : (memberships?.data || []);
+      if (membersArray.length >= 0) {
+        const activeClerkUserIds = membersArray.map(m => m.publicUserData?.userId).filter(Boolean);
+        await Employee.updateMany({ organisationId: org._id, clerkUserId: { $nin: activeClerkUserIds } }, { $set: { isRemoved: true } });
+        await Employee.updateMany({ organisationId: org._id, clerkUserId: { $in: activeClerkUserIds } }, { $set: { isRemoved: false } });
+      }
+    } catch (e) {
+      console.error('Failed to sync members from clerk', e.message);
+    }
+
     // Aggregation logic for stats
-    const totalEmployees = await Employee.countDocuments({ organisationId: org._id });
+    const totalEmployees = await Employee.countDocuments({ organisationId: org._id, isRemoved: { $ne: true } });
     
     const savingsAgg = await Employee.aggregate([
       { $match: { organisationId: org._id } },
@@ -245,7 +257,7 @@ exports.getOrganisationByClerkId = async (req, res) => {
     ]);
     const totalCombinedSavings = savingsAgg.length > 0 ? savingsAgg[0].total : 0;
     
-    const hajjJourneysWon = await Employee.countDocuments({ organisationId: org._id, awardStatus: { $in: ['won', 'claimed'] } });
+    const hajjJourneysWon = await Employee.countDocuments({ organisationId: org._id, awardStatus: { $in: ['won', 'claimed'] }, isRemoved: { $ne: true } });
     
     // Monthly onboarding data (Last 6 months)
     const sixMonthsAgo = new Date();
@@ -277,8 +289,8 @@ exports.getOrganisationByClerkId = async (req, res) => {
       );
     }
 
-    const pendingAgreements = await Employee.countDocuments({ organisationId: org._id, agreementStatus: 'pending' });
-    const recentEmployees = await Employee.find({ organisationId: org._id }).sort({ createdAt: -1 }).limit(4);
+    const pendingAgreements = await Employee.countDocuments({ organisationId: org._id, agreementStatus: 'pending', isRemoved: { $ne: true } });
+    const recentEmployees = await Employee.find({ organisationId: org._id, isRemoved: { $ne: true } }).sort({ createdAt: -1 }).limit(4);
 
     const orgObj = org.toObject();
     orgObj.dashboardStats = {
@@ -321,8 +333,21 @@ exports.getEmployeeAgreements = async (req, res) => {
       return res.status(404).json({ message: 'Organisation not found in database.' });
     }
 
+    // Sync with clerk to remove orphaned employees
+    try {
+      const memberships = await clerk.organizations.getOrganizationMembershipList({ organizationId: clerkOrgId });
+      const membersArray = Array.isArray(memberships) ? memberships : (memberships?.data || []);
+      if (membersArray.length >= 0) {
+        const activeClerkUserIds = membersArray.map(m => m.publicUserData?.userId).filter(Boolean);
+        await Employee.updateMany({ organisationId: org._id, clerkUserId: { $nin: activeClerkUserIds } }, { $set: { isRemoved: true } });
+        await Employee.updateMany({ organisationId: org._id, clerkUserId: { $in: activeClerkUserIds } }, { $set: { isRemoved: false } });
+      }
+    } catch (e) {
+      console.error('Failed to sync members from clerk', e.message);
+    }
+
     const employees = await Employee.find({ organisationId: org._id })
-      .select('firstName lastName agreementStatus updatedAt clerkUserId email')
+      .select('firstName lastName agreementStatus updatedAt clerkUserId email isRemoved balance monthlyContribution')
       .sort({ updatedAt: -1 });
 
     res.status(200).json({ success: true, data: employees });
@@ -364,6 +389,20 @@ exports.getEmployeeAgreements = async (req, res) => {
     const org = await Organisation.findOne({ clerkOrganizationId: clerkId });
     if (!org) {
       return res.status(404).json({ success: false, message: 'Organisation not found' });
+    }
+
+    // Sync with clerk to remove orphaned employees
+    try {
+      const memberships = await clerk.organizations.getOrganizationMembershipList({ organizationId: clerkId });
+      const membersArray = Array.isArray(memberships) ? memberships : (memberships?.data || []);
+      if (membersArray.length >= 0) {
+        const activeClerkUserIds = membersArray.map(m => m.publicUserData?.userId).filter(Boolean);
+        const Employee = require('../models/Employee');
+        await Employee.updateMany({ organisationId: org._id, clerkUserId: { $nin: activeClerkUserIds } }, { $set: { isRemoved: true } });
+        await Employee.updateMany({ organisationId: org._id, clerkUserId: { $in: activeClerkUserIds } }, { $set: { isRemoved: false } });
+      }
+    } catch (e) {
+      console.error('Failed to sync members from clerk', e.message);
     }
 
     // Find all employees that belong to this org

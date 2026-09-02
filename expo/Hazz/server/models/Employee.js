@@ -43,6 +43,7 @@ const employeeSchema = new mongoose.Schema({
   subscriptionStatus: { type: String, enum: ['pending', 'active', 'past_due', 'canceled'], default: 'pending' },
   
   autoPayEnabled: { type: Boolean, default: false },
+  isRemoved: { type: Boolean, default: false },
   bankDetails: {
     accountName: String,
     accountNumber: String,
