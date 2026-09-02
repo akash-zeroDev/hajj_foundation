@@ -7,7 +7,7 @@ exports.getGlobalTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.find()
       .populate('payerId', 'name companyName firstName lastName email clerkUserId')
-      .populate('orgId', 'companyName')
+      .populate('orgId', 'name')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, data: transactions });

@@ -5,6 +5,7 @@ import SidebarLayout from '../../layouts/SidebarLayout';
 import PrimaryButton from '../../components/PrimaryButton';
 import CustomSelect from '../../components/CustomSelect';
 import { superAdminNavigation } from '../../config/navigation';
+import { Landmark, Lock, Info, Check } from 'lucide-react';
 
 export const BankAccounts = () => {
   const { showToast } = useToast();
@@ -110,7 +111,7 @@ export const BankAccounts = () => {
             <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px]">
               <div className="flex items-center gap-[12px]">
                 <span className="w-[38px] h-[38px] rounded-[11px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b] flex-shrink-0">
-                  <svg className="w-[18px] h-[18px] stroke-current stroke-[1.8] fill-none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M5 10V8l7-4 7 4v2M6 10v8M10 10v8M14 10v8M18 10v8M3 20h18"/></svg>
+                  <Landmark className="w-[18px] h-[18px] stroke-[1.8]" />
                 </span>
                 <h4 className="m-0 text-[14.5px] font-bold tracking-[-0.2px] text-[#0e1a16] leading-snug">Corporate Operating<br/>Account</h4>
                 {operatingBank ? (
@@ -131,7 +132,7 @@ export const BankAccounts = () => {
             <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px]">
               <div className="flex items-center gap-[12px]">
                 <span className="w-[38px] h-[38px] rounded-[11px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b] flex-shrink-0">
-                  <svg className="w-[18px] h-[18px] stroke-current stroke-[1.8] fill-none" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M8 10V7a4 4 0 118 0v3"/></svg>
+                  <Lock className="w-[18px] h-[18px] stroke-[1.8]" />
                 </span>
                 <h4 className="m-0 text-[14.5px] font-bold tracking-[-0.2px] text-[#0e1a16] leading-snug">Hajj Trust Account</h4>
                 {trustBank ? (
@@ -216,7 +217,7 @@ export const BankAccounts = () => {
                 </div>
 
                 <div className="flex gap-[11px] p-[13px_14px] rounded-[11px] bg-[#eef4ff] border border-[#dbe6ff] text-[12.8px] leading-[1.55] text-[#1e3a8a]">
-                  <svg className="w-[17px] h-[17px] flex-shrink-0 mt-[1px] stroke-current stroke-[1.8] fill-none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 11v5M12 8h.01"/></svg>
+                  <Info className="w-[17px] h-[17px] flex-shrink-0 mt-[1px] stroke-[1.8]" />
                   <div><b className="font-bold">Security notice:</b> full bank details are transmitted directly to the payout provider over a secure API and are <b className="font-bold">never stored</b> in our database. Only the last 4 digits are kept for display.</div>
                 </div>
 
@@ -231,7 +232,7 @@ export const BankAccounts = () => {
                   <PrimaryButton 
                     type="submit"
                     isLoading={isSaving}
-                    icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12l5 5L20 7" /></svg>}
+                    icon={<Check className="w-5 h-5" />}
                     className="ml-auto"
                   >
                     {isSaving ? 'Updating...' : 'Update routing'}

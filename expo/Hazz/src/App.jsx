@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Show, RedirectToSignIn, useUser, useOrganization } from '@clerk/react';
+import { Show, RedirectToSignIn, RedirectToSignUp, useUser, useOrganization } from '@clerk/react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import { EmployeeDashboard, AdminDashboard, SuperAdminDashboard, Unauthorized } from './pages/Dashboards';
@@ -19,12 +19,27 @@ import { AgreementsTracking } from './pages/admin/AgreementsTracking';
 import { Settings } from './pages/admin/Settings';
 import { RequireRole } from './components/RequireRole';
 
-const ProtectedRoute = ({ children }) => (
-  <>
-    <Show when="signed-in">{children}</Show>
-    <Show when="signed-out"><RedirectToSignIn /></Show>
-  </>
-);
+const ProtectedRoute = ({ children }) => {
+  const hasTicket = new URLSearchParams(window.location.search).has('__clerk_ticket');
+  
+  // If there's a ticket, DO NOT aggressively redirect. 
+  // Let Clerk's internal JS detect the ticket and handle the Hosted UI handoff natively!
+  if (hasTicket) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-700 mb-4"></div>
+        <p className="text-slate-500 font-medium animate-pulse">Processing your invitation...</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Show when="signed-in">{children}</Show>
+      <Show when="signed-out"><RedirectToSignIn /></Show>
+    </>
+  );
+};
 
 
 const DashboardRouter = () => {

@@ -5,6 +5,8 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
+import { NotificationProvider } from './context/NotificationContext.jsx'
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -17,8 +19,10 @@ createRoot(document.getElementById('root')).render(
     >
       <BrowserRouter>
         <ToastProvider>
-        <App />
-      </ToastProvider>
+          <NotificationProvider>
+            <App />
+          </NotificationProvider>
+        </ToastProvider>
       </BrowserRouter>
     </ClerkProvider>
   </StrictMode>,

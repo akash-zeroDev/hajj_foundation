@@ -2,6 +2,7 @@ const Employee = require('../models/Employee');
 const cloudinary = require('cloudinary').v2;
 const { createClerkClient } = require('@clerk/clerk-sdk-node');
 const Organisation = require('../models/Organisation');
+const NotificationService = require('../services/NotificationService');
 
 // Initialize Clerk client
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
@@ -389,6 +390,16 @@ exports.updateOrganisationDetails = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Organisation not found' });
     }
     
+    // Send notification to Super Admins
+    await NotificationService.notifySuperAdmin({
+      senderId: clerkOrgId,
+      senderName: org.name,
+      type: 'ORG_DETAILS_UPDATED',
+      title: 'Organisation Details Updated',
+      message: `${org.name} has updated their profile details.`,
+      actionUrl: `/superadmin/organisations/${org._id}`
+    });
+
     res.status(200).json({ success: true, data: org });
   } catch (error) {
     console.error('Error updating organisation details:', error);

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { UserButton, useUser } from '@clerk/react';
+import NotificationDropdown from '../components/NotificationDropdown';
+
 
 export default function SidebarLayout({ navigation, title, children }) {
     const location = useLocation();
@@ -109,7 +111,7 @@ export default function SidebarLayout({ navigation, title, children }) {
             <h1 className="text-xl font-bold text-slate-800 truncate">{title}</h1>
           </div>
           <div className="flex items-center gap-4">
-             {/* Additional header items could go here */}
+             <NotificationDropdown />
              <span className="text-sm text-slate-500 hidden sm:block">
                {new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
              </span>

@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { superAdminNavigation } from '../../config/navigation';
+import { Building, Wallet } from 'lucide-react';
+import SearchFilterBar from '../../components/SearchFilterBar';
+
 
 export const PaymentsList = () => {
   const { getToken } = useAuth();
   const [transactions, setTransactions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ totalRevenue: 0, totalSavingsPool: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,6 +41,25 @@ export const PaymentsList = () => {
     fetchData();
   }, []);
 
+  
+  const filteredTransactions = transactions.filter(tx => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    
+    let payerName = '';
+    let orgName = '';
+    
+    if (tx.payerModel === 'Organisation') {
+      payerName = tx.payerId?.name || '';
+      orgName = tx.payerId?.name || '';
+    } else {
+      payerName = `${tx.payerId?.firstName || ''} ${tx.payerId?.lastName || ''}`;
+      orgName = tx.orgId?.name || '';
+    }
+    
+    return payerName.toLowerCase().includes(term) || orgName.toLowerCase().includes(term);
+  });
+
   return (
     <SidebarLayout navigation={superAdminNavigation}>
       <div className="mb-8">
@@ -48,8 +71,8 @@ export const PaymentsList = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div className="p-2 bg-slate-100 rounded-lg">
+              <Building className="w-5 h-5 text-slate-800" />
             </div>
             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Company Revenue (Org Fees)</h3>
           </div>
@@ -58,8 +81,8 @@ export const PaymentsList = () => {
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            <div className="p-2 bg-slate-100 rounded-lg">
+              <Wallet className="w-5 h-5 text-slate-800" />
             </div>
             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Savings Pool (AUM)</h3>
           </div>
@@ -69,6 +92,15 @@ export const PaymentsList = () => {
       </div>
 
       {/* Ledger Table */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <SearchFilterBar 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          placeholder="Search by payer or organisation..." 
+          containerClassName="flex-1 max-w-md"
+        />
+      </div>
+
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
           <h2 className="text-lg font-bold text-slate-800">Global Ledger</h2>
@@ -79,6 +111,7 @@ export const PaymentsList = () => {
               <tr>
                 <th className="px-6 py-3">Date</th>
                 <th className="px-6 py-3">Payer</th>
+                <th className="px-6 py-3">Organisation</th>
                 <th className="px-6 py-3">Type</th>
                 <th className="px-6 py-3">Amount</th>
                 <th className="px-6 py-3">Status</th>
@@ -87,27 +120,29 @@ export const PaymentsList = () => {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-slate-500">Loading transactions...</td>
+                  <td colSpan="6" className="px-6 py-8 text-center text-slate-500">Loading transactions...</td>
                 </tr>
-              ) : transactions.length === 0 ? (
+              ) : filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-slate-500">No transactions found in the ledger.</td>
+                  <td colSpan="6" className="px-6 py-8 text-center text-slate-500">No transactions found in the ledger.</td>
                 </tr>
               ) : (
-                transactions.map((tx) => (
+                filteredTransactions.map((tx) => (
                   <tr key={tx._id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-slate-600">
                       {new Date(tx.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {tx.payerModel === 'Organisation' ? (
-                        <div className="font-medium text-slate-900">{tx.payerId?.companyName || 'Unknown Org'}</div>
+                        <div className="font-medium text-slate-900 truncate max-w-[150px]" title={tx.payerId?.name || 'Unknown Org'}>{tx.payerId?.name || 'Unknown Org'}</div>
                       ) : (
-                        <div>
-                          <div className="font-medium text-slate-900">{tx.payerId?.firstName} {tx.payerId?.lastName}</div>
-                          <div className="text-xs text-slate-500">{tx.orgId?.companyName}</div>
-                        </div>
+                        <div className="font-medium text-slate-900 truncate max-w-[150px]" title={`${tx.payerId?.firstName || ''} ${tx.payerId?.lastName || ''}`}>{tx.payerId?.firstName} {tx.payerId?.lastName}</div>
                       )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-slate-600 truncate max-w-[150px] sm:max-w-[200px]" title={tx.payerModel === 'Organisation' ? (tx.payerId?.name || 'Unknown Org') : (tx.orgId?.name || 'Unknown Org')}>
+                        {tx.payerModel === 'Organisation' ? (tx.payerId?.name || 'Unknown Org') : (tx.orgId?.name || 'Unknown Org')}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {tx.type === 'employer_fee' ? (

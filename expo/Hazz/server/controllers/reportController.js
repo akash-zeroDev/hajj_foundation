@@ -1,3 +1,5 @@
+const { createClerkClient } = require('@clerk/clerk-sdk-node');
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 const Employee = require('../models/Employee');
 const Organisation = require('../models/Organisation');
 const Transaction = require('../models/Transaction');
@@ -12,6 +14,16 @@ exports.getOperationalStats = async (req, res) => {
     const activeEmployees = await Employee.countDocuments({ isRemoved: { $ne: true } });
     const compliantEmployees = await Employee.countDocuments({ agreementStatus: 'signed', isRemoved: { $ne: true } });
     const pendingEmployees = activeEmployees - compliantEmployees;
+    
+    // Fetch suspended users from Clerk
+    let suspendedUsersCount = 0;
+    try {
+      const usersResponse = await clerk.users.getUserList();
+      const allUsers = Array.isArray(usersResponse) ? usersResponse : (usersResponse.data || []);
+      suspendedUsersCount = allUsers.filter(u => u.banned || u.publicMetadata?.isSuspended).length;
+    } catch (err) {
+      console.error('Error fetching suspended users from clerk for reports:', err);
+    }
     
     const totalAUM = await Employee.aggregate([
       { $group: { _id: null, total: { $sum: "$balance" } } }
@@ -33,7 +45,8 @@ exports.getOperationalStats = async (req, res) => {
         total: totalEmployees,
         active: activeEmployees,
         compliant: compliantEmployees,
-        pending: pendingEmployees
+        pending: pendingEmployees,
+        suspended: suspendedUsersCount
       },
       financials: {
         aum: totalAUM[0]?.total || 0,

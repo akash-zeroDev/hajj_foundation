@@ -7,5 +7,6 @@ router.get('/clerk/:clerkId', requireSelf, employeeController.getEmployeeProfile
 router.get('/clerk/:clerkId/admin', requireOrgAdmin, employeeController.getEmployeeForAdmin);
 router.patch('/:id/complete-onboarding', requireSelf, employeeController.completeOnboarding);
 router.patch('/:id/bank-settings', requireSelf, employeeController.updateBankSettings);
+router.post('/invite', requireOrgAdmin, employeeController.inviteEmployee);
 
 module.exports = router;

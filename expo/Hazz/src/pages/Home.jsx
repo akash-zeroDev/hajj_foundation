@@ -8,7 +8,7 @@ import {
 } from "motion/react";
 import { useEffect, useRef, useState,  } from "react";
 import { useAuth, useUser, Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import archesImage from "../assets/arches.png";
 import heroImage from "../assets/hero-makkah.png";
 import pilgrimsImage from "../assets/pilgrims.png";
@@ -1035,14 +1035,15 @@ function Footer({ dashboardLink }) {
 /* ------------------------------------------------------------------ */
 
 export default function LandingPage() {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const navigate = useNavigate();
   const [dashboardLink, setDashboardLink] = useState('/dashboard');
 
   useEffect(() => {
-    if (isLoaded && user) {
-      setDashboardLink('/dashboard');
+    if (isLoaded && isSignedIn) {
+      navigate('/dashboard', { replace: true });
     }
-  }, [isLoaded, user]);
+  }, [isLoaded, isSignedIn, navigate]);
 
   return (
     <>

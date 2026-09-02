@@ -1,6 +1,8 @@
 const { createClerkClient } = require('@clerk/clerk-sdk-node');
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 const Employee = require('../models/Employee');
+const NotificationService = require('../services/NotificationService');
+
 const Organisation = require('../models/Organisation');
 
 
@@ -87,6 +89,17 @@ exports.completeOnboarding = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Employee not found' });
     }
 
+    // Send notification to Org Admin
+    await NotificationService.notifyOrgAdmins({
+      orgId: employee.organisationId,
+      senderId: employee.clerkUserId,
+      senderName: `${firstName} ${lastName}`,
+      type: 'EMPLOYEE_ONBOARDING_COMPLETED',
+      title: 'Employee Onboarding Complete',
+      message: `${firstName} ${lastName} has signed the master agreement and completed onboarding.`,
+      actionUrl: `/admin/employees`
+    });
+
     res.status(200).json({ success: true, data: employee });
   } catch (error) {
     console.error('Error completing onboarding:', error);
@@ -119,6 +132,17 @@ exports.updateEmployeeProfile = async (req, res) => {
     } catch (clerkErr) {
       console.error('Failed to sync name to Clerk during update:', clerkErr);
     }
+
+    // Send notification to Org Admin
+    await NotificationService.notifyOrgAdmins({
+      orgId: employee.organisationId,
+      senderId: clerkId,
+      senderName: `${firstName} ${lastName}`,
+      type: 'EMPLOYEE_PROFILE_UPDATED',
+      title: 'Employee Profile Updated',
+      message: `${firstName} ${lastName} has updated their profile details.`,
+      actionUrl: `/admin/employees`
+    });
 
     res.status(200).json({ success: true, data: employee });
   } catch (error) {
@@ -199,5 +223,34 @@ exports.updateBankSettings = async (req, res) => {
   } catch (error) {
     console.error('Error updating bank settings:', error);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.inviteEmployee = async (req, res) => {
+  try {
+    const { emailAddress, role } = req.body;
+    const auth = getAuth(req);
+    const orgId = auth.orgId; // The Clerk Organization ID
+
+    if (!orgId) {
+      return res.status(400).json({ success: false, message: 'Must be in an organization to invite members' });
+    }
+
+    if (auth.orgRole !== 'org:admin') {
+      return res.status(403).json({ success: false, message: 'Must be an admin to invite members' });
+    }
+
+    // Use the backend SDK to invite, which supports redirectUrl!
+    const invitation = await clerk.organizations.createOrganizationInvitation({
+      organizationId: orgId,
+      emailAddress,
+      role: role || 'org:member',
+      redirectUrl: 'http://localhost:5173/dashboard'
+    });
+
+    res.status(200).json({ success: true, data: invitation });
+  } catch (error) {
+    console.error('Error inviting employee:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to send invite' });
   }
 };

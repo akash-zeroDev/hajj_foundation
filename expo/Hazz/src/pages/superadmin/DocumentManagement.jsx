@@ -4,6 +4,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import { useAuth } from '@clerk/react';
 import { useToast } from '../../context/ToastContext';
 import { superAdminNavigation } from '../../config/navigation';
+import { Upload, Check } from 'lucide-react';
 
 const DocumentManagement = () => {
   const { getToken } = useAuth();
@@ -92,68 +93,76 @@ const DocumentManagement = () => {
   const activeDoc = documents.find(d => d.isActive);
 
   return (
-    <SidebarLayout navigation={superAdminNavigation} title="Document Management">
-      <div className="mb-6">
-        <h3 className="text-[23px] font-bold tracking-[-0.5px] text-slate-900 m-0">Shariah Documents</h3>
-        <p className="mt-1.5 text-[13.5px] text-[#5c6b65]">Upload and version control the Global Master Agreements for all employees.</p>
-      </div>
+    <SidebarLayout navigation={superAdminNavigation}>
+      <div className="max-w-5xl mx-auto space-y-8">
+        
+        {/* Page Header */}
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-2xl font-bold text-slate-900">Document Management</h1>
+          <p className="text-slate-500 text-sm">Upload and version control the Global Master Agreements for all employees.</p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start mb-4">
         {/* Upload Card */}
-        <div className="bg-white rounded-[14px] border border-[#e6ecea] shadow-[0_1px_2px_rgba(14,26,22,0.04),0_8px_24px_-18px_rgba(14,26,22,0.35)]">
-          <div className="px-[18px] py-[16px] border-b border-[#e6ecea]">
-            <h4 className="text-[15px] font-bold tracking-[-0.2px] m-0 text-[#0e1a16]">Upload New Master Agreement</h4>
-            <p className="mt-[3px] text-[12.5px] text-[#8a9994]">This will automatically become the new active template for all future signups.</p>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-slate-200 bg-slate-50/50">
+            <h2 className="text-lg font-bold text-slate-800">Upload New Master Agreement</h2>
+            <p className="text-sm text-slate-500 mt-1">This will automatically become the active template for all future signups.</p>
           </div>
           
-          <div className="p-[18px]">
-            <form onSubmit={handleUpload} className="grid gap-[16px]">
+          <div className="p-6">
+            <form onSubmit={handleUpload} className="space-y-6">
               
-              <div className="grid gap-[6px]">
-                <label className="text-[12.5px] font-semibold text-[#5c6b65]">Document title</label>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Document Title</label>
                 <input 
                   type="text" 
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Master Shariah Agreement 2026 (v2)"
-                  className="w-full text-[14px] px-[13px] py-[11px] border border-[#e6ecea] rounded-[10px] bg-white text-[#0e1a16] outline-none focus:border-[#17a377] focus:ring-[3px] focus:ring-[rgba(23,163,119,0.14)] transition-all"
+                  className="w-full text-sm px-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition-all placeholder:text-slate-400"
                 />
               </div>
 
-              <div className="grid gap-[6px]">
-                <label className="text-[12.5px] font-semibold text-[#5c6b65]">PDF file</label>
-                <label className="flex items-center gap-[13px] p-[18px] border-[1.5px] border-dashed border-[#cfdcd7] rounded-[12px] bg-[#fafcfb] cursor-pointer hover:border-[#17a377] hover:bg-[rgba(23,163,119,0.06)] transition-all">
-                  <div className="w-[38px] h-[38px] rounded-[11px] flex-shrink-0 grid place-items-center bg-[rgba(11,122,91,0.10)] text-[#0b7a5b]">
-                    <svg className="w-[19px] h-[19px] stroke-current stroke-[1.8px] fill-none" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">PDF File</label>
+                <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/50 transition-all group">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-emerald-100 text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6 stroke-[2px]" />
                   </div>
-                  <div>
-                    <b className="block text-[13.5px] text-[#0e1a16]">{file ? file.name : "Choose a file or drag it here"}</b>
-                    <small className="text-[#8a9994] text-[12px]">{file ? (file.size / 1048576).toFixed(2) + " MB · ready" : "PDF only · max 10 MB"}</small>
+                  <div className="text-center">
+                    <b className="block text-sm font-bold text-slate-700 mb-1">
+                      {file ? file.name : "Click to upload or drag and drop"}
+                    </b>
+                    <span className="text-xs text-slate-500">
+                      {file ? `${(file.size / 1048576).toFixed(2)} MB · Ready to publish` : "PDF format only (max. 10MB)"}
+                    </span>
                   </div>
                   <input type="file" className="hidden" accept=".pdf" required ref={fileInputRef} onChange={handleFileChange} />
                 </label>
               </div>
 
-              <label className="flex gap-[12px] p-[14px] rounded-[12px] bg-[#fdf6e6] border border-[#f2e3c2] text-[#8a5b12] cursor-pointer">
+              <label className="flex gap-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 cursor-pointer items-start transition-colors hover:bg-amber-100/50">
                 <input 
                   type="checkbox" 
                   checked={forceResign} 
                   onChange={(e) => setForceResign(e.target.checked)} 
-                  className="appearance-none w-[17px] h-[17px] flex-shrink-0 mt-[2px] border-[1.5px] border-[#d9bd85] rounded-[5px] bg-white cursor-pointer checked:bg-[#0b7a5b] checked:border-[#0b7a5b] relative checked:after:content-[''] checked:after:absolute checked:after:w-[9px] checked:after:h-[5px] checked:after:border-l-[2px] checked:after:border-b-[2px] checked:after:border-white checked:after:-rotate-45 checked:after:left-[2.5px] checked:after:top-[3px]" 
+                  className="mt-1 w-5 h-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer" 
                 />
-                <div>
-                  <b className="block text-[13.2px] font-bold text-[#6f4a0e]">Force existing employees to re-sign</b>
-                  <p className="mt-[4px] text-[12.6px] leading-[1.55]">If checked, every existing employee will be locked out of their dashboard until they read and sign this new version. If left unchecked, they are grandfathered into their old contract.</p>
+                <div className="flex-1">
+                  <b className="block text-sm font-bold text-amber-900 mb-1">Force existing employees to re-sign</b>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    If checked, every existing employee will be locked out of their dashboard until they read and sign this new version. If left unchecked, they remain grandfathered into their old contract.
+                  </p>
                 </div>
               </label>
 
-              <div className="flex items-center pt-[16px] border-t border-[#e6ecea]">
+              <div className="flex justify-end pt-2">
                 <PrimaryButton 
                   type="submit" 
                   isLoading={isUploading}
-                  icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12l5 5L20 7" /></svg>}
-                  className="ml-auto"
+                  icon={<Check className="w-4 h-4" />}
+                  className="px-6 py-2.5"
                 >
                   {isUploading ? 'Uploading...' : 'Publish new version'}
                 </PrimaryButton>
@@ -162,95 +171,70 @@ const DocumentManagement = () => {
           </div>
         </div>
 
-        {/* Active Template Card */}
-        <div className="bg-white rounded-[14px] border border-[#e6ecea] shadow-[0_1px_2px_rgba(14,26,22,0.04),0_8px_24px_-18px_rgba(14,26,22,0.35)] h-auto self-start">
-          <div className="px-[18px] py-[14px] border-b border-[#e6ecea] bg-[#fafcfb] rounded-t-[14px]">
-            <span className="text-[10.5px] tracking-[0.14em] uppercase text-[#8a9994] font-bold">Currently active template</span>
+        {/* History Table */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-slate-200 flex flex-col gap-1">
+            <h2 className="text-lg font-bold text-slate-800">Version History</h2>
+            <p className="text-sm text-slate-500">Every published version is securely retained for auditing purposes.</p>
           </div>
-          <div className="px-[18px] py-[18px]">
-            {isLoading ? (
-              <p className="text-[#8a9994] animate-pulse text-sm">Loading...</p>
-            ) : activeDoc ? (
-              <div className="flex flex-col gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-[rgba(23,163,119,0.14)] text-[#0b7a5b] px-[6px] py-[2px] rounded font-bold text-[10px] tracking-wide uppercase">
-                      v{activeDoc.version}
-                    </span>
-                    <h5 className="m-0 text-[14.5px] font-bold tracking-[-0.2px] text-[#0e1a16] truncate" title={activeDoc.title}>
-                      {activeDoc.title}
-                    </h5>
-                  </div>
-                  <p className="text-[12px] text-[#8a9994] mt-1.5">
-                    Published on {new Date(activeDoc.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                  </p>
-                </div>
-                
-                <a 
-                  href={activeDoc.fileUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="inline-flex items-center justify-center gap-[8px] w-full font-semibold text-[13px] px-[14px] py-[9px] rounded-[8px] bg-white border border-[#e6ecea] text-[#0e1a16] hover:bg-[#f2f6f5] transition-colors cursor-pointer no-underline"
-                >
-                  <svg className="w-[14px] h-[14px] stroke-current stroke-[2px] fill-none" viewBox="0 0 24 24"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
-                  View PDF document
-                </a>
-              </div>
-            ) : (
-              <div className="text-[13px] text-[#8a9994]">No active templates</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* History Table */}
-      <div className="bg-white rounded-[14px] border border-[#e6ecea] shadow-[0_1px_2px_rgba(14,26,22,0.04),0_8px_24px_-18px_rgba(14,26,22,0.35)]">
-        <div className="px-[18px] py-[16px] border-b border-[#e6ecea]">
-          <h4 className="text-[15px] font-bold tracking-[-0.2px] m-0 text-[#0e1a16]">Document Version History</h4>
-          <p className="mt-[3px] text-[12.5px] text-[#8a9994]">Every published version stays available for audit.</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="bg-[#fafcfb]">
-                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Version</th>
-                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Title</th>
-                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Status</th>
-                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Date published</th>
-                <th className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-bold">Link</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
                 <tr>
-                  <td colSpan="5" className="px-[18px] py-8 text-center text-[#8a9994]">Loading history...</td>
+                  <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Version</th>
+                  <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Title</th>
+                  <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Status</th>
+                  <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Published On</th>
+                  <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Document</th>
                 </tr>
-              ) : documents.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-[18px] py-8 text-center text-[#8a9994]">No documents uploaded yet.</td>
-                </tr>
-              ) : (
-                documents.map(doc => (
-                  <tr key={doc._id} className="hover:bg-[#fafcfb] group transition-colors">
-                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] text-[#0e1a16] group-last:border-0"><b className="font-semibold">v{doc.version}</b></td>
-                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] text-[#0e1a16] group-last:border-0">{doc.title}</td>
-                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] group-last:border-0">
-                      <span className={`inline-block text-[11px] font-bold px-[9px] py-[3px] rounded-full ${doc.isActive ? 'bg-[rgba(23,163,119,0.14)] text-[#0b7a5b]' : 'bg-[#eef1f0] text-[#8a9994]'}`}>
-                        {doc.isActive ? 'Active' : 'Archived'}
-                      </span>
-                    </td>
-                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] text-[#5c6b65] tabular-nums group-last:border-0">
-                      {new Date(doc.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                    </td>
-                    <td className="px-[18px] py-[13px] border-b border-[#e6ecea] text-[13.2px] group-last:border-0">
-                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-[#0b7a5b] font-semibold no-underline hover:underline">View PDF</a>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-500"></div>
+                        Loading history...
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : documents.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">No documents uploaded yet.</td>
+                  </tr>
+                ) : (
+                  documents.map(doc => (
+                    <tr key={doc._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-slate-900">v{doc.version}</td>
+                      <td className="px-6 py-4 text-slate-700">{doc.title}</td>
+                      <td className="px-6 py-4">
+                        {doc.isActive ? (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+                            Archived
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-500 font-mono text-xs">
+                        {new Date(doc.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 font-semibold no-underline hover:underline transition-colors">
+                          View PDF
+                        </a>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </div>
     </SidebarLayout>
   );

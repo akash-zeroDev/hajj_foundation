@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import SearchFilterBar from '../../components/SearchFilterBar';
 import CustomSelect from '../../components/CustomSelect';
+import { FileSignature, CreditCard, Award, X } from 'lucide-react';
 import { superAdminNavigation } from '../../config/navigation';
 import { useToast } from '../../context/ToastContext';
 
@@ -94,6 +95,7 @@ export const UsersList = () => {
       
       showToast('User permanently deleted', 'success');
       setActiveUser(null);
+      setSelectedUser(null);
       fetchUsers(); // Refresh list
     } catch (error) {
       showToast('Error deleting user', 'error');
@@ -119,7 +121,14 @@ export const UsersList = () => {
         showToast(`User successfully ${action}.`, 'success');
         
         // Update local state to reflect change without full refetch
-        const updatedUser = { ...activeUser, banned: data.banned };
+        const updatedUser = { 
+          ...activeUser, 
+          banned: data.banned,
+          publicMetadata: {
+            ...activeUser.publicMetadata,
+            isSuspended: data.banned
+          }
+        };
         setActiveUser(updatedUser);
         setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
       } else {
@@ -306,7 +315,7 @@ export const UsersList = () => {
                     onClick={handleCloseSidecard}
                     aria-label="Close"
                   >
-                    <svg viewBox="0 0 24 24" className="w-[12px] h-[12px] stroke-current stroke-[2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+                    <X className="w-[12px] h-[12px] stroke-[2]" />
                   </button>
                 </div>
                 <div className="flex items-center gap-[12px] mt-[6px]">
@@ -394,7 +403,7 @@ export const UsersList = () => {
                   <div className="bg-white border border-[#e5e7eb] rounded-[16px] overflow-hidden shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)]">
                     <div className="flex items-center gap-[12px] p-[13px_15px] border-b border-[#e5e7eb]">
                       <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#ecfdf5] text-[#059669]">
-                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <FileSignature className="w-[15px] h-[15px] stroke-[1.8]" />
                       </div>
                       <div>
                         <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#111827]">Shariah agreement</div>
@@ -411,7 +420,7 @@ export const UsersList = () => {
 
                     <div className="flex items-center gap-[12px] p-[13px_15px] border-b border-[#e5e7eb]">
                       <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#ecfdf5] text-[#059669]">
-                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><rect x="3" y="6" width="18" height="12" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h3"/></svg>
+                        <CreditCard className="w-[15px] h-[15px] stroke-[1.8]" />
                       </div>
                       <div>
                         <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#111827]">Subscription</div>
@@ -428,7 +437,7 @@ export const UsersList = () => {
 
                     <div className="flex items-center gap-[12px] p-[13px_15px]">
                       <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#ecfdf5] text-[#059669]">
-                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v6a8 8 0 01-16 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 20h6M12 18v2"/></svg>
+                        <Award className="w-[15px] h-[15px] stroke-[1.8]" />
                       </div>
                       <div>
                         <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#111827]">Hajj award</div>
@@ -492,6 +501,41 @@ export const UsersList = () => {
       </>
 
     
+
+      {/* Delete Confirmation Modal */}
+      {isConfirmingDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsConfirmingDelete(false)}></div>
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
+            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-red-100">
+              <svg className="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-xl font-bold text-slate-900">Delete User?</h3>
+            <p className="text-sm text-slate-500 mt-2 mb-6">
+              This action cannot be undone. This will permanently remove the user from the system.
+            </p>
+            
+            <div className="flex gap-3 justify-center">
+              <button 
+                onClick={() => setIsConfirmingDelete(false)}
+                className="px-6 py-2.5 rounded-xl font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDeleteUser}
+                className="px-6 py-2.5 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-[0_4px_12px_rgba(220,38,38,0.3)]"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 </SidebarLayout>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { superAdminNavigation } from '../../config/navigation';
+import { FileDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useToast } from '../../context/ToastContext';
@@ -148,7 +149,8 @@ export const Reports = () => {
           ['Total Employees (Historical)', stats.employees.total.toString()],
           ['Active Employees', stats.employees.active.toString()],
           ['Compliant Employees (Agreements Signed)', stats.employees.compliant.toString()],
-          ['Pending Employees (Not Signed)', stats.employees.pending.toString()]
+          ['Pending Employees (Not Signed)', stats.employees.pending.toString()],
+          ['Suspended Users', (stats.employees.suspended || 0).toString()]
         ],
         theme: 'grid',
         headStyles: { fillColor: [51, 65, 85] }, 
@@ -172,9 +174,10 @@ export const Reports = () => {
 
     const employeePieData = [
       { name: 'Compliant', value: stats.employees.compliant },
-      { name: 'Pending', value: stats.employees.pending }
+      { name: 'Pending', value: stats.employees.pending },
+      { name: 'Suspended', value: stats.employees.suspended || 0 }
     ];
-    const COLORS = ['#10b981', '#f59e0b']; // emerald, amber
+    const COLORS = ['#10b981', '#f59e0b', '#ef4444']; // emerald, amber, red
 
     const orgBarData = [
       { name: 'Active', count: stats.organizations.active },
@@ -363,7 +366,7 @@ export const Reports = () => {
             className="flex-1 md:flex-none px-4 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-lg transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {isGeneratingCsv ? 'Processing...' : (
-              <><svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Export Ledger (CSV)</>
+              <><FileDown className="w-4 h-4 text-slate-500" /> Export Ledger (CSV)</>
             )}
           </button>
           
@@ -373,7 +376,7 @@ export const Reports = () => {
             className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {isGeneratingPdf ? 'Generating...' : (
-              <><svg className="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Export Summary (PDF)</>
+              <><FileDown className="w-4 h-4 text-emerald-200" /> Export Summary (PDF)</>
             )}
           </button>
         </div>

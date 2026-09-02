@@ -3,6 +3,7 @@ const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // Note: Need to add this to .env
 const Organisation = require('../models/Organisation');
 const Employee = require('../models/Employee');
+const NotificationService = require('../services/NotificationService');
 const Transaction = require('../models/Transaction');
 
 
@@ -88,6 +89,16 @@ exports.verifyAnnualFeeCheckout = async (req, res) => {
           payerId: orgId,
           payerModel: 'Organisation',
           orgId: orgId
+        });
+
+        // Send notification to Super Admins
+        await NotificationService.notifySuperAdmin({
+          senderId: org.clerkOrganizationId,
+          senderName: org.name,
+          type: 'ORG_FEE_PAID',
+          title: 'Annual Fee Paid',
+          message: `${org.name} has successfully paid their annual platform fee of £${session.amount_total / 100}.`,
+          actionUrl: `/superadmin/payments`
         });
       }
       return res.status(200).json({ success: true, message: 'Payment verified and updated' });
@@ -188,6 +199,17 @@ exports.verifyEmployeeSubscription = async (req, res) => {
           payerModel: 'Employee',
           orgId: employee.organisationId
         });
+
+        // Send notification to Org Admin
+        await NotificationService.notifyOrgAdmins({
+          orgId: employee.organisationId,
+          senderId: employee.clerkUserId,
+          senderName: `${employee.firstName} ${employee.lastName}`,
+          type: 'EMPLOYEE_SUBSCRIPTION_ACTIVATED',
+          title: 'Employee Auto-Pay Activated',
+          message: `${employee.firstName} ${employee.lastName} has activated their £${employee.monthlyContribution} monthly auto-pay.`,
+          actionUrl: `/admin/payments`
+        });
       }
       return res.status(200).json({ success: true, message: 'Subscription verified and activated' });
     } else {
@@ -241,6 +263,17 @@ exports.cancelSubscription = async (req, res) => {
     employee.stripeSubscriptionId = null;
     await employee.save();
     
+    // Send notification to Org Admin
+    await NotificationService.notifyOrgAdmins({
+      orgId: employee.organisationId,
+      senderId: employee.clerkUserId,
+      senderName: `${employee.firstName} ${employee.lastName}`,
+      type: 'EMPLOYEE_SUBSCRIPTION_CANCELLED',
+      title: 'Employee Auto-Pay Cancelled',
+      message: `${employee.firstName} ${employee.lastName} has cancelled their monthly auto-pay.`,
+      actionUrl: `/admin/employees`
+    });
+
     res.json({ success: true, message: 'Auto Pay cancelled successfully' });
   } catch (err) {
     console.error('Error cancelling subscription:', err);
