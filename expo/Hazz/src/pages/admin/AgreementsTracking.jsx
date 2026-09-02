@@ -80,8 +80,7 @@ export const AgreementsTracking = () => {
         .agt-btn-ghost:hover { background: #f2f6f5; }
         .agt-grid { display: grid; gap: 16px; }
         .agt-kpis { grid-template-columns: repeat(3, 1fr); margin-bottom: 16px; }
-        .agt-kpi { padding: 18px; position: relative; overflow: hidden; }
-        .agt-kpi::after { content: ""; position: absolute; inset: auto -30px -40px auto; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(23,163,119,.10), transparent 70%); }
+        .agt-kpi { padding: 18px; position: relative; }
         .agt-kpi .agt-row { display: flex; align-items: center; justify-content: space-between; }
         .agt-kpi .agt-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8a9994; font-weight: 700; }
         .agt-kpi .agt-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(11,122,91,.10); color: #0b7a5b; }
@@ -89,7 +88,6 @@ export const AgreementsTracking = () => {
         .agt-kpi .agt-val { margin: 14px 0 6px; font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
         .agt-kpi .agt-foot { font-size: 12.5px; color: #5c6b65; }
         .agt-kpi.agt-amber .agt-ic { background: #fdf3e3; color: #c8811f; }
-        .agt-kpi.agt-amber::after { background: radial-gradient(circle, rgba(200,129,31,.12), transparent 70%); }
         .agt-meter { padding: 18px; }
         .agt-meter .agt-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
         .agt-meter h4 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
@@ -136,7 +134,6 @@ export const AgreementsTracking = () => {
             <p>Track which employees have reviewed and signed the Shariah master agreement.</p>
           </div>
           <div className="agt-actions">
-            <button className="agt-btn agt-btn-ghost"><svg viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M4 20h16"/></svg>Export CSV</button>
             <button className="agt-btn agt-btn-primary"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Remind pending</button>
           </div>
         </div>
@@ -152,7 +149,7 @@ export const AgreementsTracking = () => {
             <div className="agt-row"><span className="agt-label">Fully compliant</span>
               <span className="agt-ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span></div>
             <div className="agt-val">{signedCount}</div>
-            <div className="agt-foot">Signed the current version (v1)</div>
+            <div className="agt-foot">Employees with active agreements</div>
           </div>
           <div className="agt-card agt-kpi agt-amber">
             <div className="agt-row"><span className="agt-label">Pending signature</span>
@@ -165,7 +162,7 @@ export const AgreementsTracking = () => {
         <div className="agt-card agt-meter" style={{ marginBottom: 16 }}>
           <div className="agt-top"><h4>Compliance rate</h4><span className="agt-pct">{pct}%</span></div>
           <div className="agt-bar"><i style={{ width: `${pct}%` }}></i></div>
-          <small>{signedCount} of {totalCount} employees have signed Master Shariah Agreement v1 · published 01/09/2026</small>
+          <small>{signedCount} of {totalCount} employees have signed the active Master Shariah Agreement</small>
         </div>
 
         <div className="agt-card">

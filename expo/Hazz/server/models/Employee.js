@@ -37,9 +37,18 @@ const employeeSchema = new mongoose.Schema({
     default: 'none'
   },
 
+  
   stripeCustomerId: { type: String },
   stripeSubscriptionId: { type: String },
   subscriptionStatus: { type: String, enum: ['pending', 'active', 'past_due', 'canceled'], default: 'pending' },
+  
+  autoPayEnabled: { type: Boolean, default: false },
+  bankDetails: {
+    accountName: String,
+    accountNumber: String,
+    sortCode: String
+  },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Employee', employeeSchema);

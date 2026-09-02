@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react';
 import { useUser, useAuth, useOrganization } from '@clerk/react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import SidebarLayout from '../layouts/SidebarLayout';
+import HorizontalTabs from '../components/HorizontalTabs';
+import { EmployeeSettings } from './employee/Settings';
 import PrimaryButton from '../components/PrimaryButton';
 import { superAdminNavigation, orgAdminNavigation } from '../config/navigation';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // ... (OldLayout and Employee/Admin Dashboards unchanged for now)
 
@@ -32,7 +36,7 @@ const OldLayout = ({ title, children, description }) => {
 
 export const EmployeeDashboard = () => {
   const { showToast } = useToast();
-  const { getToken } = useAuth(); // EmployeeDashboard
+  const { getToken, signOut } = useAuth(); // EmployeeDashboard
   const { user, isLoaded: userLoaded } = useUser();
   const { organization, isLoaded: orgLoaded } = useOrganization();
   const [employeeData, setEmployeeData] = useState(null);
@@ -47,6 +51,64 @@ export const EmployeeDashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [isLoadingTx, setIsLoadingTx] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  const [autoPayEnabled, setAutoPayEnabled] = useState(false);
+  const [bankDetails, setBankDetails] = useState({ accountName: '', accountNumber: '', sortCode: '' });
+  const [isSavingBank, setIsSavingBank] = useState(false);
+  
+  useEffect(() => {
+    if (employeeData) {
+      setAutoPayEnabled(employeeData.autoPayEnabled || false);
+      if (employeeData.bankDetails) setBankDetails(employeeData.bankDetails);
+    }
+  }, [employeeData]);
+
+  const handleSaveBankSettings = async (triggerFailure = false) => {
+    setIsSavingBank(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`http://localhost:5000/api/employees/${employeeData._id}/bank-settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ autoPayEnabled, bankDetails, triggerFailure })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEmployeeData(data.data);
+        showToast(triggerFailure ? 'Simulated failed payment' : 'Bank settings saved successfully', triggerFailure ? 'error' : 'success');
+        
+        // Reload transactions
+        const txRes = await fetch('http://localhost:5000/api/financials/my-transactions', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const txData = await txRes.json();
+        if (txData.success) {
+          setTransactions(txData.data);
+        }
+      } else {
+        showToast(data.message || 'Error saving settings', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error', 'error');
+    } finally {
+      setIsSavingBank(false);
+    }
+  };
+
+  const tabs = [
+
+    { id: 'overview', name: 'Overview' },
+    { id: 'contributions', name: 'Contributions' },
+    { id: 'documents', name: 'Documents' },
+    { id: 'settings', name: 'Profile Settings' }
+  ];
+
 
     
   const trackDocumentActivity = async (action, details) => {
@@ -91,7 +153,7 @@ export const EmployeeDashboard = () => {
         tx.status
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: 55,
         head: [['Date', 'Contribution', 'Status']],
         body: txRows,
@@ -424,194 +486,438 @@ export const EmployeeDashboard = () => {
 
   }
 
+
   return (
-    <OldLayout title="Employee Portal" description="Manage your contributions, view balances, and download statements.">
-      
-      {employeeData?.awardStatus === 'won' && (
-        <div className="mb-6 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-xl shadow-lg border border-amber-300 p-6 flex flex-col sm:flex-row items-center gap-6 transform hover:scale-[1.01] transition-transform">
-          <div className="flex-shrink-0 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner">
-            <span className="text-3xl">🎉</span>
-          </div>
-          <div>
-            <h2 className="text-2xl font-black text-amber-900 mb-1">Congratulations! You have been selected!</h2>
-            <p className="text-amber-800 font-medium text-lg">You are a winner in the latest Hajj Awards draw. A member of our team will contact you shortly.</p>
+    <div className="hs-portal">
+      <style>{`
+        .hs-portal {
+          --green:#0b7a5b; --green-600:#0a6b50; --green-400:#17a377; --mint:#9ff0d2;
+          --green-soft:rgba(23,163,119,.12);
+          --bg:#f4f7f6; --card:#fff; --line:#e6ecea;
+          --ink:#0e1a16; --ink-2:#5c6b65; --ink-3:#8a9994;
+          --amber:#c8811f; --amber-soft:#fdf3e3;
+          --r:14px;
+          --shadow:0 1px 2px rgba(14,26,22,.04), 0 8px 24px -18px rgba(14,26,22,.35);
+          background: var(--bg); color: var(--ink);
+          font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          min-height: 100vh;
+        }
+        .hs-portal * { box-sizing: border-box; }
+        .hs-portal .top { background: radial-gradient(120% 180% at 0% 0%, rgba(23,163,119,.35), transparent 60%), linear-gradient(180deg,var(--green),var(--green-600)); color: #fff; }
+        .hs-portal .top-in { max-width: 1120px; margin: 0 auto; padding: 0 24px; height: 66px; display: flex; align-items: center; gap: 14px; }
+        .hs-portal .logo { display: flex; align-items: center; gap: 11px; font-weight: 700; font-size: 17px; letter-spacing: -.3px; }
+        .hs-portal .logo .mark { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.16); font-size: 13px; font-weight: 800; }
+        .hs-portal .top .right { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 13.5px; color: rgba(255,255,255,.82); }
+        .hs-portal .top .right b { color: #fff; font-weight: 600; }
+        .hs-portal .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; }
+        .hs-portal .signout { background: transparent; border: 1px solid rgba(255,255,255,.28); color: #fff; font: inherit; font-size: 12.8px; font-weight: 600; padding: 7px 13px; border-radius: 9px; cursor: pointer; }
+        .hs-portal .signout:hover { background: rgba(255,255,255,.12); }
+        .hs-portal .head { background: #fff; border-bottom: 1px solid var(--line); }
+        .hs-portal .head-in { max-width: 1120px; margin: 0 auto; padding: 22px 24px 0; }
+        .hs-portal .head h1 { margin: 0; font-size: 24px; letter-spacing: -.6px; }
+        .hs-portal .head p { margin: 5px 0 16px; color: var(--ink-2); font-size: 13.5px; }
+        .hs-portal .tabs { display: flex; gap: 26px; overflow-x: auto; }
+        .hs-portal .tab { border: 0; background: transparent; font: inherit; font-size: 13.8px; font-weight: 600; color: var(--ink-3); padding: 0 0 13px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .hs-portal .tab:hover { color: var(--ink); }
+        .hs-portal .tab.on { color: var(--green); border-bottom-color: var(--green); }
+        .hs-portal .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 24px 48px; }
+        .hs-portal .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); }
+        .hs-portal .card-head { padding: 15px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+        .hs-portal .card-head h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+        .hs-portal .card-head .sub { margin-left: auto; font-size: 12.5px; color: var(--ink-3); }
+        .hs-portal .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--green-soft); color: var(--green); }
+        .hs-portal .ic svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.8; fill: none; }
+        .hs-portal .grid { display: grid; gap: 16px; }
+        .hs-portal .g3 { grid-template-columns: repeat(3, 1fr); }
+        .hs-portal .g2 { grid-template-columns: repeat(2, 1fr); }
+        .hs-portal .stat { padding: 18px; position: relative; overflow: hidden; }
+        .hs-portal .stat .label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+        .hs-portal .stat .val { margin: 12px 0 4px; font-size: 30px; font-weight: 800; letter-spacing: -1.2px; line-height: 1; }
+        .hs-portal .stat .foot { font-size: 12.5px; color: var(--ink-2); }
+        .hs-portal .stat .row { display: flex; align-items: center; gap: 10px; }
+        .hs-portal .pill { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); display: inline-flex; align-items: center; gap: 6px; }
+        .hs-portal .pill svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+        .hs-portal .pill.warn { background: var(--amber-soft); color: var(--amber); }
+        .hs-portal .pill.mute { background: #eff3f2; color: var(--ink-3); }
+        .hs-portal .bar { height: 7px; border-radius: 999px; background: #eef2f1; overflow: hidden; margin-top: 14px; }
+        .hs-portal .bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--green-400), var(--green)); }
+        .hs-portal .btn { border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 13.4px; padding: 10px 16px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; }
+        .hs-portal .btn svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2; fill: none; }
+        .hs-portal .btn-primary { color: #fff; background: linear-gradient(180deg, var(--green-400), var(--green)); box-shadow: 0 10px 22px -12px rgba(11,122,91,.9); }
+        .hs-portal .btn-primary:hover { filter: brightness(1.06); }
+        .hs-portal .btn-ghost { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+        .hs-portal .btn-ghost:hover { background: #f2f6f5; }
+        .hs-portal .btn.full { width: 100%; justify-content: center; margin-top: 14px; }
+        .hs-portal .notice { display: flex; gap: 12px; padding: 14px 16px; border: 1px solid #f3e2c4; background: var(--amber-soft); border-radius: 12px; margin-bottom: 16px; }
+        .hs-portal .notice svg { width: 18px; height: 18px; flex: 0 0 18px; stroke: var(--amber); stroke-width: 2; fill: none; margin-top: 1px; }
+        .hs-portal .notice strong { display: block; font-size: 13.6px; margin-bottom: 2px; }
+        .hs-portal .notice p { margin: 0; font-size: 12.8px; color: #7a6033; }
+        .hs-portal table { width: 100%; border-collapse: collapse; }
+        .hs-portal th, .hs-portal td { text-align: left; padding: 13px 18px; font-size: 13.4px; border-bottom: 1px solid var(--line); }
+        .hs-portal th { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+        .hs-portal tbody tr:last-child td { border-bottom: 0; }
+        .hs-portal tbody tr:hover { background: #f7faf9; }
+        .hs-portal .mono { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+        .hs-portal .empty { padding: 44px 18px; text-align: center; }
+        .hs-portal .empty .eic { width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 12px; display: grid; place-items: center; background: #f1f5f4; color: var(--ink-3); }
+        .hs-portal .empty .eic svg { width: 21px; height: 21px; stroke: currentColor; stroke-width: 1.7; fill: none; }
+        .hs-portal .empty strong { display: block; font-size: 14.5px; }
+        .hs-portal .empty span { font-size: 13px; color: var(--ink-3); }
+        .hs-portal .doc { padding: 18px; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line); border-radius: 12px; background: #fcfdfd; }
+        .hs-portal .doc h3 { margin: 8px 0 0; font-size: 14.5px; font-weight: 700; }
+        .hs-portal .doc p { margin: 0; font-size: 12.8px; color: var(--ink-2); line-height: 1.5; }
+        .hs-portal .doc .btn { align-self: flex-start; margin-top: 6px; }
+        .hs-portal .dl { padding: 4px 18px; }
+        .hs-portal .dl .r { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+        .hs-portal .dl .r:last-child { border-bottom: 0; }
+        .hs-portal .dl .k { color: var(--ink-3); width: 210px; flex: 0 0 210px; }
+        .hs-portal .dl .v { font-weight: 600; }
+        .hs-portal .dl .a { margin-left: auto; }
+        .hs-portal .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+        .hs-portal .field input { width: 100%; font: inherit; font-size: 13.6px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: #f7faf9; color: var(--ink-2); }
+        .hs-portal .field input:disabled { cursor: not-allowed; }
+        .hs-portal .hint { font-size: 12.4px; color: var(--ink-3); padding: 0 18px 16px; }
+        .hs-portal .panel { padding: 18px; }
+        @media(max-width:900px){ .hs-portal .g3, .hs-portal .g2 { grid-template-columns: 1fr; } .hs-portal .top .right span.hide { display: none; } .hs-portal .dl .k { width: auto; flex: 0 0 130px; } }
+      `}</style>
+
+      <header className="top">
+        <div className="top-in">
+          <div className="logo"><span className="mark">HS</span>Hajj Savings Fund</div>
+          <div className="right">
+            <span className="hide">Welcome, <b id="who">{user?.primaryEmailAddress?.emailAddress}</b></span>
+            <button className="signout" onClick={() => signOut()}>Sign out</button>
+            <div className="avatar">
+              {user?.hasImage ? <img src={user.imageUrl} className="w-full h-full rounded-full" alt="" /> : (user?.firstName?.charAt(0) || 'E')}
+            </div>
           </div>
         </div>
-      )}
+      </header>
 
-      {employeeData?.subscriptionStatus === 'past_due' && (
-        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Action Required: Payment Failed</h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>Your last monthly contribution failed to process. You are currently <strong>disqualified</strong> from the Hajj Awards draw until the outstanding balance is paid.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-            <p className="text-sm text-slate-500 font-medium mb-1">Total Savings Balance</p>
-            <p className="text-4xl font-extrabold text-emerald-600">£{employeeData?.balance?.toLocaleString()}</p>
-          </div>
-          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-            <div className="flex justify-between items-start mb-1">
-              <p className="text-sm text-slate-500 font-medium">Monthly Contribution</p>
-              {employeeData?.subscriptionStatus === 'active' ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  Active
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  Action Required
-                </span>
-              )}
-            </div>
-            <p className="text-4xl font-extrabold text-slate-800">£{employeeData?.monthlyContribution?.toLocaleString()}</p>
-            {employeeData?.subscriptionStatus !== 'active' && (
+      <div className="head">
+        <div className="head-in">
+          <h1>Employee Portal</h1>
+          <p>Manage your contributions, view balances and download statements.</p>
+          <div className="tabs">
+            {tabs.map(t => (
               <button 
-                onClick={handleSetupSubscription}
-                disabled={isRedirecting}
-                className="mt-4 w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition shadow-sm disabled:bg-emerald-400 flex justify-center items-center gap-2"
+                key={t.id} 
+                className={`tab ${activeTab === t.id ? 'on' : ''}`}
+                onClick={() => setActiveTab(t.id)}
               >
-                {isRedirecting ? 'Connecting...' : 'Set up Direct Debit'}
+                {t.name}
               </button>
-            )}
-          </div>
-          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 flex flex-col justify-center">
-            <p className="text-sm text-slate-500 font-medium mb-2">Hajj Award Status</p>
-            {employeeData?.awardStatus === 'won' ? (
-              <span className="px-3 py-1 bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-900 text-sm font-black rounded-full w-max shadow-sm border border-amber-300 uppercase tracking-wide">
-                🏆 Award Winner
-              </span>
-            ) : (
-              <span className="px-3 py-1 bg-slate-200 text-slate-700 text-sm font-bold rounded-full w-max">
-                Not Selected Yet
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="border border-slate-200 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <h3 className="text-lg font-bold text-slate-800">Payment History</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-slate-500 font-medium border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-3">Date</th>
-                  <th className="px-6 py-3">Description</th>
-                  <th className="px-6 py-3">Amount</th>
-                  <th className="px-6 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {isLoadingTx ? (
-                   <tr><td colSpan="4" className="px-6 py-8 text-center text-slate-500">Loading transactions...</td></tr>
-                ) : transactions.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center">
-                      <h3 className="text-base font-bold text-slate-800 mb-1">No Transactions Yet</h3>
-                      <p className="text-slate-500">Your first payroll deduction will appear here soon.</p>
-                    </td>
-                  </tr>
-                ) : (
-                  transactions.map((tx) => (
-                    <tr key={tx._id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                        {new Date(tx.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
-                        Monthly Contribution
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-900">
-                        £{tx.amount.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {tx.status === 'succeeded' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Paid
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                            {tx.status}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            ))}
           </div>
         </div>
       </div>
-      {/* Document Center Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full lg:col-span-3">
-          <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-               <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-               Document Center
-            </h2>
-          </div>
-          <div className="p-6 flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 p-5 border border-slate-200 rounded-xl flex items-start gap-4 hover:border-emerald-200 hover:bg-emerald-50/50 transition">
-              <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">Savings Statement</h3>
-                <p className="text-xs text-slate-500 mt-1 mb-3">Download a formal PDF statement of your account balance and historical contributions.</p>
-                <button 
-                  onClick={downloadStatement}
-                  className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition"
-                >
-                  Download PDF
-                </button>
-              </div>
-            </div>
 
-            <div className="flex-1 p-5 border border-slate-200 rounded-xl flex items-start gap-4 hover:border-blue-200 hover:bg-blue-50/50 transition">
-              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+      <main className="wrap">
+        
+        {/* OVERVIEW */}
+        {activeTab === 'overview' && (
+          <section>
+            {employeeData?.subscriptionStatus !== 'active' && (
+              <div className="notice">
+                <svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                <div>
+                  <strong>Direct debit not set up yet</strong>
+                  <p>Your £{employeeData?.monthlyContribution} monthly contribution will start collecting once your direct debit mandate is active.</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">My Signed Agreement</h3>
-                <p className="text-xs text-slate-500 mt-1 mb-3">View the specific version of the Shariah Master Agreement that you digitally signed.</p>
-                {employeeData?.signedDocumentId ? (
-                   <a 
-                     href={employeeData.signedDocumentId.fileUrl} 
-                     target="_blank" 
-                     rel="noopener noreferrer"
-                     onClick={() => trackDocumentActivity('VIEWED_SIGNED_CONTRACT', `Employee ${employeeData.firstName} ${employeeData.lastName} viewed their signed Shariah Master Agreement`)}
-                     className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition inline-block"
-                   >
-                     View Contract
-                   </a>
-                ) : (
-                   <span className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full">No Contract Found</span>
+            )}
+            
+            {employeeData?.subscriptionStatus === 'past_due' && (
+              <div className="notice">
+                <svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                <div>
+                  <strong>Action Required: Payment Failed</strong>
+                  <p>Your last monthly contribution failed to process. You are currently disqualified from the Hajj Awards draw.</p>
+                </div>
+              </div>
+            )}
+
+            {employeeData?.awardStatus === 'won' && (
+              <div className="notice" style={{ background: '#fdf6e6', borderColor: '#f2e3c2', color: '#8a5b12' }}>
+                <div style={{fontSize: '24px'}}>🎉</div>
+                <div>
+                  <strong style={{color: '#c8811f', fontSize: '15px'}}>Congratulations! You have been selected!</strong>
+                  <p style={{color: '#a36d22'}}>You are a winner in the latest Hajj Awards draw. A member of our team will contact you shortly.</p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid g3" style={{marginBottom: 16}}>
+              <div className="card stat">
+                <div className="row"><span className="label">Total savings balance</span></div>
+                <div className="val">£{(employeeData?.balance || 0).toLocaleString()}</div>
+                <div className="foot">Target £6,000 · {Math.min(100, Math.round(((employeeData?.balance || 0)/6000)*100))}% complete</div>
+                <div className="bar"><i style={{width: `${Math.min(100, Math.round(((employeeData?.balance || 0)/6000)*100))}%`}}></i></div>
+              </div>
+              
+              <div className="card stat">
+                <div className="row"><span className="label">Monthly contribution</span>
+                  {employeeData?.subscriptionStatus !== 'active' && <span className="pill warn" style={{marginLeft: 'auto'}}>Action required</span>}
+                </div>
+                <div className="val">£{(employeeData?.monthlyContribution || 0).toLocaleString()}</div>
+                <div className="foot">Collected on the 1st of each month</div>
+                {employeeData?.subscriptionStatus !== 'active' && (
+                  <button className="btn btn-primary full" onClick={handleSetupSubscription} disabled={isRedirecting}>
+                    {isRedirecting ? 'Connecting...' : (
+                      <><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>Set up direct debit</>
+                    )}
+                  </button>
                 )}
               </div>
+              
+              <div className="card stat">
+                <div className="row"><span className="label">Hajj award status</span></div>
+                {employeeData?.awardStatus === 'won' ? (
+                  <div className="val" style={{fontSize: 20, letterSpacing: '-.4px', marginTop: 14, color: '#c8811f'}}>Award Winner</div>
+                ) : (
+                  <div className="val" style={{fontSize: 20, letterSpacing: '-.4px', marginTop: 14}}>Not selected yet</div>
+                )}
+                <div className="foot">
+                  {employeeData?.subscriptionStatus === 'active' ? 'You hold 1 draw ticket this month' : 'You hold 0 draw tickets this month'}
+                </div>
+
+              </div>
             </div>
-          </div>
-        </div>
 
+            <div className="grid g2">
+              <div className="card">
+                <div className="card-head">
+                  <span className="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
+                  <h2>Enrolment checklist</h2>
+                </div>
+                <div className="dl">
+                  <div className="r">
+                    <span className="k">Personal details</span>
+                    <span className="v">Complete</span>
+                    <span className="a"><span className="pill"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Done</span></span>
+                  </div>
+                  <div className="r">
+                    <span className="k">Shariah agreement</span>
+                    <span className="v">Signed</span>
+                    <span className="a"><span className="pill"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Done</span></span>
+                  </div>
+                  <div className="r">
+                    <span className="k">Direct debit mandate</span>
+                    <span className="v">{employeeData?.subscriptionStatus === 'active' ? 'Active' : 'Not set up'}</span>
+                    <span className="a">
+                      {employeeData?.subscriptionStatus === 'active' ? (
+                        <span className="pill"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Done</span>
+                      ) : (
+                        <span className="pill warn">Pending</span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="card">
+                <div className="card-head">
+                  <span className="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></span>
+                  <h2>Plan summary</h2>
+                </div>
+                <div className="dl">
+                  <div className="r"><span className="k">Employer</span><span className="v">{organization?.name || 'Your Employer'}</span></div>
+                  <div className="r">
+                    <span className="k">Subscription status</span>
+                    <span className="v">
+                      {employeeData?.subscriptionStatus === 'active' ? (
+                        <span className="pill">Active</span>
+                      ) : (
+                        <span className="pill mute">Not active</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="r"><span class="k">Joined</span><span className="v mono">{new Date(employeeData?.createdAt || Date.now()).toLocaleDateString('en-GB')}</span></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
-    </OldLayout>
+        {/* CONTRIBUTIONS */}
+        {activeTab === 'contributions' && (
+          <section>
+            <div className="grid g3" style={{marginBottom: 16}}>
+              <div className="card stat">
+                <span className="label">Paid to date</span>
+                <div className="val">£{transactions.filter(t => t.status === 'succeeded').reduce((sum, t) => sum + t.amount, 0).toLocaleString()}</div>
+                <div className="foot">Across {transactions.filter(t => t.status === 'succeeded').length} collections</div>
+              </div>
+              <div className="card stat">
+                <span className="label">Next collection</span>
+                <div className="val" style={{fontSize: 22, letterSpacing: '-.5px'}}>
+                  {(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'})}
+                </div>
+                <div className="foot">£{(employeeData?.monthlyContribution || 0).toLocaleString()} via direct debit</div>
+              </div>
+              <div className="card stat">
+                <span className="label">Missed payments</span>
+                <div className="val">{transactions.filter(t => t.status === 'failed' || t.status === 'past_due').length}</div>
+                <div className="foot">{transactions.filter(t => t.status === 'failed').length === 0 ? 'No failed collections' : 'Action required to resume plan'}</div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-head">
+                <span className="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+                <h2>Payment history</h2><span className="sub">Last 12 months</span>
+              </div>
+              {isLoadingTx ? (
+                <div className="empty"><strong>Loading transactions...</strong></div>
+              ) : transactions.length > 0 ? (
+                <table>
+                  <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {transactions.map((tx) => (
+                      <tr key={tx._id}>
+                        <td className="mono">{new Date(tx.createdAt).toLocaleDateString('en-GB')}</td>
+                        <td>Monthly Contribution</td>
+                        <td className="mono">£{tx.amount.toLocaleString()}</td>
+                        <td>
+                          {tx.status === 'succeeded' ? (
+                            <span className="pill">Paid</span>
+                          ) : tx.status === 'failed' ? (
+                            <span className="pill warn">Failed</span>
+                          ) : (
+                            <span className="pill mute">{tx.status}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="empty">
+                  <div className="eic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg></div>
+                  <strong>No transactions yet</strong>
+                  <span>Your first payroll deduction will appear here soon.</span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* DOCUMENTS */}
+        {activeTab === 'documents' && (
+          <section>
+            <div className="card">
+              <div className="card-head">
+                <span className="ic"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg></span>
+                <h2>Document centre</h2><span className="sub">PDF downloads</span>
+              </div>
+              <div className="panel grid g2">
+                <div className="doc">
+                  <span className="ic"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M12 12v5"/><path d="M9.5 14.5L12 17l2.5-2.5"/></svg></span>
+                  <h3>Savings statement</h3>
+                  <p>A formal PDF statement of your account balance and historical contributions.</p>
+                  <button className="btn btn-primary" onClick={downloadStatement}><svg viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M8 11l4 4 4-4"/><path d="M4 20h16"/></svg>Download PDF</button>
+                </div>
+                <div className="doc">
+                  <span className="ic"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M10 13h7M10 17h5"/></svg></span>
+                  <h3>My signed agreement</h3>
+                  <p>View the version of the Shariah Master Agreement you digitally signed.</p>
+                  {employeeData?.agreementUrl ? (
+                    <a href={employeeData.agreementUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" onClick={() => trackDocumentActivity('VIEWED_SIGNED_CONTRACT', `Employee viewed their signed agreement`)}>
+                      <svg viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></svg>View contract
+                    </a>
+                  ) : (
+                    <button className="btn btn-ghost" disabled>Not available</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* PROFILE */}
+        {activeTab === 'settings' && (
+          <section>
+            <div className="card" style={{marginBottom: 16}}>
+              <div className="card-head">
+                <h2>Financial data</h2><span className="sub">Read only</span>
+              </div>
+              <div className="panel grid g3">
+                <div className="field"><label>Monthly contribution</label><input value={`£${employeeData?.monthlyContribution || 0}`} disabled /></div>
+                <div className="field"><label>Total savings balance</label><input value={`£${employeeData?.balance || 0}`} disabled /></div>
+                <div className="field"><label>Legal agreement status</label><input value={employeeData?.agreementStatus === 'signed' ? 'Signed' : 'Pending'} disabled /></div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-head">
+                <h2>Profile details</h2>
+              </div>
+              <div className="dl">
+                <div className="r"><span className="k">Full name</span><span className="v">{employeeData?.firstName} {employeeData?.lastName}</span><span className="a"><button className="btn btn-ghost" onClick={() => showToast('Contact HR to update name', 'info')}>Update</button></span></div>
+                <div className="r"><span className="k">Email address</span><span className="v">{user?.primaryEmailAddress?.emailAddress} <span className="pill mute">Primary</span></span><span className="a"><button className="btn btn-ghost" onClick={() => window.open('https://accounts.clerk.com/user', '_blank')}>Manage</button></span></div>
+              </div>
+            </div>
+
+            <div className="card" style={{marginTop: 16}}>
+              <div className="card-head">
+                <h2>Bank details & Auto Pay</h2>
+                <div className="sub" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '6px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={autoPayEnabled} 
+                      onChange={e => setAutoPayEnabled(e.target.checked)} 
+                      style={{ transform: 'scale(1.2)' }}
+                    />
+                    <span style={{ fontWeight: 600, color: autoPayEnabled ? 'var(--green)' : 'var(--ink-3)' }}>
+                      {autoPayEnabled ? 'Auto Pay Enabled' : 'Auto Pay Disabled'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+              <div className="panel">
+                <div className="grid g3" style={{ opacity: autoPayEnabled ? 1 : 0.5, pointerEvents: autoPayEnabled ? 'auto' : 'none' }}>
+                  <div className="field">
+                    <label>Account Name</label>
+                    <input 
+                      placeholder="e.g. John Doe"
+                      value={bankDetails.accountName || ''} 
+                      onChange={e => setBankDetails({...bankDetails, accountName: e.target.value})} 
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Sort Code</label>
+                    <input 
+                      placeholder="12-34-56"
+                      value={bankDetails.sortCode || ''} 
+                      onChange={e => setBankDetails({...bankDetails, sortCode: e.target.value})} 
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Account Number</label>
+                    <input 
+                      placeholder="12345678"
+                      value={bankDetails.accountNumber || ''} 
+                      onChange={e => setBankDetails({...bankDetails, accountNumber: e.target.value})} 
+                    />
+                  </div>
+                </div>
+                <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
+                  <button className="btn btn-primary" onClick={() => handleSaveBankSettings(false)} disabled={isSavingBank}>
+                    {isSavingBank ? 'Saving...' : 'Save Settings & Setup'}
+                  </button>
+                  {autoPayEnabled && (
+                    <button className="btn btn-ghost" style={{ color: 'var(--amber)', borderColor: 'var(--amber-soft)' }} onClick={() => handleSaveBankSettings(true)} disabled={isSavingBank}>
+                      Simulate Failed Payment
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
   );
 };
 
@@ -770,35 +1076,35 @@ export const AdminDashboard = () => {
       </div>
 
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px] relative overflow-hidden after:content-[''] after:absolute after:-bottom-10 after:-right-[30px] after:w-[120px] after:h-[120px] after:rounded-full after:bg-[radial-gradient(circle,rgba(23,163,119,.10),transparent_70%)]">
-          <div className="flex items-center justify-between relative z-10">
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
+          <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Staff Enrolled</span>
             <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><circle cx="9" cy="8" r="3.2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/></svg></span>
           </div>
-          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16] relative z-10">{stats.totalEmployees}</div>
-          <span className={`text-[12.5px] font-semibold inline-flex items-center gap-[5px] relative z-10 ${monthEnrolments > 0 ? 'text-[#0b7a5b]' : 'text-[#8a9994]'}`}>
+          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">{stats.totalEmployees}</div>
+          <span className={`text-[12.5px] font-semibold inline-flex items-center gap-[5px] ${monthEnrolments > 0 ? 'text-[#0b7a5b]' : 'text-[#8a9994]'}`}>
             {monthEnrolments > 0 ? (
               <><svg viewBox="0 0 24 24" className="w-[13px] h-[13px] stroke-current stroke-[2.2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/></svg>+{monthEnrolments} this month</>
             ) : 'No new enrolments this month'}
           </span>
         </div>
         
-        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px] relative overflow-hidden after:content-[''] after:absolute after:-bottom-10 after:-right-[30px] after:w-[120px] after:h-[120px] after:rounded-full after:bg-[radial-gradient(circle,rgba(23,163,119,.10),transparent_70%)]">
-          <div className="flex items-center justify-between relative z-10">
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
+          <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Combined Savings</span>
             <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><circle cx="12" cy="12" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="M14 9.5A2.5 2.5 0 1012 15"/></svg></span>
           </div>
-          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16] relative z-10">£{stats.totalCombinedSavings.toLocaleString()}</div>
-          <div className="text-[12.5px] text-[#5c6b65] relative z-10">Funded towards Hajj by your staff</div>
+          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">£{stats.totalCombinedSavings.toLocaleString()}</div>
+          <div className="text-[12.5px] text-[#5c6b65]">Funded towards Hajj by your staff</div>
         </div>
 
-        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px] relative overflow-hidden after:content-[''] after:absolute after:-bottom-10 after:-right-[30px] after:w-[120px] after:h-[120px] after:rounded-full after:bg-[radial-gradient(circle,rgba(23,163,119,.10),transparent_70%)]">
-          <div className="flex items-center justify-between relative z-10">
+        <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
+          <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Hajj Journeys Won</span>
             <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v6a8 8 0 01-16 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 20h6M12 18v2"/></svg></span>
           </div>
-          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16] relative z-10">{stats.hajjJourneysWon}</div>
-          <span className="text-[12.5px] font-semibold inline-flex items-center gap-[5px] text-[#8a9994] relative z-10">No draws won yet</span>
+          <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">{stats.hajjJourneysWon}</div>
+          <span className="text-[12.5px] font-semibold inline-flex items-center gap-[5px] text-[#8a9994]">No draws won yet</span>
         </div>
       </section>
 
@@ -863,7 +1169,7 @@ export const AdminDashboard = () => {
             {orgData?.agreementStatus === 'signed' && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
                 <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.14)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5"/></svg></span>
-                <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Shariah agreement signed</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Master agreement v2 active for your organisation.</small></div>
+                <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Shariah agreement signed</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">The latest Master agreement is active for your organisation.</small></div>
                 <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View</a>
               </li>
             )}

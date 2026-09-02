@@ -92,26 +92,45 @@ export const AdminEmployees = () => {
     }
   };
 
-  const handleRevoke = async (invitation) => {
-    if (!window.confirm('Are you sure you want to revoke this invitation?')) return;
+  const [confirmRevokeTarget, setConfirmRevokeTarget] = useState(null);
+  const [confirmRemoveTarget, setConfirmRemoveTarget] = useState(null);
+
+  const handleRevoke = (invitation) => {
+    setConfirmRevokeTarget(invitation);
+  };
+
+  const executeRevoke = async () => {
+    if (!confirmRevokeTarget) return;
     try {
-      await invitation.revoke();
+      await confirmRevokeTarget.revoke();
       const invs = await organization.getInvitations({ status: 'pending' });
       const rawInvs = invs?.data || invs || [];
       setInvitations(rawInvs.filter(inv => inv.status === 'pending'));
     } catch (error) {
       console.error(error);
+    } finally {
+      setConfirmRevokeTarget(null);
     }
   };
 
-  const handleRemove = async (userId) => {
-    if (!window.confirm('Are you sure you want to remove this employee from the organisation?')) return;
+  const handleRemove = (userId) => {
+    setConfirmRemoveTarget(userId);
+  };
+
+  const executeRemove = async () => {
+    if (!confirmRemoveTarget) return;
     try {
-      await organization.removeMember(userId);
+      await organization.removeMember(confirmRemoveTarget);
       const mems = await organization.getMemberships();
       setMembers(mems?.data || mems || []);
+      if (activeMember && activeMember.publicUserData.userId === confirmRemoveTarget) {
+        setActiveMember(null);
+        setSelectedMember(null);
+      }
     } catch (error) {
       console.error(error);
+    } finally {
+      setConfirmRemoveTarget(null);
     }
   };
 
@@ -140,6 +159,7 @@ export const AdminEmployees = () => {
             <thead>
               <tr className="border-b border-slate-200 text-sm text-slate-500 bg-white">
                 <th className="px-6 py-4 font-medium">Employee</th>
+                <th className="px-6 py-4 font-medium">Email</th>
                 <th className="px-6 py-4 font-medium">Role</th>
                 <th className="px-6 py-4 font-medium">Joined Date</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -147,31 +167,39 @@ export const AdminEmployees = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <tr><td colSpan="4" className="text-center py-8 text-slate-500">Loading employees...</td></tr>
+                <tr><td colSpan="5" className="text-center py-8 text-slate-500">Loading employees...</td></tr>
               ) : members.length === 0 ? (
-                <tr><td colSpan="4" className="text-center py-8 text-slate-500">No active employees found.</td></tr>
+                <tr><td colSpan="5" className="text-center py-8 text-slate-500">No active employees found.</td></tr>
               ) : (
-                members.map((member) => (
-                  <tr key={member.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => { setActiveMember(member); setSelectedMember(member); }}>
+                [...members].sort((a, b) => {
+                  if (a.role === 'org:admin' && b.role !== 'org:admin') return -1;
+                  if (a.role !== 'org:admin' && b.role === 'org:admin') return 1;
+                  return 0;
+                }).map((member) => (
+                  <tr key={member.id} className={`transition-colors ${member.role === 'org:admin' ? '' : 'hover:bg-slate-50 cursor-pointer'}`} onClick={() => { if (member.role !== 'org:admin') { setActiveMember(member); setSelectedMember(member); } }}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {member.publicUserData.hasImage ? (
                           <img src={member.publicUserData.imageUrl} alt="" className="w-10 h-10 rounded-full border border-slate-200 object-cover" />
                         ) : (
                           <div className="w-10 h-10 shrink-0 rounded-full grid place-items-center text-white font-bold text-sm bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-sm border border-emerald-700/50">
-                            {member.publicUserData.firstName?.[0] || ''}{member.publicUserData.lastName?.[0] || ''}
-                            {!member.publicUserData.firstName && !member.publicUserData.lastName && (member.publicUserData.identifier?.[0]?.toUpperCase() || 'U')}
+                            {(member.publicUserData.firstName || member.publicMetadata?.firstName)?.[0] || ''}{(member.publicUserData.lastName || member.publicMetadata?.lastName)?.[0] || ''}
+                            {!member.publicUserData.firstName && !member.publicUserData.lastName && !member.publicMetadata?.firstName && !member.publicMetadata?.lastName && (member.publicUserData.identifier?.[0]?.toUpperCase() || 'U')}
                           </div>
                         )}
                         <div>
                           <div className="font-medium text-slate-900">
-                            {member.publicUserData.firstName} {member.publicUserData.lastName}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {member.publicUserData.identifier}
+                            {member.publicUserData.firstName || member.publicUserData.lastName || member.publicMetadata?.firstName || member.publicMetadata?.lastName ? `${member.publicUserData.firstName || member.publicMetadata?.firstName || ''} ${member.publicUserData.lastName || member.publicMetadata?.lastName || ''}`.trim() : (
+                              <span className="italic text-slate-400 font-normal">
+                                {member.publicUserData.identifier?.split('@')[0] || 'Awaiting setup'}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {member.publicUserData.identifier}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${member.role === 'org:admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
@@ -471,22 +499,85 @@ export const AdminEmployees = () => {
                   <svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 5h16v14H4z"/><path strokeLinecap="round" strokeLinejoin="round" d="M4 7l8 6 8-6"/></svg>
                   Send reminder
                 </button>
-                <button 
-                  onClick={() => {
-                    handleRemove(activeMember.publicUserData.userId);
-                    setSelectedMember(null);
-                  }}
-                  className="cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-white border border-[#f6cfcc] text-[#a3271f] hover:bg-[#fdeceb] transition-colors"
-                >
-                  <svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
-                  Remove
-                </button>
+                {activeMember.role !== 'org:admin' && (
+                  <button 
+                    onClick={() => {
+                      handleRemove(activeMember.publicUserData.userId);
+                      setSelectedMember(null);
+                    }}
+                    className="cursor-pointer font-inherit font-semibold text-[13.4px] p-[11px_16px] rounded-[11px] inline-flex items-center justify-center gap-[8px] w-full bg-white border border-[#f6cfcc] text-[#a3271f] hover:bg-[#fdeceb] transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+                    Remove
+                  </button>
+                )}
               </div>
             </div>
           </>
         )}
       </aside>
 
+
+
+      {/* Remove Employee Modal */}
+      {confirmRemoveTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <style>{`
+            @keyframes modal-pop { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+            @keyframes backdrop-fade { 0% { opacity: 0; } 100% { opacity: 1; } }
+            .animate-modal-pop { animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            .animate-backdrop { animation: backdrop-fade 0.3s ease-out forwards; }
+          `}</style>
+          
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-backdrop" onClick={() => setConfirmRemoveTarget(null)}></div>
+          
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
+            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-red-100">
+              <svg className="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Remove Employee?</h3>
+            <p className="text-sm text-slate-500 mt-2 mb-8 leading-relaxed">
+              Are you sure you want to remove this employee from the organisation? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 w-full">
+              <button onClick={() => setConfirmRemoveTarget(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition">Cancel</button>
+              <button onClick={executeRemove} className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-sm shadow-red-200 transition">Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revoke Invitation Modal */}
+      {confirmRevokeTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <style>{`
+            @keyframes modal-pop { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+            @keyframes backdrop-fade { 0% { opacity: 0; } 100% { opacity: 1; } }
+            .animate-modal-pop { animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            .animate-backdrop { animation: backdrop-fade 0.3s ease-out forwards; }
+          `}</style>
+          
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-backdrop" onClick={() => setConfirmRevokeTarget(null)}></div>
+          
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
+            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-amber-100">
+              <svg className="h-7 w-7 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Revoke Invitation?</h3>
+            <p className="text-sm text-slate-500 mt-2 mb-8 leading-relaxed">
+              Are you sure you want to revoke this invitation? The link they received will no longer work.
+            </p>
+            <div className="flex gap-3 w-full">
+              <button onClick={() => setConfirmRevokeTarget(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition">Cancel</button>
+              <button onClick={executeRevoke} className="flex-1 px-4 py-2.5 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-700 shadow-sm shadow-amber-200 transition">Revoke</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </SidebarLayout>  );
 };

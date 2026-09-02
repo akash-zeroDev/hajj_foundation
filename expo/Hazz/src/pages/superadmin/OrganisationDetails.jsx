@@ -2,6 +2,8 @@ import { useAuth } from '@clerk/react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SidebarLayout from '../../layouts/SidebarLayout';
+import HorizontalTabs from '../../components/HorizontalTabs';
+import SearchFilterBar from '../../components/SearchFilterBar';
 import { superAdminNavigation } from '../../config/navigation';
 
 export const OrganisationDetails = () => {
@@ -11,6 +13,16 @@ export const OrganisationDetails = () => {
   const [org, setOrg] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Billing State
+  const [transactions, setTransactions] = useState(null);
+  const [isLoadingBilling, setIsLoadingBilling] = useState(false);
+  const [totalEmployeeFunds, setTotalEmployeeFunds] = useState(0);
+  const [billingSearch, setBillingSearch] = useState('');
+
+  // Awards State
+  const [orgDraws, setOrgDraws] = useState(null);
+  const [isLoadingAwards, setIsLoadingAwards] = useState(false);
 
   // Employees State
   const [employees, setEmployees] = useState(null);
@@ -26,6 +38,66 @@ export const OrganisationDetails = () => {
   // Custom Confirm Modal State
   const [isConfirmingSuspend, setIsConfirmingSuspend] = useState(false);
   const [isConfirmingArchive, setIsConfirmingArchive] = useState(false);
+
+
+  useEffect(() => {
+    if (activeTab === 'billing' && transactions === null && org) {
+      const fetchBilling = async () => {
+        setIsLoadingBilling(true);
+        try {
+          const res = await fetch(`http://localhost:5000/api/financials/org-transactions/${org.clerkOrganizationId}`, {
+            headers: { Authorization: `Bearer ${await getToken()}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const txs = data.data || [];
+            setTransactions(txs);
+            
+            // Calculate total funds
+            const total = txs
+              .filter(t => t.type === 'employee_contribution' && t.status === 'succeeded')
+              .reduce((sum, t) => sum + t.amount, 0);
+            setTotalEmployeeFunds(total);
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setIsLoadingBilling(false);
+        }
+      };
+      fetchBilling();
+    }
+  }, [activeTab, org, transactions, getToken]);
+
+  useEffect(() => {
+    if (activeTab === 'awards' && orgDraws === null && org) {
+      const fetchAwards = async () => {
+        setIsLoadingAwards(true);
+        try {
+          const res = await fetch('http://localhost:5000/api/awards', {
+            headers: { Authorization: `Bearer ${await getToken()}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const allDraws = data.data || [];
+            // Filter draws that have at least one winner from this org
+            const filtered = allDraws
+              .filter(draw => draw.winners?.some(w => w.organisationId?._id === org._id))
+              .map(draw => ({
+                ...draw,
+                orgWinners: draw.winners.filter(w => w.organisationId?._id === org._id)
+              }));
+            setOrgDraws(filtered);
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setIsLoadingAwards(false);
+        }
+      };
+      fetchAwards();
+    }
+  }, [activeTab, org, orgDraws, getToken]);
 
   useEffect(() => {
     const fetchOrg = async () => {
@@ -179,7 +251,7 @@ export const OrganisationDetails = () => {
         {org.isSuspended && (
           <div className="absolute top-0 inset-x-0 h-1 bg-red-500"></div>
         )}
-        <div className="px-6 py-6 sm:px-8 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="px-6 py-6 sm:px-8 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-slate-900">{org.name}</h2>
@@ -191,51 +263,11 @@ export const OrganisationDetails = () => {
             </div>
             <p className="text-sm text-slate-500 mt-1">Company No: {org.companyNumber} • Joined {new Date(org.createdAt).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</p>
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setIsConfirmingArchive(true)}
-              className="px-4 py-2 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
-            >
-              Archive Org
-            </button>
-            <button 
-              onClick={handleToggleSuspension}
-              className={`px-4 py-2 border rounded-lg shadow-sm text-sm font-medium transition ${
-                org.isSuspended 
-                  ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' 
-                  : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              {org.isSuspended ? 'Activate Account' : 'Suspend Account'}
-            </button>
-            <button 
-              onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-emerald-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-emerald-700 transition"
-            >
-              Edit Organisation
-            </button>
-          </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-slate-50/50 px-6 sm:px-8 border-b border-slate-200">
-          <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                  ${activeTab === tab.id
-                    ? 'border-emerald-600 text-emerald-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                  }
-                `}
-              >
-                {tab.name}
-              </button>
-            ))}
-          </nav>
+        <div className="bg-slate-50/50 px-6 sm:px-8">
+          <HorizontalTabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
       </div>
 
@@ -316,36 +348,42 @@ export const OrganisationDetails = () => {
               <thead>
                 <tr className="border-b border-slate-200 text-sm text-slate-500 bg-white">
                   <th className="px-6 py-4 font-medium">Name</th>
+                  <th className="px-6 py-4 font-medium">Email</th>
                   <th className="px-6 py-4 font-medium">System Role</th>
                   <th className="px-6 py-4 font-medium">Joined Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoadingEmployees ? (
-                  <tr><td colSpan="3" className="text-center py-8 text-slate-500">Loading employees...</td></tr>
+                  <tr><td colSpan="4" className="text-center py-8 text-slate-500">Loading employees...</td></tr>
                 ) : (employees || []).length === 0 ? (
-                  <tr><td colSpan="3" className="text-center py-8 text-slate-500">No employees found.</td></tr>
+                  <tr><td colSpan="4" className="text-center py-8 text-slate-500">No employees found.</td></tr>
                 ) : (
                   (employees || []).map((member) => (
                     <tr key={member.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => { setActiveMember(member); setSelectedMember(member); }}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {member.publicUserData.imageUrl && (
-                            <img src={member.publicUserData.imageUrl} alt="" className="w-8 h-8 rounded-full border border-slate-200" />
+                          {member.publicUserData.hasImage ? (
+                            <img src={member.publicUserData.imageUrl} alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
+                          ) : (
+                            <div className="w-8 h-8 shrink-0 rounded-full grid place-items-center text-white font-bold text-xs bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-sm border border-emerald-700/50">
+                              {(member.publicUserData.firstName || member.publicMetadata?.firstName)?.[0] || ''}{(member.publicUserData.lastName || member.publicMetadata?.lastName)?.[0] || ''}
+                              {!member.publicUserData.firstName && !member.publicUserData.lastName && !member.publicMetadata?.firstName && !member.publicMetadata?.lastName && (member.publicUserData.identifier?.[0]?.toUpperCase() || 'U')}
+                            </div>
                           )}
                           <div>
                             <div className="font-medium text-slate-900">
-                              {member.publicUserData.firstName || member.publicUserData.lastName ? `${member.publicUserData.firstName || ''} ${member.publicUserData.lastName || ''}`.trim() : (
+                              {member.publicUserData.firstName || member.publicUserData.lastName || member.publicMetadata?.firstName || member.publicMetadata?.lastName ? `${member.publicUserData.firstName || member.publicMetadata?.firstName || ''} ${member.publicUserData.lastName || member.publicMetadata?.lastName || ''}`.trim() : (
   <span className="italic text-slate-500 font-normal">
     {member.publicUserData.identifier?.split('@')[0] || 'Awaiting setup'}
   </span>
 )}
                             </div>
-                            <div className="text-xs text-slate-500">
-                              {member.publicUserData.identifier}
-                            </div>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {member.publicUserData.identifier}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${member.role === 'org:admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
@@ -364,14 +402,314 @@ export const OrganisationDetails = () => {
         </div>
       )}
 
-      {/* Tab Content: OTHER TABS */}
-      {activeTab !== 'overview' && activeTab !== 'employees' && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <h3 className="mt-2 text-sm font-semibold text-slate-900">Module Under Construction</h3>
-          <p className="mt-1 text-sm text-slate-500">The {tabs.find(t => t.id === activeTab)?.name} section will be built here next.</p>
+      {/* Tab Content: BILLING & PAYMENTS */}
+      {activeTab === 'billing' && (
+        <div className="space-y-6">
+          {/* Subscription Summary */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Subscription Overview</h3>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-3xl font-extrabold text-slate-900">£{(org?.annualFee || 0).toLocaleString()}</span>
+                  <span className="text-sm text-slate-500 font-medium">/ year</span>
+                </div>
+                {org?.annualFeeStatus === 'paid' ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active & Paid
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending Payment
+                  </span>
+                )}
+              </div>
+              <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                  <span className="text-sm font-medium text-slate-600">Total Employee Funds Routed</span>
+                </div>
+                <span className="text-sm font-bold text-emerald-600">£{totalEmployeeFunds.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Unified Transaction Ledger */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Transaction Ledger</h3>
+            </div>
+            <div className="p-6 pb-0">
+              <SearchFilterBar searchTerm={billingSearch} setSearchTerm={setBillingSearch} placeholder="Search by payer name or email..." />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500 bg-white">
+                    <th className="px-6 py-4 font-medium">Date</th>
+                    <th className="px-6 py-4 font-medium">Payer</th>
+                    <th className="px-6 py-4 font-medium">Type</th>
+                    <th className="px-6 py-4 font-medium">Status</th>
+                    <th className="px-6 py-4 font-medium text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {isLoadingBilling ? (
+                    <tr><td colSpan="5" className="text-center py-8 text-slate-500">Loading ledger...</td></tr>
+                  ) : (transactions || []).filter(tx => {
+                    if (!billingSearch.trim()) return true;
+                    const q = billingSearch.toLowerCase();
+                    if (tx.type === 'employer_fee') return (org?.name || '').toLowerCase().includes(q);
+                    const name = `${tx.payerId?.firstName || ''} ${tx.payerId?.lastName || ''}`.toLowerCase();
+                    const email = (tx.payerId?.email || '').toLowerCase();
+                    return name.includes(q) || email.includes(q);
+                  }).length === 0 ? (
+                    <tr><td colSpan="5" className="text-center py-8 text-slate-500">{billingSearch.trim() ? 'No matching transactions.' : 'No transactions recorded yet.'}</td></tr>
+                  ) : (
+                    (transactions || []).filter(tx => {
+                      if (!billingSearch.trim()) return true;
+                      const q = billingSearch.toLowerCase();
+                      if (tx.type === 'employer_fee') return (org?.name || '').toLowerCase().includes(q);
+                      const name = `${tx.payerId?.firstName || ''} ${tx.payerId?.lastName || ''}`.toLowerCase();
+                      const email = (tx.payerId?.email || '').toLowerCase();
+                      return name.includes(q) || email.includes(q);
+                    }).map((tx) => (
+                      <tr key={tx._id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                          {new Date(tx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-6 py-4">
+                          {tx.type === 'employer_fee' ? (
+                            <span className="font-bold text-slate-800">{org?.name} (Employer)</span>
+                          ) : (
+                            <div className="flex flex-col">
+                              <span className="font-medium text-slate-900">{tx.payerId?.firstName} {tx.payerId?.lastName}</span>
+                              <span className="text-xs text-slate-500">{tx.payerId?.email}</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {tx.type === 'employer_fee' ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wide">Platform Fee</span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 uppercase tracking-wide">Employee Savings</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {tx.status === 'succeeded' ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Paid
+                            </span>
+                          ) : tx.status === 'pending' ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Failed
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-slate-900">
+                          £{tx.amount.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: AWARDS HISTORY */}
+      {activeTab === 'awards' && (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+            <h3 className="font-bold text-slate-800">Hajj Award Draws</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 bg-white">
+                  <th className="px-6 py-4 font-medium">Draw Name</th>
+                  <th className="px-6 py-4 font-medium">Date</th>
+                  <th className="px-6 py-4 font-medium">Draw Status</th>
+                  <th className="px-6 py-4 font-medium">Winners from this Org</th>
+                  <th className="px-6 py-4 font-medium">Claim Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {isLoadingAwards ? (
+                  <tr><td colSpan="5" className="text-center py-8 text-slate-500">Loading awards history...</td></tr>
+                ) : (orgDraws || []).length === 0 ? (
+                  <tr><td colSpan="5" className="text-center py-8 text-slate-500">No award draws have included employees from this organisation yet.</td></tr>
+                ) : (
+                  (orgDraws || []).map((draw) => (
+                    <tr key={draw._id} className="hover:bg-slate-50 transition-colors align-top">
+                      <td className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">{draw.drawName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {new Date(draw.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {draw.status === 'completed' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Completed
+                          </span>
+                        ) : draw.status === 'pending_approval' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending Approval
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Discarded
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          {draw.orgWinners.map((w) => (
+                            <div key={w._id} className="flex items-center gap-2">
+                              <div className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-white font-bold text-[10px] bg-gradient-to-br from-emerald-600 to-emerald-800">
+                                {w.firstName?.[0] || ''}{w.lastName?.[0] || ''}
+                              </div>
+                              <span className="text-sm text-slate-800">{w.firstName} {w.lastName}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          {draw.orgWinners.map((w) => (
+                            <div key={w._id}>
+                              {w.awardStatus === 'claimed' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Claimed
+                                </span>
+                              ) : w.awardStatus === 'won' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Won — Unclaimed
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                  —
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: SETTINGS */}
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          {/* Organisation Details Form */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Organisation Details</h3>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Organisation Name</label>
+                  <input 
+                    type="text" 
+                    value={editFormData.name || ''} 
+                    onChange={e => setEditFormData({...editFormData, name: e.target.value})}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Company Number</label>
+                  <input 
+                    type="text" 
+                    value={editFormData.companyNumber || ''} 
+                    onChange={e => setEditFormData({...editFormData, companyNumber: e.target.value})}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Annual Fee (£)</label>
+                  <input 
+                    type="number" 
+                    value={editFormData.annualFee || ''} 
+                    onChange={e => setEditFormData({...editFormData, annualFee: e.target.value})}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Registered Address</label>
+                  <textarea 
+                    rows="3"
+                    value={editFormData.registeredAddress || ''} 
+                    onChange={e => setEditFormData({...editFormData, registeredAddress: e.target.value})}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <button 
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
+                  className="px-5 py-2.5 bg-emerald-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm"
+                >
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Administrative Actions */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Administrative Actions</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">{org.isSuspended ? 'Activate Organisation' : 'Suspend Organisation'}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {org.isSuspended 
+                      ? 'Restore full access for this organisation and its employees.' 
+                      : 'Temporarily block access for this organisation. This can be undone.'}
+                  </p>
+                </div>
+                <button 
+                  onClick={handleToggleSuspension}
+                  className={`px-4 py-2 border rounded-lg text-sm font-medium transition shrink-0 ${
+                    org.isSuspended 
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' 
+                      : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+                  }`}
+                >
+                  {org.isSuspended ? 'Activate Account' : 'Suspend Account'}
+                </button>
+              </div>
+              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">Archive Organisation</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">Permanently archive this organisation. This action cannot be easily undone.</p>
+                </div>
+                <button 
+                  onClick={() => setIsConfirmingArchive(true)}
+                  className="px-4 py-2 bg-red-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-red-700 transition shrink-0"
+                >
+                  Archive Org
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -481,77 +819,7 @@ export const OrganisationDetails = () => {
         </div>
       )}
 
-      {/* Edit Modal */}
-      {isEditing && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <div className="fixed inset-0 bg-slate-900/50 transition-opacity" onClick={() => setIsEditing(false)}></div>
-            <div className="relative bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg w-full p-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-6">Edit Organisation Details</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Organisation Name</label>
-                  <input 
-                    type="text" 
-                    value={editFormData.name} 
-                    onChange={e => setEditFormData({...editFormData, name: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Company Number</label>
-                  <input 
-                    type="text" 
-                    value={editFormData.companyNumber} 
-                    onChange={e => setEditFormData({...editFormData, companyNumber: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Annual Fee (£)</label>
-                  <input 
-                    type="number" 
-                    value={editFormData.annualFee} 
-                    onChange={e => setEditFormData({...editFormData, annualFee: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Registered Address</label>
-                  <textarea 
-                    rows="3"
-                    value={editFormData.registeredAddress} 
-                    onChange={e => setEditFormData({...editFormData, registeredAddress: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-8 flex justify-end gap-3">
-                <button 
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleSaveEdit}
-                  disabled={isSaving}
-                  className="px-4 py-2 bg-emerald-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  {isSaving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-    
       {/* Employee Details Side Panel */}
       <>
         <div 

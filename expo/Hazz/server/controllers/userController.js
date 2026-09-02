@@ -77,11 +77,22 @@ exports.toggleSuspend = async (req, res) => {
     const user = await clerk.users.getUser(id);
     
     let updatedUser;
-    if (user.banned) {
-      updatedUser = await clerk.users.unbanUser(id);
-    } else {
-      updatedUser = await clerk.users.banUser(id);
+    const action = user.banned ? 'unban' : 'ban';
+    
+    const response = await fetch(`https://api.clerk.com/v1/users/${id}/${action}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.CLERK_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.errors?.[0]?.message || `Failed to ${action} user`);
     }
+
+    updatedUser = await response.json();
 
     res.status(200).json({ success: true, banned: updatedUser.banned });
   } catch (error) {

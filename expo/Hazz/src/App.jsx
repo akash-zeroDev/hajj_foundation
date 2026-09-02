@@ -37,6 +37,7 @@ function App() {
         <Route path="/" element={null} />
         <Route path="/superadmin/*" element={null} />
         <Route path="/admin/*" element={null} />
+        <Route path="/dashboard" element={null} />
         <Route path="*" element={<Navbar />} />
       </Routes>
 

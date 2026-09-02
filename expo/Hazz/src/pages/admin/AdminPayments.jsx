@@ -92,8 +92,13 @@ export const AdminPayments = () => {
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                           Paid
                         </span>
+                      ) : tx.status === 'failed' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                          Failed
+                        </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
                           {tx.status}
                         </span>
                       )}

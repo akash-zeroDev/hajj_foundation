@@ -196,7 +196,6 @@ export const UsersList = () => {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500">ID: {user.id.substring(0, 15)}...</div>
                       </div>
                     </div>
                   </td>

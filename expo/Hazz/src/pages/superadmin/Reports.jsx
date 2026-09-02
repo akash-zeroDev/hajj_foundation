@@ -3,7 +3,7 @@ import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { superAdminNavigation } from '../../config/navigation';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { useToast } from '../../context/ToastContext';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -34,23 +34,23 @@ export const Reports = () => {
         const [statsRes, ledgerRes, auditRes] = await Promise.all([
           fetch('http://localhost:5000/api/reports/operational-stats', { headers }),
           fetch('http://localhost:5000/api/reports/ledger-export', { headers }),
-          fetch('http://localhost:5000/api/audit', { headers })
+          fetch('http://localhost:5000/api/audit-logs', { headers })
         ]);
 
         if (statsRes.ok) {
-          const s = await statsRes.json();
-          setStats(s.data);
+          const statsData = await statsRes.json();
+          setStats(statsData.data);
         }
         if (ledgerRes.ok) {
-          const l = await ledgerRes.json();
-          setLedgerData(l.data || []);
+          const ledgerData = await ledgerRes.json();
+          setLedgerData(ledgerData.data || []);
         }
         if (auditRes.ok) {
-          const a = await auditRes.json();
-          setAuditData(a.data || []);
+          const auditData = await auditRes.json();
+          setAuditData(auditData.data || []);
         }
       } catch (error) {
-        console.error('Error fetching reports data:', error);
+        console.error('Failed to fetch reports data', error);
         showToast('Failed to load report data', 'error');
       } finally {
         setIsLoading(false);
@@ -62,7 +62,7 @@ export const Reports = () => {
   const trackDownload = async (action, details) => {
     try {
       const token = await getToken();
-      await fetch('http://localhost:5000/api/audit/track', {
+      await fetch('http://localhost:5000/api/audit-logs/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action, details })
@@ -125,7 +125,7 @@ export const Reports = () => {
       doc.setFontSize(10);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 34);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: 45,
         head: [['Financial Metric', 'Amount (GBP)']],
         body: [
@@ -137,7 +137,7 @@ export const Reports = () => {
         styles: { fontSize: 11, cellPadding: 6 }
       });
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 15,
         head: [['Operational Metric', 'Count']],
         body: [
