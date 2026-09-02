@@ -586,7 +586,7 @@ export const EmployeeDashboard = () => {
         <div className="top-in">
           <div className="logo"><span className="mark">HS</span>Hajj Savings Fund</div>
           <div className="right">
-            <span className="hide">Welcome, <b id="who">{user?.primaryEmailAddress?.emailAddress}</b></span>
+            <span className="hide">Welcome, <b id="who">{employeeData?.firstName ? `${employeeData.firstName} ${employeeData.lastName || ''}`.trim() : user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.primaryEmailAddress?.emailAddress}</b></span>
             <button className="signout" onClick={() => signOut()}>Sign out</button>
             <div className="avatar">
               {user?.hasImage ? <img src={user.imageUrl} className="w-full h-full rounded-full" alt="" /> : (user?.firstName?.charAt(0) || 'E')}
@@ -598,7 +598,7 @@ export const EmployeeDashboard = () => {
       <div className="head">
         <div className="head-in">
           <h1>Employee Portal</h1>
-          <p>Manage your contributions, view balances and download statements.</p>
+          <p>Manage your contributions, view balances and download statements</p>
           <div className="tabs">
             {tabs.map(t => (
               <button 
