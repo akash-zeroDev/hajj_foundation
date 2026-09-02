@@ -1,37 +1,25 @@
-/**
- * Hajj Savings landing page.
- * Entire UI (primitives + every section) in one file.
- *
- * Requires: motion/react, the brand tokens/utilities in src/styles.css,
- * and the three images in src/assets.
- */
 import {
   AnimatePresence,
   motion,
   useReducedMotion,
   useScroll,
   useTransform,
+  
 } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState,  } from "react";
+import { useAuth, useUser, Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
+import { Link } from 'react-router-dom';
 import archesImage from "../assets/arches.png";
 import heroImage from "../assets/hero-makkah.png";
 import pilgrimsImage from "../assets/pilgrims.png";
-import { useAuth, useUser, Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
-import { Link } from 'react-router-dom';
 
 /* ------------------------------------------------------------------ */
 /* Primitives                                                          */
 /* ------------------------------------------------------------------ */
 
-const EASE = [0.22, 1, 0.36, 1];
+const EASE = [0.22, 1, 0.36, 1] ;
 
-function Reveal({
-  children,
-  delay = 0,
-  y = 24,
-  className,
-  as = "div",
-}) {
+function Reveal({ children, delay = 0, y = 24, className, as = "div" }) {
   const reduce = useReducedMotion();
   const M = motion[as];
   return (
@@ -71,10 +59,7 @@ function Rule({ tone, className = "" }) {
   );
 }
 
-function Eyebrow({
-  children,
-  tone = "green",
-}) {
+function Eyebrow({ children, tone = "green" }) {
   const color = {
     brass: "text-brass",
     ivory: "text-ivory/70",
@@ -95,12 +80,7 @@ function Eyebrow({
   );
 }
 
-function ArrowLink({
-  href,
-  children,
-  variant = "green",
-  isInternal = false,
-}) {
+function ArrowLink({ href, children, variant = "green" }) {
   const styles = {
     solid: "bg-olive text-ivory hover:bg-olive-deep",
     ivory: "bg-ivory text-green-deep hover:bg-stone",
@@ -109,22 +89,18 @@ function ArrowLink({
     outline: "border border-current text-current hover:border-green-muted hover:text-green-muted",
     ghost: "px-0 py-2 text-current hover:text-green",
   };
-  
-  const className = `group inline-flex items-center gap-3 px-7 py-4 text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${styles[variant]}`;
-  
-  const arrow = <span aria-hidden className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1">&#8594;</span>;
-
-  if (isInternal) {
-    return (
-      <Link to={href} className={className}>
-        {children} {arrow}
-      </Link>
-    );
-  }
-
   return (
-    <a href={href} className={className}>
-      {children} {arrow}
+    <a
+      href={href}
+      className={`group inline-flex items-center gap-3 px-7 py-4 text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${styles[variant]}`}
+    >
+      {children}
+      <span
+        aria-hidden
+        className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1"
+      >
+        &#8594;
+      </span>
     </a>
   );
 }
@@ -140,21 +116,19 @@ const NAV = [
   { label: "For Employees", href: "#organisations" },
 ];
 
-const LEGAL = [
-  { label: "Privacy", href: "#" },
-  { label: "Terms", href: "#" },
-];
+const FOOTER_NAV = [...NAV, { label: "Portal Login", href: "#final" }];
 
 const HEADLINE = ["Prepare today", "for a journey", "that matters."];
 const GREEN_LINE = "that matters.";
 
 const STAGES = [
-  { n: "01", label: "Intention", note: "A decision is made, and recorded." },
-  { n: "02", label: "Participation", note: "An organisation opens the way." },
-  { n: "03", label: "Contribution", note: "Amounts are agreed and set aside." },
-  { n: "04", label: "Progress", note: "Every payment is visible." },
-  { n: "05", label: "Preparation", note: "The journey becomes reachable." },
+  { label: "Intention", note: "A decision is made, and recorded." },
+  { label: "Participation", note: "An organisation opens the way." },
+  { label: "Contribution", note: "Amounts are agreed and set aside." },
+  { label: "Progress", note: "Every payment is visible." },
+  { label: "Preparation", note: "The journey becomes reachable." },
 ];
+
 
 const SIDES = [
   {
@@ -179,51 +153,51 @@ const SIDES = [
 
 const PATHWAY = ["Organisation", "Participation", "Employee", "Contribution", "Progress"];
 
-const ORG_BLOCK = {
-  eyebrow: "For organisations",
-  heading: ["Built for", "organisations."],
-  body: "Employers can offer their teams a considered way to prepare, without carrying the administrative weight alone.",
-  items: [
-    "Structured participation",
-    "Clear records",
-    "Employee oversight",
-    "Agreement management",
-  ],
-};
-const EMP_BLOCK = {
-  eyebrow: "For employees",
-  heading: ["Designed", "around people."],
-  body: "Each person keeps their own view of the journey — what they have set aside, what they agreed to, and how far along they are.",
-  items: [
-    "Personal contribution journey",
-    "Accessible records",
-    "Payment visibility",
-    "Preparation progress",
-  ],
-};
+
+const [ORG_BLOCK, EMP_BLOCK] = [
+  {
+    eyebrow: "For organisations",
+    heading: ["Built for", "organisations."],
+    body: "Employers can offer their teams a considered way to prepare, without carrying the administrative weight alone.",
+    items: [
+      "Structured participation",
+      "Clear records",
+      "Employee oversight",
+      "Agreement management",
+    ],
+  },
+  {
+    eyebrow: "For employees",
+    heading: ["Designed", "around people."],
+    body: "Each person keeps their own view of the journey — what they have set aside, what they agreed to, and how far along they are.",
+    items: [
+      "Personal contribution journey",
+      "Accessible records",
+      "Payment visibility",
+      "Preparation progress",
+    ],
+  },
+];
 
 const PRINCIPLES = [
   {
-    n: "01",
     title: "Security",
     body: "Access is role-based and protected, so records are only visible to those who should see them.",
   },
   {
-    n: "02",
     title: "Transparency",
     body: "Contributions, agreements and payment history are stated plainly and kept up to date.",
   },
   {
-    n: "03",
     title: "Governance",
     body: "Clear responsibilities between the organisation, the participant and the fund.",
   },
   {
-    n: "04",
     title: "Accountability",
     body: "Activity is recorded, so every figure can be traced back to its origin.",
   },
 ];
+
 
 /* ------------------------------------------------------------------ */
 /* Navbar                                                              */
@@ -413,10 +387,6 @@ function Navbar({ dashboardLink }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Hero                                                                */
-/* ------------------------------------------------------------------ */
-
 function Hero({ dashboardLink }) {
   const ref = useRef(null);
   const reduce = useReducedMotion();
@@ -539,6 +509,7 @@ function Hero({ dashboardLink }) {
   );
 }
 
+
 /* ------------------------------------------------------------------ */
 /* Purpose                                                             */
 /* ------------------------------------------------------------------ */
@@ -549,13 +520,13 @@ function PurposeSection() {
       <div className="mx-auto grid max-w-[1440px] grid-cols-12 gap-y-14 px-6 md:px-10">
         <div className="col-span-12 lg:col-span-7">
           <Reveal>
-            <p className="mb-8 flex items-baseline gap-4">
-              <span className="font-serif text-2xl font-light text-green">01</span>
-              <span className="eyebrow text-olive-muted">The purpose</span>
+            <p className="mb-8">
+              <Eyebrow tone="green">The purpose</Eyebrow>
             </p>
           </Reveal>
+
           <Reveal>
-            <h2 className="display text-[2.1rem] text-olive sm:text-5xl lg:text-[3.75rem]">
+            <h2 className="display text-[2.35rem] text-olive sm:text-[3.4rem] lg:text-[4rem]">
               Saving for Hajj is more
               <br />
               than a <span className="text-green">financial</span> decision.
@@ -585,7 +556,7 @@ function PurposeSection() {
           </Reveal>
           <Reveal delay={0.35}>
             <p className="body-copy mt-6 text-charcoal/75">
-              Hajj Savings gives organisations and their people a shared framework for that preparation:
+              We give organisations and their people a shared framework for that preparation:
               agreed contributions, honest records, and progress that can be seen rather than
               guessed at.
             </p>
@@ -626,7 +597,7 @@ function JourneyTimeline() {
           </div>
           <div className="col-span-12 md:col-span-8 md:col-start-5">
             <Reveal delay={0.1}>
-              <h2 className="display text-[2rem] sm:text-4xl lg:text-[3.25rem]">
+              <h2 className="display text-[2.25rem] sm:text-[2.9rem] lg:text-[3.5rem]">
                 A clearer path from intention
                 <br className="hidden sm:block" /> to{" "}
                 <span className="text-green">preparation</span>.
@@ -636,7 +607,7 @@ function JourneyTimeline() {
         </div>
 
         <div ref={ref} className="relative mt-20 md:mt-32">
-          <div className="pointer-events-none absolute left-0 right-0 top-[54px] hidden md:block">
+          <div className="pointer-events-none absolute left-0 right-0 top-[3px] hidden md:block">
             <div className="h-px w-full bg-olive/15" />
             <motion.div
               className="h-px w-full origin-left bg-green"
@@ -644,7 +615,7 @@ function JourneyTimeline() {
               aria-hidden
             />
           </div>
-          <div className="pointer-events-none absolute bottom-6 left-[7px] top-6 w-px bg-olive/15 md:hidden">
+          <div className="pointer-events-none absolute bottom-6 left-[3px] top-2 w-px bg-olive/15 md:hidden">
             <motion.div
               className="h-full w-px origin-top bg-green"
               style={reduce ? {} : { scaleY }}
@@ -652,36 +623,28 @@ function JourneyTimeline() {
             />
           </div>
 
-          <ol className="grid grid-cols-1 gap-12 md:grid-cols-5 md:gap-6">
+          <ol className="grid grid-cols-1 gap-12 md:grid-cols-5 md:gap-8">
             {STAGES.map((s, i) => (
               <motion.li
-                key={s.n}
-                className="group relative pl-9 md:pl-0"
+                key={s.label}
+                className="group relative pl-9 md:pl-0 md:pt-10"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-15% 0px" }}
                 transition={{ duration: 0.8, delay: i * 0.1, ease: EASE }}
               >
                 <motion.span
-                  className="block font-serif text-3xl font-light text-olive/30 transition-colors duration-500 group-hover:text-green md:text-4xl"
-                  whileInView={{ color: "var(--green)" }}
-                  viewport={{ once: true, margin: "-20% 0px -20% 0px" }}
-                  transition={{ duration: 0.8, delay: 0.15 + i * 0.1 }}
-                >
-                  {s.n}
-                </motion.span>
-                <motion.span
                   aria-hidden
-                  className="absolute left-0 top-4 h-[7px] w-[7px] rounded-full bg-olive/25 md:left-0 md:top-[51px]"
+                  className="absolute left-0 top-[6px] h-[7px] w-[7px] rounded-full bg-olive/25 md:top-0"
                   whileInView={{ backgroundColor: "var(--green)", scale: 1.15 }}
                   viewport={{ once: true, margin: "-20% 0px -20% 0px" }}
                   transition={{ duration: 0.6, delay: 0.15 + i * 0.1 }}
                 />
-                <div className="md:pt-12">
-                  <h3 className="text-[0.8125rem] font-medium uppercase tracking-[0.2em] transition-colors duration-500 group-hover:text-green">
+                <div>
+                  <h3 className="text-[0.9375rem] font-medium uppercase tracking-[0.18em] transition-colors duration-500 group-hover:text-green">
                     {s.label}
                   </h3>
-                  <p className="mt-3 max-w-[22ch] text-sm font-light leading-relaxed text-olive-muted">
+                  <p className="mt-3 max-w-[26ch] text-[1rem] font-light leading-relaxed text-olive-muted">
                     {s.note}
                   </p>
                 </div>
@@ -689,6 +652,7 @@ function JourneyTimeline() {
             ))}
           </ol>
         </div>
+
       </div>
     </section>
   );
@@ -703,11 +667,7 @@ function EcosystemSection() {
     <section id="ecosystem" className="relative overflow-hidden bg-ivory py-28 md:py-44">
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-24 top-24 hidden h-[560px] w-[520px] border-l border-green/12 bg-green-pale/60 lg:block"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-8 top-48 hidden h-[420px] w-[380px] border border-green/10 lg:block"
+        className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-green/12"
       />
 
       <div className="relative mx-auto max-w-[1440px] px-6 md:px-10">
@@ -717,7 +677,7 @@ function EcosystemSection() {
               <Eyebrow tone="green">How it works</Eyebrow>
             </Reveal>
             <Reveal delay={0.1}>
-              <h2 className="display mt-7 text-[2rem] text-olive sm:text-4xl lg:text-[3.25rem]">
+              <h2 className="display mt-7 text-[2.25rem] text-olive sm:text-[2.9rem] lg:text-[3.5rem]">
                 Two responsibilities,
                 <br />
                 one <span className="text-green">shared record</span>.
@@ -740,9 +700,10 @@ function EcosystemSection() {
                       className="absolute -left-[27px] top-[18px] h-[7px] w-[7px] rounded-full bg-green"
                     />
                     <span
-                      className={`text-[0.8125rem] uppercase tracking-[0.18em] ${
+                      className={`text-[0.875rem] uppercase tracking-[0.18em] ${
                         i === PATHWAY.length - 1 ? "text-green" : "text-olive/75"
                       }`}
+
                     >
                       {step}
                     </span>
@@ -753,11 +714,11 @@ function EcosystemSection() {
           </div>
 
           <div className="col-span-12 lg:col-span-6 lg:col-start-7">
-            <div className="grid grid-cols-1 gap-x-12 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-x-12 gap-y-14 sm:grid-cols-2">
               {SIDES.map((side, si) => (
-                <div key={side.title} className={si === 1 ? "mt-14 sm:mt-24" : ""}>
+                <div key={side.title}>
                   <Reveal delay={0.1 + si * 0.1}>
-                    <h3 className="font-serif text-[1.75rem] font-light text-olive">
+                    <h3 className="font-serif text-[1.9rem] font-light text-olive">
                       {side.title}
                     </h3>
                   </Reveal>
@@ -767,8 +728,11 @@ function EcosystemSection() {
                   <ul className="space-y-4">
                     {side.points.map((p, i) => (
                       <Reveal as="li" key={p} delay={0.2 + i * 0.07}>
-                        <span className="flex items-baseline gap-4 text-[0.95rem] font-light text-charcoal/80">
-                          <span className="eyebrow text-green">0{i + 1}</span>
+                        <span className="flex items-baseline gap-3 text-[1.05rem] font-light text-charcoal/80">
+                          <span
+                            aria-hidden
+                            className="h-[6px] w-[6px] shrink-0 translate-y-[-3px] rounded-full bg-green"
+                          />
                           {p}
                         </span>
                       </Reveal>
@@ -777,6 +741,7 @@ function EcosystemSection() {
                 </div>
               ))}
             </div>
+
 
             <Reveal delay={0.3}>
               <p className="mt-16 border-t border-green/20 pt-8 font-serif text-2xl font-light italic leading-snug text-olive-muted sm:text-[1.75rem]">
@@ -802,7 +767,7 @@ function OrgBlock({ block, delay = 0 }) {
         <Eyebrow tone="ivory">{block.eyebrow}</Eyebrow>
       </Reveal>
       <Reveal delay={delay + 0.1}>
-        <h2 className="display mt-7 text-[2.2rem] sm:text-5xl lg:text-[3.6rem]">
+        <h2 className="display mt-7 text-[2.4rem] sm:text-[3.4rem] lg:text-[3.9rem]">
           {block.heading[0]}
           <br />
           {block.heading[1]}
@@ -814,13 +779,14 @@ function OrgBlock({ block, delay = 0 }) {
       <ul className="mt-10 max-w-md">
         {block.items.map((item, i) => (
           <Reveal as="li" key={item} delay={delay + 0.25 + i * 0.07}>
-            <span className="flex items-center justify-between border-b border-ivory/12 py-4 text-[0.95rem] font-light text-ivory/85 transition-colors duration-500 hover:border-green-muted/60">
+            <span className="flex items-center gap-4 border-b border-ivory/12 py-4 text-[1.05rem] font-light text-ivory/85 transition-colors duration-500 hover:border-green-muted/60">
+              <span aria-hidden className="h-[6px] w-[6px] shrink-0 rounded-full bg-green-muted" />
               {item}
-              <span className="eyebrow text-green-muted">0{i + 1}</span>
             </span>
           </Reveal>
         ))}
       </ul>
+
     </>
   );
 }
@@ -850,7 +816,7 @@ function OrganisationEmployeeSection() {
             <OrgBlock block={ORG_BLOCK} />
           </div>
 
-          <div className="col-span-12 lg:col-span-5 lg:col-start-8 lg:pt-40">
+          <div className="col-span-12 lg:col-span-5 lg:col-start-8 lg:pt-24">
             <Reveal>
               <div className="relative overflow-hidden">
                 <img
@@ -894,7 +860,7 @@ function ContributionSection() {
               <Eyebrow tone="green">Clarity</Eyebrow>
             </Reveal>
             <Reveal delay={0.1}>
-              <h2 className="display mt-7 text-[2.1rem] text-olive sm:text-5xl">
+              <h2 className="display mt-7 text-[2.35rem] text-olive sm:text-[3.4rem]">
                 Know where
                 <br />
                 you stand.
@@ -907,7 +873,7 @@ function ContributionSection() {
               </p>
             </Reveal>
             <Reveal delay={0.3}>
-              <p className="mt-10 text-[0.6875rem] uppercase tracking-[0.2em] text-olive-muted">
+              <p className="mt-10 text-[0.75rem] uppercase tracking-[0.2em] text-olive-muted">
                 Illustrative example
               </p>
             </Reveal>
@@ -915,8 +881,8 @@ function ContributionSection() {
 
           <div className="col-span-12 lg:col-span-7 lg:col-start-6">
             <Reveal delay={0.15}>
-              <figure className="border border-green/20 bg-green-pale/45 p-8 md:p-14">
-                <figcaption className="flex items-baseline justify-between border-b border-green/20 pb-6">
+              <figure className="border border-olive/12 bg-stone/35 p-8 md:p-14">
+                <figcaption className="flex items-baseline justify-between border-b border-olive/15 pb-6">
                   <span className="font-serif text-2xl font-light text-olive">
                     Contribution record
                   </span>
@@ -924,15 +890,15 @@ function ContributionSection() {
                 </figcaption>
 
                 <dl className="grid grid-cols-1 sm:grid-cols-2">
-                  <div className="border-b border-green/15 py-8 sm:border-r sm:pr-10">
+                  <div className="border-b border-olive/12 py-8 sm:border-r sm:pr-10">
                     <dt className="eyebrow text-olive-muted">Monthly contribution</dt>
                     <dd className="mt-4 font-serif text-6xl font-light text-green-deep">£250</dd>
                   </div>
-                  <div className="border-b border-green/15 py-8 sm:pl-10">
+                  <div className="border-b border-olive/12 py-8 sm:pl-10">
                     <dt className="eyebrow text-olive-muted">Contributions made</dt>
                     <dd className="mt-4 font-serif text-6xl font-light text-green-deep">12</dd>
                   </div>
-                  <div className="border-b border-green/15 py-8 sm:border-b-0 sm:border-r sm:pr-10">
+                  <div className="border-b border-olive/12 py-8 sm:border-b-0 sm:border-r sm:pr-10">
                     <dt className="eyebrow text-olive-muted">Progress</dt>
                     <dd className="mt-6 flex flex-wrap gap-[6px]" aria-label="12 of 18 completed">
                       {Array.from({ length: 18 }).map((_, i) => (
@@ -978,7 +944,7 @@ function TrustSection() {
           </div>
           <div className="col-span-12 md:col-span-7 md:col-start-6">
             <Reveal delay={0.1}>
-              <h2 className="display text-[2.2rem] sm:text-5xl lg:text-[3.6rem]">
+              <h2 className="display text-[2.4rem] sm:text-[3.4rem] lg:text-[3.9rem]">
                 Built around trust.
               </h2>
             </Reveal>
@@ -987,20 +953,17 @@ function TrustSection() {
 
         <ul className="mt-16 border-t border-ivory/12 md:mt-24">
           {PRINCIPLES.map((p, i) => (
-            <Reveal as="li" key={p.n} delay={i * 0.08}>
-              <div className="group grid grid-cols-12 items-start gap-y-4 border-b border-ivory/12 py-10 transition-colors duration-500 hover:bg-green/15 md:py-12">
-                <span className="col-span-3 font-serif text-3xl font-light text-green-muted transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-2 md:col-span-2 md:text-4xl">
-                  {p.n}
-                </span>
-                <h3 className="col-span-9 font-serif text-[1.9rem] font-light md:col-span-4 md:text-[2.4rem]">
+            <Reveal as="li" key={p.title} delay={i * 0.08}>
+              <div className="group grid grid-cols-12 items-start gap-y-5 border-b border-ivory/12 py-10 transition-colors duration-500 hover:bg-green/15 md:gap-x-10 md:py-14">
+                <h3 className="col-span-12 font-serif text-[2.1rem] font-light leading-tight transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-2 md:col-span-5 md:text-[2.6rem]">
                   {p.title}
                 </h3>
-                <div className="col-span-12 md:col-span-5 md:col-start-8">
+                <div className="col-span-12 md:col-span-6 md:col-start-7">
                   <span
                     aria-hidden
                     className="mb-5 block h-px w-10 origin-left bg-green-muted transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-[2.6]"
                   />
-                  <p className="body-copy text-ivory/55 transition-colors duration-500 group-hover:text-ivory/85">
+                  <p className="body-copy text-ivory/60 transition-colors duration-500 group-hover:text-ivory/90">
                     {p.body}
                   </p>
                 </div>
@@ -1008,6 +971,7 @@ function TrustSection() {
             </Reveal>
           ))}
         </ul>
+
       </div>
     </section>
   );
@@ -1082,12 +1046,12 @@ function FinalCTA({ dashboardLink }) {
               viewport={{ once: true }}
               transition={{ duration: 0.9, delay: 0.35, ease: EASE }}
             >
-              <ArrowLink href={dashboardLink} variant="ivory" isInternal={true}>
+              <ArrowLink href="#top" variant="ivory">
                 Begin Your Journey
               </ArrowLink>
 
               <span className="text-ivory">
-                <ArrowLink href={dashboardLink} variant="outline" isInternal={true}>
+                <ArrowLink href={dashboardLink} variant="outline">
                   Portal Login
                 </ArrowLink>
               </span>
@@ -1104,8 +1068,6 @@ function FinalCTA({ dashboardLink }) {
 /* ------------------------------------------------------------------ */
 
 function Footer({ dashboardLink }) {
-  const FOOTER_NAV = [...NAV, { label: "Portal Login", href: dashboardLink }];
-  
   return (
     <footer className="geo-veil bg-green-forest py-20 text-ivory md:py-28">
       <div className="mx-auto max-w-[1440px] px-6 md:px-10">
@@ -1117,28 +1079,24 @@ function Footer({ dashboardLink }) {
             </p>
             <span aria-hidden className="mt-8 block h-px w-16 bg-green-muted" />
             <p className="mt-8 max-w-xs text-sm font-light leading-relaxed text-ivory/50">
-              Hajj Savings
+              A structured approach to Hajj savings.
             </p>
           </div>
 
           {[
-            { title: "Navigate", items: FOOTER_NAV, cls: "md:col-span-3 md:col-start-7" },
-            { title: "Legal", items: LEGAL, cls: "md:col-span-2 md:col-start-11" },
+            { title: "Navigate", items: FOOTER_NAV, cls: "md:col-span-4 md:col-start-9" },
           ].map((group) => (
             <div key={group.title} className={`col-span-6 ${group.cls}`}>
               <p className="eyebrow text-ivory/40">{group.title}</p>
               <ul className="mt-6 space-y-3">
                 {group.items.map((i) => (
                   <li key={i.label}>
-                    {i.href.startsWith('#') ? (
-                      <a href={i.href} className="link-rule text-sm font-light text-ivory/75 transition-colors duration-500 hover:text-green-muted">
-                        {i.label}
-                      </a>
-                    ) : (
-                      <Link to={i.href} className="link-rule text-sm font-light text-ivory/75 transition-colors duration-500 hover:text-green-muted">
-                        {i.label}
-                      </Link>
-                    )}
+                    <a
+                      href={i.href}
+                      className="link-rule text-[0.95rem] font-light text-ivory/75 transition-colors duration-500 hover:text-green-muted"
+                    >
+                      {i.label}
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -1147,7 +1105,7 @@ function Footer({ dashboardLink }) {
         </div>
 
         <div className="mt-20 flex flex-col gap-3 border-t border-ivory/12 pt-8 text-[0.6875rem] uppercase tracking-[0.16em] text-ivory/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} Hajj Savings All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Hajj Savings Fund. All rights reserved.</p>
           <p>A structured approach to Hajj savings.</p>
         </div>
       </div>
@@ -1159,27 +1117,22 @@ function Footer({ dashboardLink }) {
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 
-export default function Home() {
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
-  
-  let dashboardLink = '/dashboard';
-  if (isSignedIn && user) {
-    if (user.publicMetadata?.role === 'superadmin') {
-      dashboardLink = '/superadmin';
-    } else {
-      // Check if they are an admin of any organization
-      const isOrgAdmin = user.organizationMemberships?.some(
-        mem => mem.role === 'org:admin' || mem.role === 'admin'
-      );
-      if (isOrgAdmin) {
-        dashboardLink = '/admin';
+export default function LandingPage() {
+  const { user, isLoaded } = useUser();
+  const [dashboardLink, setDashboardLink] = useState('/dashboard');
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      if (user.publicMetadata.role === 'superadmin') {
+        setDashboardLink('/superadmin');
+      } else if (user.publicMetadata.role === 'admin') {
+        setDashboardLink('/org-admin');
       }
     }
-  }
+  }, [isLoaded, user]);
 
   return (
-    <div className="bg-ivory text-charcoal font-sans">
+    <>
       <Navbar dashboardLink={dashboardLink} />
       <main>
         <Hero dashboardLink={dashboardLink} />
@@ -1192,6 +1145,6 @@ export default function Home() {
         <FinalCTA dashboardLink={dashboardLink} />
       </main>
       <Footer dashboardLink={dashboardLink} />
-    </div>
+    </>
   );
 }
