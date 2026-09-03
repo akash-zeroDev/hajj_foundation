@@ -2,6 +2,7 @@ import { OnboardOrgModal } from '../components/OnboardOrgModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { useToast } from '../context/ToastContext';
 import { useState, useEffect } from 'react';
+import { FileText, Plus, Users, ChevronUp, PoundSterling, Trophy, AlertTriangle, Check, CreditCard } from 'lucide-react';
 import { useUser, useAuth, useOrganization } from '@clerk/react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import SidebarLayout from '../layouts/SidebarLayout';
@@ -1155,7 +1156,7 @@ export const AdminDashboard = () => {
           <div className="bg-white rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden border border-[#e6ecea]">
             <div className="bg-white px-8 py-6 border-b border-[#e6ecea] flex items-center gap-3">
               <span className="w-10 h-10 rounded-xl grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-current stroke-[2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <FileText className="w-5 h-5" />
               </span>
               <div>
                 <h2 className="text-[18px] font-bold text-[#0e1a16] m-0 tracking-[-0.2px]">Master Agreement</h2>
@@ -1219,7 +1220,7 @@ export const AdminDashboard = () => {
           <PrimaryButton 
             onClick={() => navigate('/admin/employees')}
             className="!text-[13.5px] !py-[11px] !px-[18px] !rounded-[10px] shadow-[0_10px_22px_-12px_rgba(11,122,91,.9)]"
-            icon={<svg className="w-4 h-4 stroke-current stroke-[2] fill-none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>}
+            icon={<Plus className="w-4 h-4 stroke-[3]" />}
           >
             Invite Employees
           </PrimaryButton>
@@ -1230,12 +1231,12 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Staff Enrolled</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><circle cx="9" cy="8" r="3.2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/></svg></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><Users className="w-[17px] h-[17px]" /></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">{stats.totalEmployees}</div>
           <span className={`text-[12.5px] font-semibold inline-flex items-center gap-[5px] ${monthEnrolments > 0 ? 'text-[#0b7a5b]' : 'text-[#8a9994]'}`}>
             {monthEnrolments > 0 ? (
-              <><svg viewBox="0 0 24 24" className="w-[13px] h-[13px] stroke-current stroke-[2.2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/></svg>+{monthEnrolments} this month</>
+              <><ChevronUp className="w-[13px] h-[13px]" />+{monthEnrolments} this month</>
             ) : 'No new enrolments this month'}
           </span>
         </div>
@@ -1243,7 +1244,7 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Combined Savings</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><circle cx="12" cy="12" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="M14 9.5A2.5 2.5 0 1012 15"/></svg></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><PoundSterling className="w-[17px] h-[17px]" /></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">£{stats.totalCombinedSavings.toLocaleString()}</div>
           <div className="text-[12.5px] text-[#5c6b65]">Funded towards Hajj by your staff</div>
@@ -1252,7 +1253,7 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Hajj Journeys Won</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v6a8 8 0 01-16 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 20h6M12 18v2"/></svg></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><Trophy className="w-[17px] h-[17px]" /></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">{stats.hajjJourneysWon}</div>
           <span className="text-[12.5px] font-semibold inline-flex items-center gap-[5px] text-[#8a9994]">No draws won yet</span>
@@ -1312,28 +1313,28 @@ export const AdminDashboard = () => {
           <ul className="m-0 p-0 list-none flex-1">
             {orgData?.annualFeeStatus === 'pending' && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4l9 16H3z"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v4M12 17h.01"/></svg></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><AlertTriangle className="w-[16px] h-[16px]" /></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Fee payment required</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Your annual fee of £{orgData?.annualFee?.toLocaleString()} is pending.</small></div>
                 <button onClick={handlePayAnnualFee} disabled={isRedirecting} className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap bg-transparent border-0 cursor-pointer p-0">{isRedirecting ? 'Connecting...' : 'Pay now'}</button>
               </li>
             )}
             {orgData?.agreementStatus === 'signed' && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.14)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5"/></svg></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.14)] text-[#0b7a5b]"><Check className="w-[16px] h-[16px] stroke-[3]" /></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Shariah agreement signed</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">The latest Master agreement is active for your organisation.</small></div>
                 <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View</a>
               </li>
             )}
             {stats.pendingAgreements > 0 && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><AlertTriangle className="w-[16px] h-[16px]" /></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Action Required</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">{stats.pendingAgreements} employees are pending agreement signature.</small></div>
                 <Link to="/admin/employees" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Review</Link>
               </li>
             )}
             {stats.totalEmployees < 2 && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><circle cx="9" cy="8" r="3.2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/></svg></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><Users className="w-[16px] h-[16px]" /></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Invite more staff</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Only {stats.totalEmployees} of your team has enrolled so far.</small></div>
                 <Link to="/admin/employees" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Invite</Link>
               </li>
@@ -1398,15 +1399,15 @@ export const AdminDashboard = () => {
           </div>
           <div className="grid gap-[10px] p-[18px]">
             <button onClick={() => navigate('/admin/employees')} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><Plus className="w-[16px] h-[16px] stroke-[3]" /></span>
               Invite New Employees
             </button>
             <button onClick={handlePayAnnualFee} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><rect x="3" y="6" width="18" height="12" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18"/></svg></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><CreditCard className="w-[16px] h-[16px]" /></span>
               Pay Annual Fee
             </button>
             <button onClick={() => navigate('/admin/agreements')} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M7 3h7l5 5v13H7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5"/></svg></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><FileText className="w-[16px] h-[16px]" /></span>
               View Agreements
             </button>
           </div>

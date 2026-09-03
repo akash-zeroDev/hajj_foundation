@@ -8,5 +8,6 @@ router.get('/clerk/:clerkId/admin', requireOrgAdmin, employeeController.getEmplo
 router.patch('/:id/complete-onboarding', requireSelf, employeeController.completeOnboarding);
 router.patch('/:id/bank-settings', requireSelf, employeeController.updateBankSettings);
 router.post('/invite', requireOrgAdmin, employeeController.inviteEmployee);
+router.post('/remind-pending', requireOrgAdmin, employeeController.remindPendingAgreements);
 
 module.exports = router;

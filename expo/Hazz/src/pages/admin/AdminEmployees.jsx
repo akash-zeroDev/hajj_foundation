@@ -233,7 +233,7 @@ export const AdminEmployees = () => {
           onClick={() => setIsInviteModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 border border-transparent rounded-lg text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+          <Plus className="w-5 h-5" />
           Invite Employee
         </button>
       </div>
@@ -432,9 +432,7 @@ export const AdminEmployees = () => {
           
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
             <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-red-100">
-              <svg className="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+              <AlertTriangle className="h-7 w-7 text-red-600" />
             </div>
             <h3 className="text-xl font-bold text-slate-900">Remove Employee?</h3>
             <p className="text-sm text-slate-500 mt-2 mb-8 leading-relaxed">
@@ -462,9 +460,7 @@ export const AdminEmployees = () => {
           
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
             <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-amber-100">
-              <svg className="h-7 w-7 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+              <AlertCircle className="h-7 w-7 text-amber-600" />
             </div>
             <h3 className="text-xl font-bold text-slate-900">Revoke Invitation?</h3>
             <p className="text-sm text-slate-500 mt-2 mb-8 leading-relaxed">

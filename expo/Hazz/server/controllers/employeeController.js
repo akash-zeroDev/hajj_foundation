@@ -1,5 +1,6 @@
 const { createClerkClient } = require('@clerk/clerk-sdk-node');
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+const { getAuth } = require('@clerk/express');
 const Employee = require('../models/Employee');
 const NotificationService = require('../services/NotificationService');
 
@@ -252,5 +253,44 @@ exports.inviteEmployee = async (req, res) => {
   } catch (error) {
     console.error('Error inviting employee:', error);
     res.status(500).json({ success: false, message: error.message || 'Failed to send invite' });
+  }
+};
+
+exports.remindPendingAgreements = async (req, res) => {
+  try {
+    const auth = getAuth(req);
+    const orgId = auth.orgId;
+    if (!orgId) return res.status(400).json({ success: false });
+    if (auth.orgRole !== 'org:admin') return res.status(403).json({ success: false });
+
+    const org = await Organisation.findOne({ clerkOrganizationId: orgId });
+    if (!org) return res.status(404).json({ success: false });
+
+    const pendingEmployees = await Employee.find({ 
+      organisationId: org._id, 
+      agreementStatus: 'pending',
+      isRemoved: false 
+    });
+
+    if (pendingEmployees.length === 0) {
+      return res.status(400).json({ success: false, message: 'No pending employees' });
+    }
+
+    const promises = pendingEmployees.map(emp => 
+      NotificationService.notifyUser({
+        userId: emp.clerkUserId,
+        senderId: org.clerkOrganizationId,
+        senderName: org.name,
+        type: 'AGREEMENT_REMINDER',
+        title: 'Action Required: Master Agreement',
+        message: 'Please review and sign the Shariah master agreement to complete your onboarding.',
+        actionUrl: '/dashboard'
+      })
+    );
+
+    await Promise.all(promises);
+    res.status(200).json({ success: true, count: pendingEmployees.length });
+  } catch (error) {
+    res.status(500).json({ success: false });
   }
 };
