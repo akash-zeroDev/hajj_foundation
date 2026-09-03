@@ -624,11 +624,11 @@ export const EmployeeDashboard = () => {
         .hs-portal .pill.warn { background: var(--amber-soft); color: var(--amber); }
         .hs-portal .pill.mute { background: #eff3f2; color: var(--ink-3); }
         .hs-portal .bar { height: 7px; border-radius: 999px; background: #eef2f1; overflow: hidden; margin-top: 14px; }
-        .hs-portal .bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--green-400), var(--green)); }
+        .hs-portal .bar i { display: block; height: 100%; border-radius: 999px; background: var(--green); }
         .hs-portal .btn { border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 13.4px; padding: 10px 16px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; }
         .hs-portal .btn svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2; fill: none; }
-        .hs-portal .btn-primary { color: #fff; background: linear-gradient(180deg, var(--green-400), var(--green)); box-shadow: 0 10px 22px -12px rgba(11,122,91,.9); }
-        .hs-portal .btn-primary:hover { filter: brightness(1.06); }
+        .hs-portal .btn-primary { color: #fff; background: var(--green); }
+        .hs-portal .btn-primary:hover { background: #1e4531; filter: none; }
         .hs-portal .btn-ghost { background: #fff; border: 1px solid var(--line); color: var(--ink); }
         .hs-portal .btn-ghost:hover { background: #f2f6f5; }
         .hs-portal .btn.full { width: 100%; justify-content: center; margin-top: 14px; }
@@ -1155,7 +1155,7 @@ export const AdminDashboard = () => {
           </div>
           <div className="bg-white rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden border border-[#e6ecea]">
             <div className="bg-white px-8 py-6 border-b border-[#e6ecea] flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]">
+              <span className="w-10 h-10 rounded-xl grid place-items-center bg-[#296043]/10 text-[#296043]">
                 <FileText className="w-5 h-5" />
               </span>
               <div>
@@ -1182,7 +1182,7 @@ export const AdminDashboard = () => {
                 <span className="text-xl font-bold text-slate-900">£{orgData?.annualFee?.toLocaleString() || 0}</span>
               </div>
               <div className="flex items-start gap-3">
-                <input type="checkbox" id="agree" className="mt-1 w-5 h-5 rounded border-slate-300 text-[#0b7a5b] focus:ring-[#0b7a5b] cursor-pointer" required />
+                <input type="checkbox" id="agree" className="mt-1 w-5 h-5 rounded border-slate-300 text-[#296043] focus:ring-[#0b7a5b] cursor-pointer" required />
                 <label htmlFor="agree" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
                   I confirm that I am an authorised representative of <strong>{orgData.name}</strong>, and I accept the terms of this Master Agreement. I also acknowledge the annual contribution amount shown above.
                 </label>
@@ -1231,10 +1231,10 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Staff Enrolled</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><Users className="w-[17px] h-[17px]" /></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[#296043]/10 text-[#296043]"><Users className="w-[17px] h-[17px]" /></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">{stats.totalEmployees}</div>
-          <span className={`text-[12.5px] font-semibold inline-flex items-center gap-[5px] ${monthEnrolments > 0 ? 'text-[#0b7a5b]' : 'text-[#8a9994]'}`}>
+          <span className={`text-[12.5px] font-semibold inline-flex items-center gap-[5px] ${monthEnrolments > 0 ? 'text-[#296043]' : 'text-[#8a9994]'}`}>
             {monthEnrolments > 0 ? (
               <><ChevronUp className="w-[13px] h-[13px]" />+{monthEnrolments} this month</>
             ) : 'No new enrolments this month'}
@@ -1244,7 +1244,7 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Combined Savings</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><PoundSterling className="w-[17px] h-[17px]" /></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[#296043]/10 text-[#296043]"><PoundSterling className="w-[17px] h-[17px]" /></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">£{stats.totalCombinedSavings.toLocaleString()}</div>
           <div className="text-[12.5px] text-[#5c6b65]">Funded towards Hajj by your staff</div>
@@ -1253,14 +1253,14 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Hajj Journeys Won</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><Trophy className="w-[17px] h-[17px]" /></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[#296043]/10 text-[#296043]"><Trophy className="w-[17px] h-[17px]" /></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">{stats.hajjJourneysWon}</div>
           <span className="text-[12.5px] font-semibold inline-flex items-center gap-[5px] text-[#8a9994]">No draws won yet</span>
         </div>
       </section>
 
-      <section className="p-[22px] rounded-[14px] border border-white/5 text-[#eaf6f1] bg-[radial-gradient(120%_120%_at_100%_0%,rgba(23,163,119,.35),transparent_60%),linear-gradient(135deg,#0b7a5b,#075c44)] flex flex-col md:flex-row md:items-center gap-[22px] shadow-[0_18px_34px_-22px_rgba(7,92,68,.9)] mb-4">
+      <section className="p-[22px] rounded-[14px] border border-white/5 text-[#eaf6f1] bg-[#296043] flex flex-col md:flex-row md:items-center gap-[22px] shadow-[0_18px_34px_-22px_rgba(30,69,49,.9)] mb-4">
         <div>
           <h4 className="m-0 mb-[6px] text-[19px] text-white tracking-[-0.3px] font-bold">The Monthly Award Draw</h4>
           <p className="m-0 text-[13.5px] text-white/80 max-w-[46ch] leading-[1.5]">Every active employee earns your company more collective chances to win the sponsored Hajj trip each month.</p>
@@ -1290,7 +1290,7 @@ export const AdminDashboard = () => {
                    />
                    <Bar dataKey="employees" radius={[6, 6, 0, 0]}>
                      {stats.activityGraphData?.map((entry, index) => (
-                       <Cell key={`cell-${index}`} fill="#0b7a5b" />
+                       <Cell key={`cell-${index}`} fill="#296043" />
                      ))}
                    </Bar>
                  </BarChart>
@@ -1307,7 +1307,7 @@ export const AdminDashboard = () => {
                 {(orgData?.annualFeeStatus === 'pending' ? 1 : 0) + (stats.pendingAgreements > 0 ? 1 : 0)} Pending
               </span>
             ) : (
-               <span className="ml-auto text-[11.5px] font-semibold px-[10px] py-[4px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">All clear</span>
+               <span className="ml-auto text-[11.5px] font-semibold px-[10px] py-[4px] rounded-full bg-[#296043]/15 text-[#296043]">All clear</span>
             )}
           </div>
           <ul className="m-0 p-0 list-none flex-1">
@@ -1315,28 +1315,28 @@ export const AdminDashboard = () => {
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
                 <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><AlertTriangle className="w-[16px] h-[16px]" /></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Fee payment required</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Your annual fee of £{orgData?.annualFee?.toLocaleString()} is pending.</small></div>
-                <button onClick={handlePayAnnualFee} disabled={isRedirecting} className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap bg-transparent border-0 cursor-pointer p-0">{isRedirecting ? 'Connecting...' : 'Pay now'}</button>
+                <button onClick={handlePayAnnualFee} disabled={isRedirecting} className="ml-auto self-center text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap bg-transparent border-0 cursor-pointer p-0">{isRedirecting ? 'Connecting...' : 'Pay now'}</button>
               </li>
             )}
             {orgData?.agreementStatus === 'signed' && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.14)] text-[#0b7a5b]"><Check className="w-[16px] h-[16px] stroke-[3]" /></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#296043]/15 text-[#296043]"><Check className="w-[16px] h-[16px] stroke-[3]" /></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Shariah agreement signed</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">The latest Master agreement is active for your organisation.</small></div>
-                <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View</a>
+                <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="ml-auto self-center text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View</a>
               </li>
             )}
             {stats.pendingAgreements > 0 && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
                 <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><AlertTriangle className="w-[16px] h-[16px]" /></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Action Required</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">{stats.pendingAgreements} employees are pending agreement signature.</small></div>
-                <Link to="/admin/employees" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Review</Link>
+                <Link to="/admin/employees" className="ml-auto self-center text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Review</Link>
               </li>
             )}
             {stats.totalEmployees < 2 && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
                 <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><Users className="w-[16px] h-[16px]" /></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Invite more staff</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Only {stats.totalEmployees} of your team has enrolled so far.</small></div>
-                <Link to="/admin/employees" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Invite</Link>
+                <Link to="/admin/employees" className="ml-auto self-center text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Invite</Link>
               </li>
             )}
           </ul>
@@ -1348,7 +1348,7 @@ export const AdminDashboard = () => {
           <div className="flex items-center gap-3 px-[18px] py-[16px] border-b border-[#e6ecea]">
             <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Recent Employees</h4>
             <span className="text-[12.5px] text-[#8a9994]">Latest enrolments</span>
-            <Link to="/admin/employees" className="ml-auto text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View all</Link>
+            <Link to="/admin/employees" className="ml-auto text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View all</Link>
           </div>
           <div className="overflow-x-auto w-full">
             <table className="w-full border-collapse text-left">
@@ -1371,7 +1371,7 @@ export const AdminDashboard = () => {
                     <td className="px-[18px] py-[12px] text-[13.5px] text-[#0e1a16]">£{emp.balance || 0}</td>
                     <td className="px-[18px] py-[12px] text-[13.5px]">
                       {emp.agreementStatus === 'signed' ? (
-                        <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">Signed</span>
+                        <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#296043]/15 text-[#296043]">Signed</span>
                       ) : emp.agreementStatus === 'pending' ? (
                         <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#fdf3e3] text-[#c8811f]">Pending</span>
                       ) : (
@@ -1399,15 +1399,15 @@ export const AdminDashboard = () => {
           </div>
           <div className="grid gap-[10px] p-[18px]">
             <button onClick={() => navigate('/admin/employees')} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><Plus className="w-[16px] h-[16px] stroke-[3]" /></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#296043]/10 text-[#296043]"><Plus className="w-[16px] h-[16px] stroke-[3]" /></span>
               Invite New Employees
             </button>
             <button onClick={handlePayAnnualFee} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><CreditCard className="w-[16px] h-[16px]" /></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#296043]/10 text-[#296043]"><CreditCard className="w-[16px] h-[16px]" /></span>
               Pay Annual Fee
             </button>
             <button onClick={() => navigate('/admin/agreements')} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><FileText className="w-[16px] h-[16px]" /></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#296043]/10 text-[#296043]"><FileText className="w-[16px] h-[16px]" /></span>
               View Agreements
             </button>
           </div>
@@ -1507,7 +1507,7 @@ export const SuperAdminDashboard = () => {
           <section className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden">
             <div className="flex items-center gap-3 px-[18px] py-4 border-b border-[#e6ecea]">
               <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Recent Organisations</h4>
-              <Link to="/superadmin/organisations" className="ml-auto text-[#0b7a5b] text-[12.5px] font-semibold hover:underline">View all</Link>
+              <Link to="/superadmin/organisations" className="ml-auto text-[#296043] text-[12.5px] font-semibold hover:underline">View all</Link>
             </div>
             <div className="overflow-x-auto w-full">
               <table className="w-full border-collapse text-left text-[13.5px]">
@@ -1524,7 +1524,7 @@ export const SuperAdminDashboard = () => {
                       <td className="px-[18px] py-3 font-semibold text-[#0e1a16]">{org.name}</td>
                       <td className="px-[18px] py-3">
                         {org.annualFeeStatus === 'paid' ? (
-                          <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">Paid</span>
+                          <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#296043]/15 text-[#296043]">Paid</span>
                         ) : (
                           <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#fdf3e3] text-[#c8811f]">Unpaid</span>
                         )}

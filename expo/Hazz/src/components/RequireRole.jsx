@@ -33,6 +33,12 @@ export const RequireRole = ({ role, children }) => {
       return <Navigate to="/unauthorized" replace />;
     }
   }
+  else if (role === 'org:member') {
+    if (!membership) {
+      if (user.publicMetadata?.role === 'superadmin') return <Navigate to="/superadmin" replace />;
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
 
   
   // Check for User Suspension

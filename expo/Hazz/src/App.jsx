@@ -51,7 +51,11 @@ const DashboardRouter = () => {
   if (user?.publicMetadata?.role === 'superadmin') return <Navigate to="/superadmin" replace />;
   if (membership?.role === 'org:admin') return <Navigate to="/admin" replace />;
   
-  return <EmployeeDashboard />;
+  return (
+    <RequireRole role="org:member">
+      <EmployeeDashboard />
+    </RequireRole>
+  );
 };
 
 function App() {

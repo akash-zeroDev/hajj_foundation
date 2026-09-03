@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, Lock } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useAuth, useOrganization } from '@clerk/react';
+import PrimaryButton from '../../components/PrimaryButton';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { orgAdminNavigation } from '../../config/navigation';
 
@@ -154,13 +155,12 @@ export const Settings = () => {
             </div>
 
             <div className="flex justify-end pt-4">
-              <button
+              <PrimaryButton
                 type="submit"
-                disabled={isSaving}
-                className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
+                isLoading={isSaving}
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
-              </button>
+              </PrimaryButton>
             </div>
 
           </form>

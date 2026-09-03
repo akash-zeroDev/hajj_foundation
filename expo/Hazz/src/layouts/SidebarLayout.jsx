@@ -65,7 +65,7 @@ export default function SidebarLayout({ navigation, title, children }) {
                 className={`
                   flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                   ${isActive 
-                    ? 'bg-green text-ivory shadow-sm' 
+                    ? 'bg-[#296043] text-ivory' 
                     : 'text-ivory/70 hover:bg-green/40 hover:text-ivory'
                   }
                 `}

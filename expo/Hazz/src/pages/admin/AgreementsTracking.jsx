@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Send, Users, CheckCircle, Clock, Search, Check, Loader2 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useAuth, useOrganization } from '@clerk/react';
+import PrimaryButton from '../../components/PrimaryButton';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { orgAdminNavigation } from '../../config/navigation';
 import SearchFilterBar from '../../components/SearchFilterBar';
@@ -169,14 +170,14 @@ export const AgreementsTracking = () => {
             <p>Track which employees have reviewed and signed the Shariah master agreement.</p>
           </div>
           <div className="agt-actions">
-            <button className="agt-btn agt-btn-primary" onClick={handleRemindPending} disabled={isReminding || pendingCount === 0} style={{ opacity: isReminding || pendingCount === 0 ? 0.6 : 1, cursor: isReminding || pendingCount === 0 ? 'not-allowed' : 'pointer' }}>
-  {isReminding ? (
-    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" />
-  ) : (
-    <Send className="w-[18px] h-[18px] mr-1.5" />
-  )}
-  {isReminding ? 'Sending...' : 'Remind pending'}
-</button>
+            <PrimaryButton 
+              onClick={handleRemindPending} 
+              disabled={pendingCount === 0}
+              isLoading={isReminding}
+              icon={<Send className="w-[16px] h-[16px]" />}
+            >
+              {isReminding ? 'Sending...' : 'Remind pending'}
+            </PrimaryButton>
           </div>
         </div>
 

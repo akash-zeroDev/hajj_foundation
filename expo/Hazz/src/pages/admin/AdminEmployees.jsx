@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { Plus, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useOrganization, useAuth } from '@clerk/react';
+import { useToast } from '../../context/ToastContext';
 
 
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import SearchFilterBar from '../../components/SearchFilterBar';
 import EmployeeProfileSidecar from '../../components/EmployeeProfileSidecar';
 import SidebarLayout from '../../layouts/SidebarLayout';
@@ -13,6 +15,7 @@ import { orgAdminNavigation } from '../../config/navigation';
 export const AdminEmployees = () => {
   const { organization, isLoaded } = useOrganization();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +32,7 @@ export const AdminEmployees = () => {
   const [employeeTab, setEmployeeTab] = useState('active');
   const [allDbEmployees, setAllDbEmployees] = useState([]);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   useEffect(() => {
     if (activeMember) {
@@ -114,7 +118,7 @@ export const AdminEmployees = () => {
     if (!selectedMember) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/financials/org-transactions/${org.id}`, {
+      const res = await fetch(`http://localhost:5000/api/financials/org-transactions/${organization.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -129,7 +133,7 @@ export const AdminEmployees = () => {
       
       doc.setFontSize(12);
       doc.text(`Employee: ${selectedMember.publicUserData?.firstName || ''} ${selectedMember.publicUserData?.lastName || ''}`, 14, 32);
-      doc.text(`Organisation: ${org.name}`, 14, 38);
+      doc.text(`Organisation: ${organization.name}`, 14, 38);
       doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 14, 44);
       
       const profile = allDbEmployees.find(e => e.clerkUserId === employeeClerkId);
@@ -144,7 +148,7 @@ export const AdminEmployees = () => {
          tx.status
       ]);
       
-      doc.autoTable({
+      autoTable(doc, {
          startY: 60,
          head: [['Date', 'Type', 'Amount', 'Status']],
          body: tableData,
@@ -159,6 +163,7 @@ export const AdminEmployees = () => {
 
   const executeRevoke = async () => {
     if (!confirmRevokeTarget) return;
+    setIsRevoking(true);
     try {
       await confirmRevokeTarget.revoke();
       const invs = await organization.getInvitations({ status: 'pending' });
@@ -167,9 +172,11 @@ export const AdminEmployees = () => {
     } catch (error) {
       console.error(error);
     } finally {
+      setIsRevoking(false);
       setConfirmRevokeTarget(null);
     }
   };
+
 
   const handleRemove = (userId) => {
     setConfirmRemoveTarget(userId);
@@ -229,13 +236,12 @@ export const AdminEmployees = () => {
           <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
           <p className="text-sm text-slate-500">Add and manage your organisation's staff members</p>
         </div>
-        <button 
+        <PrimaryButton 
           onClick={() => setIsInviteModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 border border-transparent rounded-lg text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+          icon={<Plus className="w-[18px] h-[18px]" />}
         >
-          <Plus className="w-5 h-5" />
           Invite Employee
-        </button>
+        </PrimaryButton>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
@@ -388,13 +394,12 @@ export const AdminEmployees = () => {
                 >
                   Cancel
                 </button>
-                <button 
+                <PrimaryButton 
                   type="submit"
-                  disabled={isInviting}
-                  className="px-4 py-2 bg-emerald-600 border border-transparent rounded-lg text-sm font-bold text-white hover:bg-emerald-700 transition disabled:opacity-50"
+                  isLoading={isInviting}
                 >
                   {isInviting ? 'Sending...' : 'Send Invitation'}
-                </button>
+                </PrimaryButton>
               </div>
             </form>
           </div>
@@ -430,17 +435,23 @@ export const AdminEmployees = () => {
           
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-backdrop" onClick={() => setConfirmRemoveTarget(null)}></div>
           
-          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
-            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-red-100">
-              <AlertTriangle className="h-7 w-7 text-red-600" />
+          <div className="relative bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 w-full max-w-[400px] overflow-hidden animate-modal-pop">
+            <div className="p-6 flex items-start gap-4">
+              <div className="flex items-center justify-center h-10 w-10 shrink-0 rounded-full bg-red-50 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="flex-1 mt-[2px]">
+                <h3 className="text-[15px] font-bold text-slate-900 leading-none">Remove Employee</h3>
+                <p className="text-[13.5px] text-slate-500 mt-1.5 leading-relaxed">
+                  Are you sure you want to remove this employee from the organisation? This action cannot be undone.
+                </p>
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-slate-900">Remove Employee?</h3>
-            <p className="text-sm text-slate-500 mt-2 mb-8 leading-relaxed">
-              Are you sure you want to remove this employee from the organisation? This action cannot be undone.
-            </p>
-            <div className="flex gap-3 w-full">
-              <button onClick={() => setConfirmRemoveTarget(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition">Cancel</button>
-              <button onClick={executeRemove} className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-sm shadow-red-200 transition">Remove</button>
+            <div className="bg-slate-50 border-t border-slate-100 p-4 flex justify-end gap-3">
+              <button onClick={() => setConfirmRemoveTarget(null)} className="px-4 py-2 rounded-lg border border-slate-200 text-[13px] font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors">Cancel</button>
+              <button onClick={executeRemove} disabled={isRemoving} className="px-4 py-2 rounded-lg bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center min-w-[70px]">
+                {isRemoving ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : 'Remove'}
+              </button>
             </div>
           </div>
         </div>
@@ -458,17 +469,23 @@ export const AdminEmployees = () => {
           
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-backdrop" onClick={() => setConfirmRevokeTarget(null)}></div>
           
-          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
-            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-amber-100">
-              <AlertCircle className="h-7 w-7 text-amber-600" />
+          <div className="relative bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 w-full max-w-[400px] overflow-hidden animate-modal-pop">
+            <div className="p-6 flex items-start gap-4">
+              <div className="flex items-center justify-center h-10 w-10 shrink-0 rounded-full bg-amber-50 text-amber-600">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div className="flex-1 mt-[2px]">
+                <h3 className="text-[15px] font-bold text-slate-900 leading-none">Revoke Invitation</h3>
+                <p className="text-[13.5px] text-slate-500 mt-1.5 leading-relaxed">
+                  Are you sure you want to revoke this invitation? The link they received will no longer work.
+                </p>
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-slate-900">Revoke Invitation?</h3>
-            <p className="text-sm text-slate-500 mt-2 mb-8 leading-relaxed">
-              Are you sure you want to revoke this invitation? The link they received will no longer work.
-            </p>
-            <div className="flex gap-3 w-full">
-              <button onClick={() => setConfirmRevokeTarget(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition">Cancel</button>
-              <button onClick={executeRevoke} className="flex-1 px-4 py-2.5 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-700 shadow-sm shadow-amber-200 transition">Revoke</button>
+            <div className="bg-slate-50 border-t border-slate-100 p-4 flex justify-end gap-3">
+              <button onClick={() => setConfirmRevokeTarget(null)} className="px-4 py-2 rounded-lg border border-slate-200 text-[13px] font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors">Cancel</button>
+              <button onClick={executeRevoke} disabled={isRevoking} className="px-4 py-2 rounded-lg bg-amber-600 text-white text-[13px] font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center justify-center min-w-[70px]">
+                {isRevoking ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : 'Revoke'}
+              </button>
             </div>
           </div>
         </div>

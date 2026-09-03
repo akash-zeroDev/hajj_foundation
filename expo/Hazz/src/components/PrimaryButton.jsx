@@ -14,7 +14,7 @@ const PrimaryButton = ({
       type={type}
       onClick={onClick}
       disabled={disabled || isLoading}
-      className={`inline-flex items-center justify-center gap-[8px] font-semibold text-[13.5px] px-[18px] py-[11px] rounded-[10px] text-white bg-gradient-to-b from-[#17a377] to-[#0b7a5b] shadow-[0_10px_22px_-12px_rgba(11,122,91,0.9)] hover:brightness-105 border-0 cursor-pointer disabled:opacity-50 transition-all ${className}`}
+      className={`inline-flex items-center justify-center gap-[8px] font-semibold text-[13.5px] px-[18px] py-[11px] rounded-[10px] text-white bg-[#296043] hover:bg-[#1e4531] border-0 cursor-pointer disabled:opacity-50 transition-all ${className}`}
     >
       {isLoading ? (
         <span className="flex items-center justify-center w-[16px] h-[16px]">

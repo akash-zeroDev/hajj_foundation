@@ -1,4 +1,6 @@
-import React from 'react';
+import re
+
+code = """import React from 'react';
 import { X, CreditCard, Award, FileText, Download, Trash2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -20,9 +22,8 @@ const EmployeeProfileSidecar = ({
   const lastName = activeMember.publicUserData?.lastName || activeMember.publicMetadata?.lastName || '';
   const email = activeMember.publicUserData?.identifier || activeMember.emailAddresses?.[0]?.emailAddress || '';
   const userId = activeMember.publicUserData?.userId || activeMember.id;
+  
   const isSuspended = activeMember.publicMetadata?.isSuspended;
-  
-  
 
   return (
     <>
@@ -230,3 +231,8 @@ const EmployeeProfileSidecar = ({
 };
 
 export default EmployeeProfileSidecar;
+"""
+
+with open('src/components/EmployeeProfileSidecar.jsx', 'w') as f:
+    f.write(code)
+
