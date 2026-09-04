@@ -23,6 +23,10 @@ const bankAccountSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  balance: {
+    type: Number,
+    default: 0
+  },
   isActive: {
     type: Boolean,
     default: true

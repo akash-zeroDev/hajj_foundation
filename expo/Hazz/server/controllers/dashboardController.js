@@ -93,10 +93,45 @@ exports.getSuperAdminOverview = async (req, res) => {
       });
     }
 
-    // 3. Alerts
+    // 3. Alerts + fee breakdown + compliance + subscription health
     const pendingDraws = await AwardDraw.countDocuments({ status: 'pending_approval' });
     const unpaidOrgs = await Organisation.countDocuments({ annualFeeStatus: { $ne: 'paid' } });
-    
+    const paidOrgs = await Organisation.countDocuments({ annualFeeStatus: 'paid' });
+    const pendingFeeOrgs = await Organisation.countDocuments({ annualFeeStatus: 'pending' });
+    const overdueOrgs = await Organisation.countDocuments({ annualFeeStatus: 'overdue' });
+    const suspendedOrgs = await Organisation.countDocuments({ isSuspended: true, isArchived: { $ne: true } });
+
+    const orgSigned = await Organisation.countDocuments({ agreementStatus: 'signed' });
+    const orgPendingAgreement = await Organisation.countDocuments({ agreementStatus: 'pending' });
+    const empActive = await Employee.countDocuments({ isRemoved: { $ne: true } });
+    const empSigned = await Employee.countDocuments({ agreementStatus: 'signed', isRemoved: { $ne: true } });
+    const empPending = await Employee.countDocuments({ agreementStatus: 'pending', isRemoved: { $ne: true } });
+    const subActive = await Employee.countDocuments({ subscriptionStatus: 'active', isRemoved: { $ne: true } });
+    const subPending = await Employee.countDocuments({ subscriptionStatus: 'pending', isRemoved: { $ne: true } });
+    const subPastDue = await Employee.countDocuments({ subscriptionStatus: 'past_due', isRemoved: { $ne: true } });
+    const subCanceled = await Employee.countDocuments({ subscriptionStatus: 'canceled', isRemoved: { $ne: true } });
+    const autoPayOn = await Employee.countDocuments({ autoPayEnabled: true, isRemoved: { $ne: true } });
+
+    // Average balance + outstanding calculation
+    const outstandingResult = await Organisation.aggregate([
+      { $match: { annualFeeStatus: { $ne: 'paid' } } },
+      { $group: { _id: null, total: { $sum: '$annualFee' } } }
+    ]);
+    const outstandingAmount = outstandingResult.length ? outstandingResult[0].total : 0;
+    const overdueResult = await Organisation.aggregate([
+      { $match: { annualFeeStatus: 'overdue' } },
+      { $group: { _id: null, total: { $sum: '$annualFee' } } }
+    ]);
+    const overdueAmount = overdueResult.length ? overdueResult[0].total : 0;
+    const avgBalanceResult = await Employee.aggregate([
+      { $match: { isRemoved: { $ne: true } } },
+      { $group: { _id: null, avg: { $avg: '$balance' } } }
+    ]);
+    const avgBalance = avgBalanceResult.length ? Math.round(avgBalanceResult[0].avg) : 0;
+
+    // Eligible pool for awards: signed agreement + paid fee orgs -> employees with active subscription
+    const eligibleOrgIds = await Organisation.find({ agreementStatus: 'signed', annualFeeStatus: 'paid' }).distinct('_id');
+    const eligiblePool = await Employee.countDocuments({ organisationId: { $in: eligibleOrgIds }, subscriptionStatus: 'active', isRemoved: { $ne: true } });
     
     const startOfMonth = new Date();
     startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0);
@@ -106,26 +141,18 @@ exports.getSuperAdminOverview = async (req, res) => {
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     const thisWeekEmployees = await Employee.countDocuments({ createdAt: { $gte: startOfWeek } });
 
-    const recentOrgs = await Organisation.aggregate([
-      { $sort: { createdAt: -1 } },
-      { $limit: 5 },
-      {
-        $lookup: {
-          from: 'employees',
-          localField: 'clerkOrganizationId',
-          foreignField: 'organizationId',
-          as: 'employees'
-        }
-      },
-      {
-        $project: {
-          name: 1,
-          createdAt: 1,
-          annualFeeStatus: 1,
-          employeeCount: { $size: '$employees' }
-        }
-      }
+    const recentOrgs = await Organisation.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('name companyNumber annualFee annualFeeStatus agreementStatus createdAt isSuspended');
+
+    // banks + audits fetched separately via their own endpoints; include counts here for convenience
+    const totalOrgsAll = await Organisation.countDocuments();
+    const totalRevenueAllOrgs = await Organisation.aggregate([
+      { $group: { _id: null, total: { $sum: '$annualFee' } } }
     ]);
+    const totalAnnualSum = totalRevenueAllOrgs.length ? totalRevenueAllOrgs[0].total : 0;
+    const collectionRate = totalAnnualSum ? Math.round((platformRevenue / totalAnnualSum) * 100) : 0;
 
 
     console.log("DASHBOARD DATA:", { totalOrganisations, totalEmployees, totalSavingsPool }); res.json({
@@ -137,6 +164,10 @@ exports.getSuperAdminOverview = async (req, res) => {
         platformRevenue,
         savingsGrowth,
         orgGrowth,
+        collection: { paid: paidOrgs, pending: pendingFeeOrgs, overdue: overdueOrgs, total: totalOrgsAll, rate: collectionRate, outstandingAmount, overdueAmount },
+        compliance: { orgSigned, orgPending: orgPendingAgreement, orgTotal: totalOrgsAll, empSigned, empPending, empTotal: empActive, suspended: suspendedOrgs },
+        subscription: { active: subActive, pending: subPending, pastDue: subPastDue, canceled: subCanceled, autoPayOn, total: empActive },
+        financial: { avgBalance, outstandingAmount, overdueAmount, totalAnnualSum },
         alerts: {
           pendingDraws,
           unpaidOrgs
@@ -145,6 +176,7 @@ exports.getSuperAdminOverview = async (req, res) => {
           thisMonthOrgs,
           thisWeekEmployees
         },
+        eligiblePool,
         recentOrgs
       }
     });

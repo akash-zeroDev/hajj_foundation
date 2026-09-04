@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { UserButton, useUser } from '@clerk/react';
-import NotificationDropdown from '../components/NotificationDropdown';
 import {
   LayoutDashboard,
   Building2,
@@ -16,6 +15,7 @@ import {
   Wallet,
   Home,
 } from 'lucide-react';
+import NotificationDropdown from '../components/NotificationDropdown';
 
 const ICONS = {
   'Dashboard Overview': <LayoutDashboard size={18} strokeWidth={1.7} />,
@@ -49,6 +49,7 @@ export default function SidebarLayout({ navigation, title, children }) {
       ? 'Employer' 
       : 'Employee';
 
+  // close drawer on route change + esc
   useEffect(() => { setIsMobileMenuOpen(false); }, [location.pathname]);
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') setIsMobileMenuOpen(false); };
@@ -57,6 +58,7 @@ export default function SidebarLayout({ navigation, title, children }) {
 
   return (
     <div className="flex min-h-screen bg-[#F5F6F7] text-[#0B0F0E]" style={{ fontFamily: "'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" }}>
+      {/* Mobile scrim */}
       {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 z-20 bg-black/35 lg:hidden"
@@ -71,14 +73,9 @@ export default function SidebarLayout({ navigation, title, children }) {
       `} style={{ width: '268px' }} aria-label="Primary">
 
         {/* Brand */}
-        <div className="flex items-center gap-3 border-b border-[#171717] px-5 py-[22px] pb-[18px]">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[8px] border border-[#242424] bg-[#111111]">
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5"><path d="M12 2.5 20 6v6c0 5-3.6 8.3-8 9.5C7.6 20.3 4 17 4 12V6l8-3.5Z" stroke="#C9B37A" strokeWidth="1.6"/><path d="M8.5 12h7M12 8.5v7" stroke="#7BC49E" strokeWidth="1.6" strokeLinecap="round"/></svg>
-          </div>
-          <div>
-            <div className="text-[16px] font-bold leading-none tracking-[-0.02em] text-white">Hajj Savings</div>
-            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#71717A]">{displayRole}</div>
-          </div>
+        <div className="flex flex-col items-center justify-center border-b border-[#171717] px-5 py-5">
+          <div className="text-[16px] font-bold leading-none tracking-[-0.02em] text-white text-center">Hajj Savings</div>
+          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#71717A] text-center">{displayRole}</div>
         </div>
         
         <nav className="flex-1 overflow-y-auto px-3 py-[14px]">
@@ -142,6 +139,7 @@ export default function SidebarLayout({ navigation, title, children }) {
 
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col">
+        {/* Header */}
         <header className="sticky top-0 z-20 flex h-[70px] items-center justify-between border-b border-[#E5E7EB] bg-white/90 px-4 shadow-sm backdrop-blur-[10px] sm:px-6 lg:px-[26px]">
           <div className="flex items-center">
             <button 
@@ -156,11 +154,12 @@ export default function SidebarLayout({ navigation, title, children }) {
           <div className="flex items-center gap-4">
              <NotificationDropdown />
              <span className="hidden text-[13px] text-[#6B7280] sm:block">
-               {new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-             </span>
+                {new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </span>
           </div>
         </header>
 
+        {/* Page Content */}
         <main className="mx-auto w-full max-w-[1360px] flex-1 p-4 sm:p-6 lg:p-[26px] lg:pb-[40px] lg:pt-[24px]">
           {children}
         </main>

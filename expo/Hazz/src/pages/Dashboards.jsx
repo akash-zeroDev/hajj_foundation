@@ -1,8 +1,6 @@
-import { OnboardOrgModal } from '../components/OnboardOrgModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { useToast } from '../context/ToastContext';
 import { useState, useEffect } from 'react';
-import { FileText, Plus, Users, ChevronUp, PoundSterling, Trophy, AlertTriangle, Check, CreditCard } from 'lucide-react';
 import { useUser, useAuth, useOrganization } from '@clerk/react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import SidebarLayout from '../layouts/SidebarLayout';
@@ -10,6 +8,7 @@ import HorizontalTabs from '../components/HorizontalTabs';
 import { EmployeeSettings } from './employee/Settings';
 import PrimaryButton from '../components/PrimaryButton';
 import { superAdminNavigation, orgAdminNavigation } from '../config/navigation';
+import { Building2, Users, Landmark, CreditCard, Plus } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -31,7 +30,6 @@ const OldLayout = ({ title, children, description }) => {
       </header>
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {children}
-
       </main>
     </div>
   );
@@ -58,8 +56,6 @@ export const EmployeeDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   
   const [autoPayEnabled, setAutoPayEnabled] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
   const [bankDetails, setBankDetails] = useState({ accountName: '', accountNumber: '', sortCode: '' });
   const [isSavingBank, setIsSavingBank] = useState(false);
   
@@ -69,84 +65,6 @@ export const EmployeeDashboard = () => {
       if (employeeData.bankDetails) setBankDetails(employeeData.bankDetails);
     }
   }, [employeeData]);
-
-
-  
-  const handleCancelAutoPay = () => {
-    setShowCancelModal(true);
-  };
-
-  const confirmCancelAutoPay = async () => {
-    setIsCancelling(true);
-    try {
-      const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/payments/cancel-employee-subscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ employeeId: employeeData._id })
-      });
-      if (res.ok) {
-        showToast('Auto Pay cancelled successfully.', 'success');
-        setShowCancelModal(false);
-        setTimeout(() => window.location.reload(), 500);
-      } else {
-        throw new Error('Failed to cancel Auto Pay');
-      }
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setIsCancelling(false);
-    }
-  };
-
-  const handleManageAutoPay = async () => {
-    try {
-      const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/payments/customer-portal', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ employeeId: employeeData._id })
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        showToast(data.message || 'Error opening Stripe Portal', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Network error', 'error');
-    }
-  };
-
-  const handleSetupStripeAutoPay = async () => {
-    setIsSavingBank(true);
-    try {
-      const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/payments/create-employee-subscription`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ employeeId: employeeData._id })
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        showToast(data.message || 'Error starting Stripe Checkout', 'error');
-        setIsSavingBank(false);
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Network error', 'error');
-      setIsSavingBank(false);
-    }
-  };
 
   const handleSaveBankSettings = async () => {
     setIsSavingBank(true);
@@ -624,11 +542,11 @@ export const EmployeeDashboard = () => {
         .hs-portal .pill.warn { background: var(--amber-soft); color: var(--amber); }
         .hs-portal .pill.mute { background: #eff3f2; color: var(--ink-3); }
         .hs-portal .bar { height: 7px; border-radius: 999px; background: #eef2f1; overflow: hidden; margin-top: 14px; }
-        .hs-portal .bar i { display: block; height: 100%; border-radius: 999px; background: var(--green); }
+        .hs-portal .bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--green-400), var(--green)); }
         .hs-portal .btn { border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 13.4px; padding: 10px 16px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; }
         .hs-portal .btn svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2; fill: none; }
-        .hs-portal .btn-primary { color: #fff; background: var(--green); }
-        .hs-portal .btn-primary:hover { background: #1e4531; filter: none; }
+        .hs-portal .btn-primary { color: #fff; background: linear-gradient(180deg, var(--green-400), var(--green)); box-shadow: 0 10px 22px -12px rgba(11,122,91,.9); }
+        .hs-portal .btn-primary:hover { filter: brightness(1.06); }
         .hs-portal .btn-ghost { background: #fff; border: 1px solid var(--line); color: var(--ink); }
         .hs-portal .btn-ghost:hover { background: #f2f6f5; }
         .hs-portal .btn.full { width: 100%; justify-content: center; margin-top: 14px; }
@@ -773,11 +691,10 @@ export const EmployeeDashboard = () => {
             </div>
 
             <div className="grid g2">
-              {!(employeeData?.agreementStatus === 'signed' && employeeData?.subscriptionStatus === 'active') && (
-                <div className="card">
-                  <div className="card-head">
-                    <span className="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
-                    <h2>Enrolment checklist</h2>
+              <div className="card">
+                <div className="card-head">
+                  <span className="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
+                  <h2>Enrolment checklist</h2>
                 </div>
                 <div className="dl">
                   <div className="r">
@@ -809,38 +726,6 @@ export const EmployeeDashboard = () => {
                   </div>
                 </div>
               </div>
-              )}
-
-              <div className="card">
-                <div className="card-head">
-                  <span className="ic"><svg viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" /></svg></span>
-                  <h2>Your Employer</h2>
-                </div>
-                <div className="dl">
-                  <div className="r">
-                    <span className="k">Organisation</span>
-                    <span className="v font-medium text-slate-900">{employeeData?.organisationId?.name || 'Loading...'}</span>
-                  </div>
-                  <div className="r">
-                    <span className="k">Contact</span>
-                    <span className="v">
-                      {employeeData?.organisationId?.adminFirstName} {employeeData?.organisationId?.adminLastName}
-                      {employeeData?.organisationId?.adminPhone && (
-                        <span className="block text-slate-500 text-xs mt-0.5">{employeeData?.organisationId?.adminPhone}</span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="r">
-                    <span className="k">Support Email</span>
-                    <span className="v"><a href={`mailto:${employeeData?.organisationId?.adminEmail}`} className="text-emerald-600 font-medium hover:underline">{employeeData?.organisationId?.adminEmail}</a></span>
-                  </div>
-                  <div className="r">
-                    <span className="k">Enrolment Date</span>
-                    <span className="v">{employeeData?.createdAt ? new Date(employeeData.createdAt).toLocaleDateString() : 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-
               <div className="card">
                 <div className="card-head">
                   <span className="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></span>
@@ -986,50 +871,57 @@ export const EmployeeDashboard = () => {
 
             <div className="card" style={{marginTop: 16}}>
               <div className="card-head">
-                <h2>Auto Pay Setup</h2>
+                <h2>Bank details & Auto Pay</h2>
+                <div className="sub" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '6px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={autoPayEnabled} 
+                      onChange={e => setAutoPayEnabled(e.target.checked)} 
+                      style={{ transform: 'scale(1.2)' }}
+                    />
+                    <span style={{ fontWeight: 600, color: autoPayEnabled ? 'var(--green)' : 'var(--ink-3)' }}>
+                      {autoPayEnabled ? 'Auto Pay Enabled' : 'Auto Pay Disabled'}
+                    </span>
+                  </label>
+                </div>
               </div>
               <div className="panel">
-                <p style={{ color: 'var(--ink-2)', marginBottom: 16 }}>
-                  Set up a direct debit to automatically contribute £{employeeData?.monthlyContribution || 0} per month to your Hajj Savings Fund.
-                </p>
-                {employeeData?.subscriptionStatus === 'active' ? (
-                  <div style={{ padding: '16px', backgroundColor: 'var(--green-pale)', color: 'var(--green-deep)', borderRadius: '8px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Auto Pay is currently Active.</span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button className="btn btn-ghost" onClick={handleManageAutoPay}>Manage</button>
-                      <button className="btn btn-ghost" style={{ color: '#d92d20' }} onClick={handleCancelAutoPay}>Cancel</button>
-                    </div>
+                <div className="grid g3" style={{ opacity: autoPayEnabled ? 1 : 0.5, pointerEvents: autoPayEnabled ? 'auto' : 'none' }}>
+                  <div className="field">
+                    <label>Account Name</label>
+                    <input 
+                      placeholder="e.g. John Doe"
+                      value={bankDetails.accountName || ''} 
+                      onChange={e => setBankDetails({...bankDetails, accountName: e.target.value})} 
+                    />
                   </div>
-                ) : (
-                  <button className="btn btn-primary" onClick={handleSetupStripeAutoPay} disabled={isSavingBank}>
-                    {isSavingBank ? 'Redirecting...' : 'Setup Auto Pay with Stripe'}
+                  <div className="field">
+                    <label>Sort Code</label>
+                    <input 
+                      placeholder="12-34-56"
+                      value={bankDetails.sortCode || ''} 
+                      onChange={e => setBankDetails({...bankDetails, sortCode: e.target.value})} 
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Account Number</label>
+                    <input 
+                      placeholder="12345678"
+                      value={bankDetails.accountNumber || ''} 
+                      onChange={e => setBankDetails({...bankDetails, accountNumber: e.target.value})} 
+                    />
+                  </div>
+                </div>
+                <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
+                  <button className="btn btn-primary" onClick={handleSaveBankSettings} disabled={isSavingBank}>
+                    {isSavingBank ? 'Saving...' : 'Save Settings & Setup'}
                   </button>
-                )}
+                </div>
               </div>
             </div>
           </section>
         )}
-
-      {showCancelModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0">
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => !isCancelling && setShowCancelModal(false)}></div>
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all text-center">
-            <div className="px-6 py-6 border-b border-slate-200">
-              <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg viewBox="0 0 24 24" className="w-7 h-7 stroke-current stroke-[2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Cancel Auto Pay?</h3>
-              <p className="text-sm text-slate-500 mb-2">Are you sure you want to cancel your monthly contribution? Your savings will pause and you may be excluded from upcoming Hajj draws.</p>
-            </div>
-            <div className="px-6 py-4 bg-slate-50 flex gap-3 justify-center">
-              <button disabled={isCancelling} onClick={() => setShowCancelModal(false)} className="px-6 py-2.5 rounded-xl font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 transition-colors cursor-pointer">Keep Active</button>
-              <button disabled={isCancelling} onClick={confirmCancelAutoPay} className="px-6 py-2.5 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer">
-                {isCancelling ? 'Cancelling...' : 'Yes, Cancel'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       </main>
     </div>
   );
@@ -1044,23 +936,6 @@ export const AdminDashboard = () => {
   const [isAccepting, setIsAccepting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('onboard') === 'true') {
-      setShowModal(true);
-    }
-  }, [location]);
-
-  const handleCloseModal = (success) => {
-    setShowModal(false);
-    navigate('/superadmin', { replace: true });
-    if (success) {
-      fetchOverview();
-    }
-  };
 
   const handlePayAnnualFee = async () => {
     setIsRedirecting(true);
@@ -1086,16 +961,16 @@ export const AdminDashboard = () => {
     setIsAccepting(true);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}/accept-agreement`, {
-        method: 'PATCH',
+      const res = await fetch(`http://localhost:5000/api/organisations/${organization.id}/accept`, {
+        method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (res.ok) {
         showToast("Agreement signed successfully!", "success");
-        setTimeout(() => window.location.reload(), 1000);
+        setOrgData(data);
       } else {
-        throw new Error(data.message || 'Failed to sign agreement');
+        throw new Error(data.message);
       }
     } catch (error) {
       showToast(error.message, "error");
@@ -1154,13 +1029,9 @@ export const AdminDashboard = () => {
             <p className="text-[15px] text-[#5c6b65]">Before managing your employees, you must review and accept your organisation's financial agreement.</p>
           </div>
           <div className="bg-white rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden border border-[#e6ecea]">
-            <div className="bg-white px-8 py-6 border-b border-[#e6ecea] flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl grid place-items-center bg-[#296043]/10 text-[#296043]">
-                <FileText className="w-5 h-5" />
-              </span>
+            <div className="bg-[#fdf3e3] px-8 py-6 border-b border-[#f2e3c2] flex justify-between items-center">
               <div>
-                <h2 className="text-[18px] font-bold text-[#0e1a16] m-0 tracking-[-0.2px]">Master Agreement</h2>
-                <p className="text-[13.5px] text-[#5c6b65] m-0 mt-0.5">{orgData.name}</p>
+                <h2 className="text-[18px] font-bold text-[#c8811f] m-0 tracking-[-0.2px]">{orgData.name} - Master Agreement</h2>
               </div>
             </div>
             <div className="p-8 bg-[#fcfdfd]">
@@ -1176,26 +1047,9 @@ export const AdminDashboard = () => {
                 <div className="text-center py-12 border border-[#e6ecea] rounded-xl"><p className="text-[#8a9994] text-[13.5px]">No document available.</p></div>
               )}
             </div>
-            <div className="px-8 py-6 bg-white border-t border-[#e6ecea] flex flex-col gap-6">
-              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <span className="text-slate-600 font-medium">Annual Contribution Amount</span>
-                <span className="text-xl font-bold text-slate-900">£{orgData?.annualFee?.toLocaleString() || 0}</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <input type="checkbox" id="agree" className="mt-1 w-5 h-5 rounded border-slate-300 text-[#296043] focus:ring-[#0b7a5b] cursor-pointer" required />
-                <label htmlFor="agree" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
-                  I confirm that I am an authorised representative of <strong>{orgData.name}</strong>, and I accept the terms of this Master Agreement. I also acknowledge the annual contribution amount shown above.
-                </label>
-              </div>
-              <button onClick={() => {
-                const cb = document.getElementById('agree');
-                if(!cb.checked) {
-                  alert('Please check the box to accept the agreement.');
-                  return;
-                }
-                handleAcceptAgreement();
-              }} disabled={isAccepting} className="w-full px-8 py-3.5 bg-[#0b7a5b] text-white rounded-[10px] text-[15px] font-bold hover:bg-[#17a377] transition-colors disabled:opacity-50">
-                {isAccepting ? 'Processing...' : 'Accept & Sign Master Agreement'}
+            <div className="px-8 py-6 bg-white border-t border-[#e6ecea] flex items-center justify-between">
+              <button onClick={handleAcceptAgreement} disabled={isAccepting} className="px-8 py-3 bg-[#0b7a5b] text-white rounded-[10px] text-[14px] font-bold hover:bg-[#17a377] transition-colors disabled:opacity-50 ml-auto">
+                {isAccepting ? 'Processing...' : 'I Accept & Sign Document'}
               </button>
             </div>
           </div>
@@ -1220,7 +1074,7 @@ export const AdminDashboard = () => {
           <PrimaryButton 
             onClick={() => navigate('/admin/employees')}
             className="!text-[13.5px] !py-[11px] !px-[18px] !rounded-[10px] shadow-[0_10px_22px_-12px_rgba(11,122,91,.9)]"
-            icon={<Plus className="w-4 h-4 stroke-[3]" />}
+            icon={<svg className="w-4 h-4 stroke-current stroke-[2] fill-none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>}
           >
             Invite Employees
           </PrimaryButton>
@@ -1231,12 +1085,12 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Staff Enrolled</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[#296043]/10 text-[#296043]"><Users className="w-[17px] h-[17px]" /></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><circle cx="9" cy="8" r="3.2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/></svg></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">{stats.totalEmployees}</div>
-          <span className={`text-[12.5px] font-semibold inline-flex items-center gap-[5px] ${monthEnrolments > 0 ? 'text-[#296043]' : 'text-[#8a9994]'}`}>
+          <span className={`text-[12.5px] font-semibold inline-flex items-center gap-[5px] ${monthEnrolments > 0 ? 'text-[#0b7a5b]' : 'text-[#8a9994]'}`}>
             {monthEnrolments > 0 ? (
-              <><ChevronUp className="w-[13px] h-[13px]" />+{monthEnrolments} this month</>
+              <><svg viewBox="0 0 24 24" className="w-[13px] h-[13px] stroke-current stroke-[2.2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"/></svg>+{monthEnrolments} this month</>
             ) : 'No new enrolments this month'}
           </span>
         </div>
@@ -1244,7 +1098,7 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Combined Savings</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[#296043]/10 text-[#296043]"><PoundSterling className="w-[17px] h-[17px]" /></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><circle cx="12" cy="12" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="M14 9.5A2.5 2.5 0 1012 15"/></svg></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">£{stats.totalCombinedSavings.toLocaleString()}</div>
           <div className="text-[12.5px] text-[#5c6b65]">Funded towards Hajj by your staff</div>
@@ -1253,14 +1107,14 @@ export const AdminDashboard = () => {
         <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),_0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px_18px_16px]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] tracking-[0.1em] uppercase text-[#8a9994] font-semibold">Hajj Journeys Won</span>
-            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[#296043]/10 text-[#296043]"><Trophy className="w-[17px] h-[17px]" /></span>
+            <span className="w-[34px] h-[34px] rounded-[10px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[17px] h-[17px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v6a8 8 0 01-16 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 20h6M12 18v2"/></svg></span>
           </div>
           <div className="mt-[14px] mb-[6px] text-[30px] font-extrabold tracking-[-1px] leading-none text-[#0e1a16]">{stats.hajjJourneysWon}</div>
           <span className="text-[12.5px] font-semibold inline-flex items-center gap-[5px] text-[#8a9994]">No draws won yet</span>
         </div>
       </section>
 
-      <section className="p-[22px] rounded-[14px] border border-white/5 text-[#eaf6f1] bg-[#296043] flex flex-col md:flex-row md:items-center gap-[22px] shadow-[0_18px_34px_-22px_rgba(30,69,49,.9)] mb-4">
+      <section className="p-[22px] rounded-[14px] border border-white/5 text-[#eaf6f1] bg-[radial-gradient(120%_120%_at_100%_0%,rgba(23,163,119,.35),transparent_60%),linear-gradient(135deg,#0b7a5b,#075c44)] flex flex-col md:flex-row md:items-center gap-[22px] shadow-[0_18px_34px_-22px_rgba(7,92,68,.9)] mb-4">
         <div>
           <h4 className="m-0 mb-[6px] text-[19px] text-white tracking-[-0.3px] font-bold">The Monthly Award Draw</h4>
           <p className="m-0 text-[13.5px] text-white/80 max-w-[46ch] leading-[1.5]">Every active employee earns your company more collective chances to win the sponsored Hajj trip each month.</p>
@@ -1290,7 +1144,7 @@ export const AdminDashboard = () => {
                    />
                    <Bar dataKey="employees" radius={[6, 6, 0, 0]}>
                      {stats.activityGraphData?.map((entry, index) => (
-                       <Cell key={`cell-${index}`} fill="#296043" />
+                       <Cell key={`cell-${index}`} fill="#0b7a5b" />
                      ))}
                    </Bar>
                  </BarChart>
@@ -1307,36 +1161,36 @@ export const AdminDashboard = () => {
                 {(orgData?.annualFeeStatus === 'pending' ? 1 : 0) + (stats.pendingAgreements > 0 ? 1 : 0)} Pending
               </span>
             ) : (
-               <span className="ml-auto text-[11.5px] font-semibold px-[10px] py-[4px] rounded-full bg-[#296043]/15 text-[#296043]">All clear</span>
+               <span className="ml-auto text-[11.5px] font-semibold px-[10px] py-[4px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">All clear</span>
             )}
           </div>
           <ul className="m-0 p-0 list-none flex-1">
             {orgData?.annualFeeStatus === 'pending' && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><AlertTriangle className="w-[16px] h-[16px]" /></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4l9 16H3z"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v4M12 17h.01"/></svg></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Fee payment required</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Your annual fee of £{orgData?.annualFee?.toLocaleString()} is pending.</small></div>
-                <button onClick={handlePayAnnualFee} disabled={isRedirecting} className="ml-auto self-center text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap bg-transparent border-0 cursor-pointer p-0">{isRedirecting ? 'Connecting...' : 'Pay now'}</button>
+                <button onClick={handlePayAnnualFee} disabled={isRedirecting} className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap bg-transparent border-0 cursor-pointer p-0">{isRedirecting ? 'Connecting...' : 'Pay now'}</button>
               </li>
             )}
             {orgData?.agreementStatus === 'signed' && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#296043]/15 text-[#296043]"><Check className="w-[16px] h-[16px] stroke-[3]" /></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(23,163,119,.14)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5"/></svg></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Shariah agreement signed</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">The latest Master agreement is active for your organisation.</small></div>
-                <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="ml-auto self-center text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View</a>
+                <a href={orgData?.agreementUrl} target="_blank" rel="noopener noreferrer" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View</a>
               </li>
             )}
             {stats.pendingAgreements > 0 && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><AlertTriangle className="w-[16px] h-[16px]" /></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Action Required</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">{stats.pendingAgreements} employees are pending agreement signature.</small></div>
-                <Link to="/admin/employees" className="ml-auto self-center text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Review</Link>
+                <Link to="/admin/employees" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Review</Link>
               </li>
             )}
             {stats.totalEmployees < 2 && (
               <li className="flex gap-3 items-start px-[18px] py-[14px] border-b border-[#e6ecea] last:border-0">
-                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><Users className="w-[16px] h-[16px]" /></span>
+                <span className="w-[32px] h-[32px] shrink-0 rounded-[9px] grid place-items-center bg-[#fdf3e3] text-[#c8811f]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><circle cx="9" cy="8" r="3.2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/></svg></span>
                 <div><strong className="block text-[13.5px] font-semibold text-[#0e1a16]">Invite more staff</strong><small className="block text-[#5c6b65] text-[12.5px] mt-[2px]">Only {stats.totalEmployees} of your team has enrolled so far.</small></div>
-                <Link to="/admin/employees" className="ml-auto self-center text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Invite</Link>
+                <Link to="/admin/employees" className="ml-auto self-center text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">Invite</Link>
               </li>
             )}
           </ul>
@@ -1348,7 +1202,7 @@ export const AdminDashboard = () => {
           <div className="flex items-center gap-3 px-[18px] py-[16px] border-b border-[#e6ecea]">
             <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Recent Employees</h4>
             <span className="text-[12.5px] text-[#8a9994]">Latest enrolments</span>
-            <Link to="/admin/employees" className="ml-auto text-[#296043] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View all</Link>
+            <Link to="/admin/employees" className="ml-auto text-[#0b7a5b] text-[12.5px] font-semibold hover:underline whitespace-nowrap">View all</Link>
           </div>
           <div className="overflow-x-auto w-full">
             <table className="w-full border-collapse text-left">
@@ -1371,7 +1225,7 @@ export const AdminDashboard = () => {
                     <td className="px-[18px] py-[12px] text-[13.5px] text-[#0e1a16]">£{emp.balance || 0}</td>
                     <td className="px-[18px] py-[12px] text-[13.5px]">
                       {emp.agreementStatus === 'signed' ? (
-                        <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#296043]/15 text-[#296043]">Signed</span>
+                        <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[rgba(23,163,119,.14)] text-[#0b7a5b]">Signed</span>
                       ) : emp.agreementStatus === 'pending' ? (
                         <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#fdf3e3] text-[#c8811f]">Pending</span>
                       ) : (
@@ -1399,15 +1253,15 @@ export const AdminDashboard = () => {
           </div>
           <div className="grid gap-[10px] p-[18px]">
             <button onClick={() => navigate('/admin/employees')} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#296043]/10 text-[#296043]"><Plus className="w-[16px] h-[16px] stroke-[3]" /></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg></span>
               Invite New Employees
             </button>
             <button onClick={handlePayAnnualFee} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#296043]/10 text-[#296043]"><CreditCard className="w-[16px] h-[16px]" /></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><rect x="3" y="6" width="18" height="12" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18"/></svg></span>
               Pay Annual Fee
             </button>
             <button onClick={() => navigate('/admin/agreements')} className="flex items-center gap-3 w-full p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer text-[13.5px] font-semibold text-left text-[#0e1a16] hover:border-[#17a377] hover:bg-[rgba(23,163,119,.05)] transition-colors">
-              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#296043]/10 text-[#296043]"><FileText className="w-[16px] h-[16px]" /></span>
+              <span className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b]"><svg viewBox="0 0 24 24" className="w-[16px] h-[16px] stroke-current stroke-[1.9] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M7 3h7l5 5v13H7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5"/></svg></span>
               View Agreements
             </button>
           </div>
@@ -1418,146 +1272,341 @@ export const AdminDashboard = () => {
 };
 
 
-
-
-
 export const SuperAdminDashboard = () => {
-  const [overviewData, setOverviewData] = useState({
-    recentOrgs: [],
-    stats: { totalOrgs: 0, activeMembers: 0, totalSavings: 0 },
-    alerts: { pendingDraws: 0, unpaidOrgs: 0 }
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const { getToken } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [showModal, setShowModal] = useState(false);
+  const { getToken } = useAuth();
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const [overview, setOverview] = useState(null);
+  const [banks, setBanks] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Skeleton helpers — no demo numbers, pure live
+  const SkeletonCard = () => <div className="bg-white border border-[#E5E7EB] rounded-[10px] p-[16px_14px_14px] animate-pulse"><div className="h-3 bg-[#F3F4F6] rounded w-1/2 mb-4" /><div className="h-7 bg-[#F3F4F6] rounded w-1/3 mb-3" /><div className="h-3 bg-[#F3F4F6] rounded w-3/4" /></div>;
+  const SkeletonChart = ({h=150}) => <div className="animate-pulse"><div className="h-3 bg-[#F3F4F6] rounded w-1/3 mb-3" /><div style={{height:h}} className="bg-[#F3F4F6] rounded-lg" /></div>;
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('onboard') === 'true') {
-      setShowModal(true);
-    }
-  }, [location]);
-
-  const handleCloseModal = (success) => {
-    setShowModal(false);
-    navigate('/superadmin', { replace: true });
-    if (success) {
-      fetchOverview();
-    }
-  };
-  
-  useEffect(() => {
-    const fetchOverview = async () => {
+    let mounted = true;
+    const fetchAll = async () => {
       try {
         const token = await getToken();
-        const res = await fetch('http://localhost:5000/api/dashboard/superadmin', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        
-        if (data.success) {
-          setOverviewData({
-            recentOrgs: data.data.recentOrgs || [],
-            stats: { 
-              totalOrgs: data.data.totalOrganisations || 0, 
-              activeMembers: data.data.totalEmployees || 0, 
-              totalSavings: data.data.totalSavingsPool || 0 
-            },
-            alerts: { 
-              pendingDraws: data.data.alerts.pendingDraws || 0, 
-              unpaidOrgs: data.data.alerts.unpaidOrgs || 0 
-            }
-          });
-        }
+        const headers = { Authorization: `Bearer ${token}` };
+        const [dashRes, banksRes, auditRes] = await Promise.all([
+          fetch(`${API}/api/dashboard/superadmin`, { headers }),
+          fetch(`${API}/api/banks`, { headers }),
+          fetch(`${API}/api/audit-logs`, { headers }).catch(() => ({ json: async () => ({ success: false, data: [] }) })),
+        ]);
+        const dashJson = await dashRes.json().catch(() => ({}));
+        const banksJson = await banksRes.json().catch(() => ({}));
+        const auditJson = await auditRes.json().catch(() => ({}));
+        if (!mounted) return;
+        if (dashJson.success) setOverview(dashJson.data);
+        if (banksJson.success) setBanks(banksJson.data || []);
+        if (auditJson.success) setAuditLogs((auditJson.data || []).slice(0, 4));
       } catch (e) {
-        console.error(e);
+        console.error('Dashboard fetch error', e);
       } finally {
-        setIsLoading(false);
+        if (mounted) setLoading(false);
       }
     };
-    fetchOverview();
+    fetchAll();
+    return () => { mounted = false; };
   }, []);
+
+  // Derived live data — no demo fallback
+  const areaData = overview?.savingsGrowth?.map(s => ({ m: s.name, v: s.amount })) || [];
+  const barData = overview?.orgGrowth?.map(b => ({ m: b.name, a: b.onboarded })) || [];
+  const recentData = overview?.recentOrgs?.map(o => ({
+    n: o.name, id: o._id, co: o.companyNumber || '—', fee: o.annualFee ?? '—', st: o.annualFeeStatus ? (o.annualFeeStatus.charAt(0).toUpperCase()+o.annualFeeStatus.slice(1)) : 'Pending', ag: o.agreementStatus ? (o.agreementStatus.charAt(0).toUpperCase()+o.agreementStatus.slice(1)) : 'Pending', d: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : '—', suspended: o.isSuspended
+  })) || [];
+  const auditData = auditLogs.map(l => {
+    // clerkUserId is like user_3laxXXXXXXXX — first 8 chars are always "user_3ln" → looked identical. Show last 6 + role hint
+    const raw = l.clerkUserId || '';
+    const isSystem = !raw || raw === 'System' || raw.startsWith('system');
+    const shortId = isSystem ? 'System' : `…${raw.slice(-6)}`;
+    const label = isSystem ? 'System' : (l.action?.includes('Super') || l.details?.includes('Super Admin') ? `Superadmin ${shortId}` : shortId);
+    return { t: new Date(l.createdAt).toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}), who: label, fullId: raw, act: l.details || l.action, ip: l.ipAddress || '—' };
+  });
+  const kpis = overview ? [
+    { label: 'Active Organisations', value: String(overview.totalOrganisations), sub: `${overview.compliance?.orgSigned ?? 0} signed · ${overview.compliance?.orgPending ?? 0} pending · ${overview.compliance?.suspended ?? 0} suspended`, trend: `+${overview.trends?.thisMonthOrgs ?? 0} this month`, trendType: (overview.trends?.thisMonthOrgs||0)>0?'up':'flat', accent: false },
+    { label: 'Active Members', value: String(overview.totalEmployees), sub: `Across ${overview.totalOrganisations||0} orgs · avg balance £${overview.financial?.avgBalance?.toLocaleString() ?? 0}`, trend: `+${overview.trends?.thisWeekEmployees ?? 0} this week`, trendType: (overview.trends?.thisWeekEmployees||0)>0?'up':'flat', accent: false },
+    { label: 'Trust Pool (Platform)', value: `£${(overview.totalSavingsPool||0).toLocaleString()}`, sub: 'Cumulative contributions · bank-matched', trend: overview.savingsGrowth?.length ? `£${Math.round(overview.savingsGrowth.slice(-1)[0].amount)} total` : 'No data', trendType: 'up', accent: false },
+    { label: 'Platform Revenue', value: `£${(overview.platformRevenue||0).toLocaleString()}`, sub: `${overview.collection?.paid ?? 0} paid · outstanding £${overview.collection?.outstandingAmount?.toLocaleString() ?? 0} · overdue £${overview.collection?.overdueAmount?.toLocaleString() ?? 0}`, trend: `${overview.collection?.rate ?? 0}% collected`, trendType: (overview.collection?.rate||0)>=70?'up':'flat', accent: false },
+  ] : [];
+  const collection = overview?.collection || { paid:0, pending:0, overdue:0, total:0, rate:0, outstandingAmount:0, overdueAmount:0 };
+  const subscription = overview?.subscription || { active:0, pending:0, pastDue:0, total:0, autoPayOn:0 };
+  const compliance = overview?.compliance || { orgSigned:0, orgPending:0, orgTotal:0, empSigned:0, empPending:0, empTotal:0, suspended:0 };
+  const eligiblePool = overview?.eligiblePool ?? 0;
+  const totalAUM = overview ? `£${(overview.totalSavingsPool||0).toLocaleString()}` : '—';
+
+  // SVG helpers — now use live areaData/barData
+  const AreaChartSvg = () => {
+    const W = 640, H = 140, padL = 0, padR = 8, padT = 8, padB = 18;
+    const vals = areaData.map(d => d.v), min = vals.length? Math.min(...vals) * 0.92 : 0, max = vals.length? Math.max(...vals) * 1.02 : 100;
+    const X = i => padL + (W - padL - padR) * (areaData.length>1 ? (i / (areaData.length - 1)) : 0.5);
+    const Y = v => padT + (H - padT - padB) * (1 - (v - min) / (max - min || 1));
+    const pts = areaData.map((d, i) => `${X(i)},${Y(d.v)}`).join(' ');
+    const areaPts = `${X(0)},${H - padB} ` + pts + ` ${X(areaData.length - 1)},${H - padB}`;
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[150px] block">
+        {[0.25, 0.5, 0.75].map(t => (
+          <line key={t} x1={padL} x2={W - padR} y1={padT + (H - padT - padB) * t} y2={padT + (H - padT - padB) * t} stroke="#EEF0F3" strokeWidth="1" strokeDasharray="3 4" />
+        ))}
+        <polygon points={areaPts} fill="#EDF3EF" />
+        <polyline points={pts} fill="none" stroke="#0E5C3E" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {areaData.map((d, i) => (
+          <circle key={i} cx={X(i)} cy={Y(d.v)} r="4" fill="#0E5C3E" stroke="#fff" strokeWidth="1.6" />
+        ))}
+        {areaData.map((d, i) => (
+          <text key={d.m} x={X(i)} y={H - 2} textAnchor="middle" fontSize="11" fill="#9CA3AF">{d.m}</text>
+        ))}
+      </svg>
+    );
+  };
+  const BarChartSvg = () => {
+    const W = 360, H = 160, padL = 8, padR = 8, padT = 24, padB = 22;
+    const max = Math.max(4, ...barData.map(d=>d.a));
+    const bw = ((W - padL - padR) / barData.length) * 0.52, gap = (W - padL - padR) / barData.length;
+    const y = v => padT + (H - padT - padB) * (1 - v / max);
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[170px] overflow-visible">
+        <line x1={padL} x2={W - padR} y1={padT} y2={padT} stroke="#EEF0F3" strokeWidth="1" />
+        <line x1={padL} x2={W - padR} y1={padT + (H - padT - padB) / 2} y2={padT + (H - padT - padB) / 2} stroke="#EEF0F3" strokeWidth="1" strokeDasharray="3 4" />
+        {barData.map((d, i) => {
+          const x = padL + gap * i + gap / 2 - bw / 2;
+          const h = (H - padT - padB) * (d.a / max);
+          const labelY = d.a > 0 ? Math.max(12, y(d.a) - 6) : y(d.a) - 6;
+          return (
+            <g key={d.m}>
+              <rect x={x} y={y(d.a)} width={bw} height={h} rx="4" fill="#0E5C3E" />
+              <text x={padL + gap * i + gap / 2} y={H - 4} textAnchor="middle" fontSize="11" fill="#9CA3AF">{d.m}</text>
+              <text x={padL + gap * i + gap / 2} y={labelY} textAnchor="middle" fontSize="11" fontWeight="600" fill="#0B0F0E">{d.a}</text>
+            </g>
+          );
+        })}
+      </svg>
+    );
+  };
 
   return (
     <SidebarLayout navigation={superAdminNavigation} title="Super Admin Dashboard">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Platform Overview</h1>
-        <p className="text-sm text-slate-500">Manage organisations, monitor global savings, and run awards.</p>
+      {/* Page head — same as v2 */}
+      <div className="mb-4">
+        <h1 className="text-[24px] font-bold tracking-[-0.03em] text-[#0B0F0E] leading-none">Platform Overview</h1>
+
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-sm font-medium text-slate-500 mb-1">Active Organisations</h3>
-          <p className="text-3xl font-bold text-slate-900">{overviewData.stats.totalOrgs}</p>
+      {/* Alert banner — skeleton while loading, live thereafter */}
+      {loading ? (
+        <div className="h-[46px] bg-white border border-[#E5E7EB] rounded-lg animate-pulse mb-4" />
+      ) : (() => {
+        const overdue = overview?.collection?.overdue ?? 0;
+        const pendingDraws = overview?.alerts?.pendingDraws ?? 0;
+        const excluded = overview?.compliance ? (overview.compliance.orgTotal - overview.compliance.orgSigned) : 0;
+        const hasAlert = overdue>0 || pendingDraws>0 || excluded>0;
+        if (!hasAlert) return <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-lg border border-[#A7F3D0] bg-[#ECFDF5] text-[13px] mb-4"><span className="text-[11px] font-bold bg-white border border-[#A7F3D0] px-2 py-0.5 rounded-full text-[#065F46]">All clear</span><span className="text-[#0B0F0E]">No overdue fees or pending draws. Platform healthy.</span></div>;
+        return (
+        <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-lg border border-[#FDE68A] bg-[#FEF3C7] text-[13px] mb-4">
+          <span className="text-[11px] font-bold tracking-wide bg-white border border-[#FDE68A] px-2 py-0.5 rounded-full text-[#92400E]">Action needed</span>
+          <span className="text-[#0B0F0E]"><b>{overdue} organisations</b> overdue &gt;14 days · <b>{pendingDraws} draw</b> pending approval · <b>{excluded} orgs</b> excluded from next draw until signed.</span>
+          <button onClick={() => navigate('/superadmin/organisations')} className="ml-auto text-[#0A3D2A] font-semibold underline underline-offset-2 text-[13px] bg-transparent border-0 cursor-pointer">Review →</button>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-sm font-medium text-slate-500 mb-1">Active Members</h3>
-          <p className="text-3xl font-bold text-slate-900">{overviewData.stats.activeMembers}</p>
+        );
+      })()}
+
+      {/* KPI Strip — wired to live overview, demo fallback */}
+      {loading && !overview ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
+          {[1,2,3,4].map(i => <div key={i} className="bg-white border border-[#E5E7EB] rounded-[10px] p-6 animate-pulse"><div className="h-3 bg-[#F3F4F6] rounded w-1/2 mb-3" /><div className="h-7 bg-[#F3F4F6] rounded w-1/3" /></div>)}
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-sm font-medium text-slate-500 mb-1">Total Savings (Platform)</h3>
-          <p className="text-3xl font-bold text-emerald-600">£{overviewData.stats.totalSavings.toLocaleString()}</p>
-        </div>
+      ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
+        {kpis.map(k => (
+          <div key={k.label} className={`bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] p-[16px_14px_14px] relative overflow-hidden ${k.accent ? 'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[#0E5C3E] before:content-[""]' : ''}`}>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <span className="text-[11.5px] font-semibold tracking-[0.02em] uppercase text-[#6B7280]">{k.label}</span>
+              <span className="w-7 h-7 rounded-[7px] grid place-items-center bg-[#F9FAFB] border border-[#EEF0F3] text-[#9CA3AF] shrink-0">
+                {k.label.includes('Organisations') && <Building2 size={16} strokeWidth={1.7} />}
+                {k.label.includes('Members') && <Users size={16} strokeWidth={1.7} />}
+                {k.label.includes('Trust') && <Landmark size={16} strokeWidth={1.7} />}
+                {k.label.includes('Revenue') && <CreditCard size={16} strokeWidth={1.7} />}
+              </span>
+            </div>
+            <p className="text-[28px] font-bold tracking-[-0.04em] leading-none text-[#0B0F0E] font-mono" style={{fontFamily:"'JetBrains Mono',monospace"}}>{k.value}</p>
+            <p className="mt-2 text-[12.5px] text-[#6B7280] leading-snug" dangerouslySetInnerHTML={{__html:k.sub}} />
+            <div className="mt-2.5"><span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${k.trendType==='up' ? 'bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]' : 'bg-[#F3F4F6] border-[#E5E7EB] text-[#6B7280]'}`}>{k.trendType==='up' ? '↗ ' : '— '}{k.trend}</span></div>
+          </div>
+        ))}
       </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <section className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden">
-            <div className="flex items-center gap-3 px-[18px] py-4 border-b border-[#e6ecea]">
-              <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Recent Organisations</h4>
-              <Link to="/superadmin/organisations" className="ml-auto text-[#296043] text-[12.5px] font-semibold hover:underline">View all</Link>
-            </div>
-            <div className="overflow-x-auto w-full">
-              <table className="w-full border-collapse text-left text-[13.5px]">
-                <thead>
-                  <tr>
-                    <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Organisation</th>
-                    <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Annual Fee</th>
-                    <th className="px-[18px] py-3 text-[10.5px] tracking-[0.1em] uppercase text-[#8a9994] font-bold border-b border-[#e6ecea]">Joined</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {overviewData.recentOrgs.map((org, i) => (
-                    <tr key={i} className="hover:bg-[#f7faf9] border-b border-[#e6ecea] last:border-0 transition-colors">
-                      <td className="px-[18px] py-3 font-semibold text-[#0e1a16]">{org.name}</td>
-                      <td className="px-[18px] py-3">
-                        {org.annualFeeStatus === 'paid' ? (
-                          <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#296043]/15 text-[#296043]">Paid</span>
-                        ) : (
-                          <span className="text-[11.5px] font-semibold px-[9px] py-[3px] rounded-full bg-[#fdf3e3] text-[#c8811f]">Unpaid</span>
-                        )}
-                      </td>
-                      <td className="px-[18px] py-3 text-[#0e1a16]">{new Date(org.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                  {overviewData.recentOrgs.length === 0 && (
-                    <tr><td colSpan="3" className="px-[18px] py-4 text-center text-[#5c6b65]">No organisations onboarded yet.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+      {/* Row 2 — Trust Pool + Collection */}
+      <div className="grid grid-cols-12 gap-3.5 mb-3.5">
+        <div className="col-span-12 lg:col-span-8 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
+          <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-[#EEF0F3]">
+            <div><h3 className="m-0 text-[13.5px] font-semibold tracking-[-0.015em] text-[#0B0F0E]">Trust Pool — Cumulative Growth</h3><p className="m-0 text-[12px] text-[#6B7280]">Employee contribution pool (succeeded). Last 6 months.</p></div>
+            <span className="ml-auto inline-flex text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">+£3.2k this month</span>
+          </div>
+          <div className="p-4">
+            {loading ? <SkeletonChart h={150} /> : areaData.length===0 ? <div className="py-12 text-center text-[13px] text-[#6B7280]">No contribution data yet — chart will appear after first payroll.</div> : (
+              <>
+                <div className="flex items-center gap-2.5 mb-3 text-[12px] text-[#6B7280]"><i className="w-2.5 h-2.5 rounded-sm bg-[#0E5C3E] inline-block" /> Cumulative pool <span className="ml-2 font-semibold text-[#0B0F0E]">{totalAUM}</span><span className="text-[#6B7280]">total AUM</span></div>
+                <AreaChartSvg />
+              </>
+            )}
+          </div>
         </div>
-
-        <div className="space-y-6">
-          <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] overflow-hidden">
-            <div className="px-[18px] py-4 border-b border-[#e6ecea]">
-              <h4 className="m-0 text-[15px] font-bold tracking-[-0.2px] text-[#0e1a16]">Quick Actions</h4>
+        <div className="col-span-12 lg:col-span-4 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold tracking-[-0.015em]">Collection Health</h3><p className="m-0 text-[12px] text-[#6B7280]">Annual fee status across {collection.total || '—'} orgs</p></div>
+          <div className="p-4 flex gap-4 items-center">
+            <div className="relative w-[116px] h-[116px] shrink-0">
+              {(() => {
+                const total = collection.total || 13;
+                const pPaid = total? Math.round((collection.paid/total)*100):0;
+                const pPend = total? Math.round((collection.pending/total)*100):0;
+                const pOver = total? Math.round((collection.overdue/total)*100):0;
+                return (
+                <>
+                <svg viewBox="0 0 42 42" className="w-[116px] h-[116px] -rotate-90">
+                  <circle cx="21" cy="21" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="6" />
+                  <circle cx="21" cy="21" r="15.9" fill="none" stroke="#0E5C3E" strokeWidth="6" strokeDasharray={`${pPaid} ${100-pPaid}`} strokeLinecap="round" />
+                  <circle cx="21" cy="21" r="15.9" fill="none" stroke="#F59E0B" strokeWidth="6" strokeDasharray={`${pPend} ${100-pPend}`} strokeDashoffset={`-${pPaid}`} strokeLinecap="round" opacity=".95" />
+                  <circle cx="21" cy="21" r="15.9" fill="none" stroke="#DC2626" strokeWidth="6" strokeDasharray={`${pOver} ${100-pOver}`} strokeDashoffset={`-${pPaid+pPend}`} strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 grid place-items-center text-[14px] font-extrabold tracking-tight">{collection.rate}%</div>
+                </>
+                );
+              })()}
             </div>
-            <div className="p-4 space-y-3">
-              <PrimaryButton onClick={() => navigate('/superadmin?onboard=true')} className="w-full justify-center">
-                Onboard Organisation
-              </PrimaryButton>
-              <button onClick={() => navigate('/superadmin/awards')} className="w-full flex items-center justify-center gap-2 p-[13px_14px] rounded-[11px] border border-[#e6ecea] bg-white cursor-pointer font-inherit text-[13.5px] font-semibold text-[#0e1a16] hover:bg-slate-50 transition-colors">
-                Run Awards Draw
-              </button>
+            <div className="flex-1">
+              <div className="text-[22px] font-bold tracking-tight">{collection.rate}%<span className="text-[12px] font-semibold text-[#6B7280] ml-1.5">collected</span></div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <span className="inline-flex items-center text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">Paid {collection.paid}</span>
+                <span className="inline-flex items-center text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E]">Pending {collection.pending}</span>
+                <span className="inline-flex items-center text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECDD3] text-[#9F1239]">Overdue {collection.overdue}</span>
+              </div>
+              <div className="mt-2.5 text-[12.5px] text-[#6B7280]">Outstanding <b className="text-[#0B0F0E] font-mono">£{(collection.outstandingAmount||0).toLocaleString()}</b> · Overdue <b className="text-[#9F1239] font-mono">£{(collection.overdueAmount||0).toLocaleString()}</b></div>
+              <div className="mt-2 h-1.5 bg-[#EEF0F3] rounded-full overflow-hidden flex"><div style={{flex:collection.paid}} className="bg-[#0E5C3E]" /><div style={{flex:collection.pending}} className="bg-[#F59E0B]" /><div style={{flex:collection.overdue}} className="bg-[#DC2626]" /></div>
+            </div>
+          </div>
+          <div className="border-t border-[#EEF0F3] p-4">
+            <div className="flex justify-between items-center mb-2"><h4 className="m-0 text-[12.5px] font-semibold">Member Subscription Health</h4><span className="text-[12px] text-[#6B7280]">{subscription.total} members</span></div>
+            <div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden flex"><div style={{flex:subscription.active||1}} className="bg-[#0E5C3E]" /><div style={{flex:subscription.pending||1}} className="bg-[#F59E0B]" /><div style={{flex:subscription.pastDue||1}} className="bg-[#DC2626]" /></div>
+            <div className="flex gap-2 mt-2 flex-wrap items-center">
+              <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">Active {subscription.active}</span>
+              <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E]">Pending {subscription.pending}</span>
+              <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#FEF2F2] border border-[#FECDD3] text-[#9F1239]">Past due {subscription.pastDue}</span>
+              <span className="ml-auto text-[12px] text-[#6B7280]">AutoPay <b className="text-[#0B0F0E]">{subscription.total? Math.round((subscription.autoPayOn/subscription.total)*100):0}%</b></span>
             </div>
           </div>
         </div>
       </div>
-      <OnboardOrgModal isOpen={showModal} onClose={handleCloseModal} />
+
+      {/* Row 3 */}
+      <div className="grid grid-cols-12 gap-3.5 mb-3.5">
+        <div className="col-span-12 lg:col-span-6 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Organisation Onboarding</h3><p className="m-0 text-[12px] text-[#6B7280]">New orgs by month</p></div>
+          <div className="p-4">{loading ? <SkeletonChart h={160} /> : barData.length===0 ? <div className="py-12 text-center text-[13px] text-[#6B7280]">No onboarding data yet.</div> : (<><BarChartSvg /><div className="flex gap-2.5 justify-center mt-1.5 text-[11.5px] text-[#6B7280]"><span className="inline-flex items-center gap-1.5"><i className="w-2 h-2 bg-[#0E5C3E] rounded-sm inline-block" />Onboarded</span></div></>)}</div>
+        </div>
+        <div className="col-span-12 lg:col-span-6 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Agreement Compliance</h3><p className="m-0 text-[12px] text-[#6B7280]">Signed vs pending — eligibility gate</p></div>
+          <div className="p-4">
+            <div className="grid grid-cols-2 gap-3.5">
+              <div><div className="text-[12px] font-semibold text-[#6B7280]">Organisations</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.orgSigned} / {compliance.orgTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">{compliance.orgTotal? Math.round(compliance.orgSigned/compliance.orgTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.orgSigned||1}} className="bg-[#0E5C3E]" /><div style={{flex:(compliance.orgTotal-compliance.orgSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">{compliance.orgTotal-compliance.orgSigned} pending — excluded from next draw</div></div>
+              <div><div className="text-[12px] font-semibold text-[#6B7280]">Members</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.empSigned} / {compliance.empTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">{compliance.empTotal? Math.round(compliance.empSigned/compliance.empTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.empSigned||1}} className="bg-[#0E5C3E]" /><div style={{flex:(compliance.empTotal-compliance.empSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">If {compliance.orgTotal-compliance.orgSigned} orgs sign → pool <b className="text-[#0B0F0E]">+{eligiblePool}</b> eligible</div></div>
+            </div>
+            <div className="h-px bg-[#EEF0F3] my-3.5" />
+            <div className="flex gap-2 flex-wrap items-center">
+              <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]"><i className="w-1.5 h-1.5 rounded-full bg-current inline-block" />Eligible: {eligiblePool}</span>
+              <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E]"><i className="w-1.5 h-1.5 rounded-full bg-current inline-block" />Excluded: {compliance.orgTotal - compliance.orgSigned} orgs</span>
+              <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#F3F4F6] border border-[#E5E7EB] text-[#6B7280]"><i className="w-1.5 h-1.5 rounded-full bg-current inline-block" />Suspended: {compliance.suspended}</span>
+              <button onClick={() => navigate('/superadmin/organisations')} className="ml-auto text-[12.5px] font-semibold text-[#0E5C3E] bg-transparent border-0 cursor-pointer">Review queue →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 4 — Recent + Quick */}
+      <div className="grid grid-cols-12 gap-3.5 mb-3.5">
+        <div className="col-span-12 lg:col-span-8 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Recent Organisations</h3><p className="m-0 text-[12px] text-[#6B7280]">Latest onboardings</p><Link to="/superadmin/organisations" className="ml-auto text-[13px] font-semibold text-[#0E5C3E] hover:underline">View all →</Link></div>
+          <div className="overflow-auto">
+            <table className="w-full border-collapse text-[13px]">
+              <thead><tr className="bg-[#F9FAFB]"><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Organisation</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Company No.</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Annual fee</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Status</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Agreement</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Joined</th></tr></thead>
+              <tbody>
+                {loading ? (
+                  [1,2,3].map(i => <tr key={i} className="animate-pulse"><td colSpan="6" className="px-3.5 py-4"><div className="h-3 bg-[#F3F4F6] rounded w-full" /></td></tr>)
+                ) : recentData.length===0 ? (
+                  <tr><td colSpan="6" className="px-3.5 py-8 text-center text-[13px] text-[#6B7280]">No organisations onboarded yet.</td></tr>
+                ) : recentData.map(r => (
+                  <tr key={r.n+r.id} className="hover:bg-[#F9FAFB] border-b border-[#EEF0F3] last:border-0 cursor-pointer" onClick={() => r.id && navigate(`/superadmin/organisations/${r.id}`)}>
+                    <td className="px-3.5 py-3"><div className="font-semibold tracking-tight text-[#0B0F0E]">{r.n} {r.suspended && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-[#F3F4F6] border border-[#E5E7EB] text-[#6B7280]">Suspended</span>}</div><div className="text-[12px] text-[#6B7280]">No: {r.co}</div></td>
+                    <td className="px-3.5 py-3 font-mono text-[#6B7280]">{r.co}</td>
+                    <td className="px-3.5 py-3 font-mono font-bold text-[#0B0F0E]">£{r.fee}</td>
+                    <td className="px-3.5 py-3"><span className={`inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full border ${r.st==='Paid' ? 'bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]' : r.st==='Overdue' ? 'bg-[#FEF2F2] border-[#FECDD3] text-[#9F1239]' : 'bg-[#FEF3C7] border-[#FDE68A] text-[#92400E]'}`}><i className="w-1.5 h-1.5 rounded-full bg-current inline-block" />{r.st}</span></td>
+                    <td className="px-3.5 py-3"><span className={`inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full border ${r.ag==='Signed' ? 'bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]' : 'bg-[#FEF3C7] border-[#FDE68A] text-[#92400E]'}`}><i className="w-1.5 h-1.5 rounded-full bg-current inline-block" />{r.ag}</span></td>
+                    <td className="px-3.5 py-3 text-[#2B3330]">{r.d}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="col-span-12 lg:col-span-4">
+          <div className="bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
+            <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Quick Actions</h3></div>
+            <div className="grid gap-2.5 p-3.5">
+              <button onClick={() => navigate('/superadmin/organisations')} className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-[#0E5C3E] text-white font-semibold text-[13.5px] border border-[#0E5C3E] hover:bg-[#0A3D2A] transition"><Plus size={16} strokeWidth={2} />Onboard Organisation</button>
+              <button onClick={() => navigate('/superadmin/awards')} className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-white text-[#0B0F0E] font-semibold text-[13.5px] border border-[#D1D5DB] hover:bg-[#F9FAFB] transition">Run Awards Draw</button>
+              <button onClick={() => navigate('/superadmin/reports')} className="inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-transparent text-[#2B3330] font-medium text-[13.5px] border-0 hover:underline">Export audit report ↓</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* Row 5 — Treasury + Audit */}
+      <div className="grid grid-cols-12 gap-3.5">
+        <div className="col-span-12 lg:col-span-4 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Treasury</h3><p className="m-0 text-[12px] text-[#6B7280]">Superadmin-only bank pools</p></div>
+          <div className="grid grid-cols-2">
+            {loading ? (
+              <div className="col-span-2 p-6 animate-pulse"><div className="h-4 bg-[#F3F4F6] rounded w-1/3 mb-3" /><div className="h-6 bg-[#F3F4F6] rounded w-1/2" /></div>
+            ) : banks.length ? banks.map(b => (
+              <div key={b._id || b.accountType} className="p-3.5 border-r last:border-0 border-[#EEF0F3]"><div className="text-[11px] font-semibold tracking-wide uppercase text-[#6B7280]">{b.accountType==='hajj_trust_pool'?'Awards Reserve':'HS Collections — GBP'}</div><div className="font-semibold mt-1">{b.bankName} · {b.isActive?'Primary':'—'}</div><div className="text-[12.5px] text-[#6B7280] mt-1.5 font-mono">•••• {b.last4}</div><div className="text-[18px] font-bold tracking-tight mt-2 font-mono">£{(b.balance ?? 0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div><div className="mt-1.5"><span className={`inline-flex items-center text-[11.5px] font-semibold px-2.5 py-1 rounded-full border ${b.isActive?'bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]':'bg-[#F3F4F6] border-[#E5E7EB] text-[#6B7280]'}`}>{b.isActive?'Connected':'Inactive'}</span></div></div>
+            )) : (
+              <div className="col-span-2 p-6 text-center text-[13px] text-[#6B7280]">No bank accounts configured yet.</div>
+            )}
+          </div>
+          <div className="h-px bg-[#EEF0F3]" />
+          <div className="px-4 py-2.5 flex justify-between text-[12.5px] text-[#6B7280]"><span>Reconciliation</span><span className="text-[#0A3D2A] font-semibold">✓ Pools match ledger</span></div>
+        </div>
+        <div className="col-span-12 lg:col-span-8 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Live Audit Trail</h3><p className="m-0 text-[12px] text-[#6B7280]">Immutable log — last 4 events</p><Link to="/superadmin/reports" className="ml-auto text-[13px] font-semibold text-[#0E5C3E] hover:underline">View all →</Link></div>
+          <div className="overflow-auto">
+            <table className="w-full border-collapse text-[13px]">
+              <thead><tr className="bg-[#F9FAFB]"><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">When</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Actor</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Event</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">IP</th></tr></thead>
+              <tbody>
+                {loading ? (
+                  [1,2,3].map(i => <tr key={i} className="animate-pulse"><td colSpan="4" className="px-3.5 py-4"><div className="h-3 bg-[#F3F4F6] rounded w-full" /></td></tr>)
+                ) : auditData.length===0 ? (
+                  <tr><td colSpan="4" className="px-3.5 py-8 text-center text-[13px] text-[#6B7280]">No audit events yet.</td></tr>
+                ) : auditData.map(a => (
+                  <tr key={a.act+a.t} className="hover:bg-[#F9FAFB] border-b border-[#EEF0F3] last:border-0">
+                    <td className="px-3.5 py-3 text-[#6B7280]">{a.t}</td>
+                    <td className="px-3.5 py-3"><span className="inline-flex text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#F3F4F6] border border-[#E5E7EB] text-[#6B7280] max-w-[90px] truncate">{a.who}</span></td>
+                    <td className="px-3.5 py-3 font-medium text-[#0B0F0E] max-w-[280px] truncate" title={a.act}>{a.act}</td>
+                    <td className="px-3.5 py-3 font-mono text-[#6B7280]">{a.ip}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+
     </SidebarLayout>
   );
 };

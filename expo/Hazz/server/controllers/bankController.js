@@ -14,7 +14,7 @@ exports.getBankAccounts = async (req, res) => {
 
 exports.updateBankAccount = async (req, res) => {
   try {
-    const { accountType, accountHolderName, sortCode, accountNumber } = req.body;
+    const { accountType, accountHolderName, sortCode, accountNumber, balance } = req.body;
 
     if (!accountType || !accountHolderName || !sortCode || !accountNumber) {
       return res.status(400).json({ message: 'All fields are required.' });
@@ -35,7 +35,9 @@ exports.updateBankAccount = async (req, res) => {
                      sortCode.startsWith('20') ? 'Barclays' : 
                      'UK Bank PLC';
 
-    // Upsert the bank account in our database
+    const existing = await BankAccount.findOne({ accountType });
+    const nextBalance = balance !== undefined ? Number(balance) : (existing?.balance ?? 0);
+
     const updatedBank = await BankAccount.findOneAndUpdate(
       { accountType },
       {
@@ -44,6 +46,7 @@ exports.updateBankAccount = async (req, res) => {
         bankName,
         last4,
         stripeBankAccountId: mockStripeId,
+        balance: nextBalance,
         isActive: true
       },
       { new: true, upsert: true }

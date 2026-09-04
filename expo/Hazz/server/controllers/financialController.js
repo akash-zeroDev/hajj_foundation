@@ -27,7 +27,7 @@ exports.getOrgTransactions = async (req, res) => {
     }
     
     const transactions = await Transaction.find({ orgId: org._id })
-      .populate('payerId', 'firstName lastName email name adminEmail adminFirstName adminLastName adminPhone clerkUserId isRemoved')
+      .populate('payerId', 'firstName lastName email name adminEmail adminFirstName adminLastName adminPhone clerkUserId')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, data: transactions });
