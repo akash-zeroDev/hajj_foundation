@@ -8,6 +8,7 @@ export const AdminPayments = () => {
   const { organization } = useOrganization();
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,6 +31,14 @@ export const AdminPayments = () => {
         if (res.ok) {
           const data = await res.json();
           const txs = data.data || [];
+          
+          try {
+            const orgMembers = await organization.getMemberships();
+            setMembers(orgMembers?.data || orgMembers || []);
+          } catch (e) {
+            console.error("Failed to fetch members", e);
+          }
+
           // Pin Admin payments (employer_fee) to the top, then sort by date
           txs.sort((a, b) => {
             if (a.payerModel === 'Organisation' && b.payerModel !== 'Organisation') return -1;
@@ -93,11 +102,27 @@ export const AdminPayments = () => {
                           </span>
                         </div>
                       ) : (
-                        `${tx.payerId?.firstName || ''} ${tx.payerId?.lastName || ''}`.trim() || 'Unknown'
+                        <div className="flex items-center gap-2">
+                          {`${tx.payerId?.firstName || ''} ${tx.payerId?.lastName || ''}`.trim() || 'Unknown'}
+                          {tx.payerId?.isRemoved && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider">
+                              Removed
+                            </span>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-slate-500">
-                      {tx.payerModel === 'Organisation' ? tx.payerId?.adminEmail : tx.payerId?.email}
+                      {(() => {
+                        if (tx.payerModel === 'Organisation') return tx.payerId?.adminEmail || '';
+                        const clerkId = tx.payerId?.clerkUserId;
+                        const member = members.find(m => m.publicUserData?.userId === clerkId);
+                        const foundEmail = member?.publicUserData?.identifier || tx.payerId?.email;
+                        
+                        if (foundEmail) return foundEmail;
+                        if (tx.payerId?.isRemoved) return <span className="italic text-slate-400">Unavailable</span>;
+                        return '';
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-900">
                       £{tx.amount.toLocaleString()}
