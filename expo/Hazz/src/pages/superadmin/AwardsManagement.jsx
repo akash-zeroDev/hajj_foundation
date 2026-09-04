@@ -225,9 +225,14 @@ export const AwardsManagement = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center text-slate-500">Loading history...</td>
-                </tr>
+                [1,2,3].map(i => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-32" /></td>
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-24" /></td>
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-16" /></td>
+                    <td className="px-6 py-4"><div className="h-5 bg-slate-200 rounded-full w-20" /></td>
+                  </tr>
+                ))
               ) : pastDraws.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="px-6 py-8 text-center text-slate-500">No past draws found.</td>

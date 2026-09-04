@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '@clerk/react';
+import { Landmark, Lock, Info, Check } from 'lucide-react';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import PrimaryButton from '../../components/PrimaryButton';
 import CustomSelect from '../../components/CustomSelect';
 import { superAdminNavigation } from '../../config/navigation';
-import { Landmark, Lock, Info, Check } from 'lucide-react';
 
 export const BankAccounts = () => {
   const { showToast } = useToast();
@@ -107,7 +107,19 @@ export const BankAccounts = () => {
           
           {/* Left Column: Accounts Stack */}
           <div className="grid gap-[16px]">
-            {/* Corporate Account */}
+            {/* Corporate Account — skeleton while loading */}
+            {isLoading ? (
+              <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px] animate-pulse">
+                <div className="flex items-center gap-[12px]">
+                  <div className="w-[38px] h-[38px] rounded-[11px] bg-slate-200" />
+                  <div className="h-4 bg-slate-200 rounded w-1/2" />
+                  <div className="ml-auto h-5 w-12 bg-slate-200 rounded-full" />
+                </div>
+                <div className="mt-[14px] grid gap-[9px]">
+                  {[1,2,3,4].map(i => <div key={i} className="flex justify-between"><div className="h-3 bg-slate-200 rounded w-1/4" /><div className="h-3 bg-slate-200 rounded w-1/3" /></div>)}
+                </div>
+              </div>
+            ) : (
             <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px]">
               <div className="flex items-center gap-[12px]">
                 <span className="w-[38px] h-[38px] rounded-[11px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b] flex-shrink-0">
@@ -127,8 +139,21 @@ export const BankAccounts = () => {
                 <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Purpose</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">Employer fees</b></div>
               </div>
             </div>
+            )}
 
-            {/* Trust Account */}
+            {/* Trust Account — skeleton while loading */}
+            {isLoading ? (
+              <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px] animate-pulse">
+                <div className="flex items-center gap-[12px]">
+                  <div className="w-[38px] h-[38px] rounded-[11px] bg-slate-200" />
+                  <div className="h-4 bg-slate-200 rounded w-1/2" />
+                  <div className="ml-auto h-5 w-12 bg-slate-200 rounded-full" />
+                </div>
+                <div className="mt-[14px] grid gap-[9px]">
+                  {[1,2,3,4].map(i => <div key={i} className="flex justify-between"><div className="h-3 bg-slate-200 rounded w-1/4" /><div className="h-3 bg-slate-200 rounded w-1/3" /></div>)}
+                </div>
+              </div>
+            ) : (
             <div className="bg-white border border-[#e6ecea] rounded-[14px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] p-[18px]">
               <div className="flex items-center gap-[12px]">
                 <span className="w-[38px] h-[38px] rounded-[11px] grid place-items-center bg-[rgba(11,122,91,.10)] text-[#0b7a5b] flex-shrink-0">
@@ -148,6 +173,7 @@ export const BankAccounts = () => {
                 <div className="flex justify-between text-[13px]"><span className="text-[#8a9994]">Purpose</span><b className="font-semibold text-[#0e1a16] font-variant-numeric:tabular-nums">Member savings</b></div>
               </div>
             </div>
+            )}
           </div>
 
           {/* Right Column: Update Form */}
