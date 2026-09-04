@@ -29,14 +29,7 @@ export const AdminPayments = () => {
 
         if (res.ok) {
           const data = await res.json();
-          const txs = data.data || [];
-          // Pin Admin payments (employer_fee) to the top, then sort by date
-          txs.sort((a, b) => {
-            if (a.payerModel === 'Organisation' && b.payerModel !== 'Organisation') return -1;
-            if (a.payerModel !== 'Organisation' && b.payerModel === 'Organisation') return 1;
-            return new Date(b.createdAt) - new Date(a.createdAt);
-          });
-          setTransactions(txs);
+          setTransactions(data.data || []);
         }
       } catch (err) {
         console.error('Error fetching org transactions:', err);
@@ -71,9 +64,15 @@ export const AdminPayments = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-slate-500">Loading transactions...</td>
-                </tr>
+                [1,2,3].map(i => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-20" /></td>
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-32" /></td>
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-40" /></td>
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-14" /></td>
+                    <td className="px-6 py-4"><div className="h-5 bg-slate-200 rounded-full w-14" /></td>
+                  </tr>
+                ))
               ) : transactions.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-8 text-center text-slate-500">No transactions found for your employees yet.</td>
@@ -85,19 +84,10 @@ export const AdminPayments = () => {
                       {new Date(tx.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
-                      {tx.payerModel === 'Organisation' ? (
-                        <div className="flex items-center gap-2">
-                          {`${tx.payerId?.adminFirstName || ''} ${tx.payerId?.adminLastName || ''}`.trim() || 'Organisation Admin'}
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-indigo-50 text-indigo-700 border-indigo-200">
-                            Administrator
-                          </span>
-                        </div>
-                      ) : (
-                        `${tx.payerId?.firstName || ''} ${tx.payerId?.lastName || ''}`.trim() || 'Unknown'
-                      )}
+                      {tx.payerId?.firstName} {tx.payerId?.lastName}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-slate-500">
-                      {tx.payerModel === 'Organisation' ? tx.payerId?.adminEmail : tx.payerId?.email}
+                      {tx.payerId?.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-900">
                       £{tx.amount.toLocaleString()}

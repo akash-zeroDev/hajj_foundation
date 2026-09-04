@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/react';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { superAdminNavigation } from '../../config/navigation';
-import { FileDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useToast } from '../../context/ToastContext';
@@ -142,15 +141,13 @@ export const Reports = () => {
         startY: doc.lastAutoTable.finalY + 15,
         head: [['Operational Metric', 'Count']],
         body: [
-          ['Total Enrolled Organisations (Historical)', stats.organizations.total.toString()],
+          ['Total Enrolled Organisations', stats.organizations.total.toString()],
           ['Active Organisations', stats.organizations.active.toString()],
           ['Suspended Organisations', stats.organizations.suspended.toString()],
-          ['Archived Organisations', (stats.organizations.archived || 0).toString()],
           ['Total Employees (Historical)', stats.employees.total.toString()],
           ['Active Employees', stats.employees.active.toString()],
           ['Compliant Employees (Agreements Signed)', stats.employees.compliant.toString()],
-          ['Pending Employees (Not Signed)', stats.employees.pending.toString()],
-          ['Suspended Users', (stats.employees.suspended || 0).toString()]
+          ['Pending Employees (Not Signed)', stats.employees.pending.toString()]
         ],
         theme: 'grid',
         headStyles: { fillColor: [51, 65, 85] }, 
@@ -170,19 +167,17 @@ export const Reports = () => {
   };
 
   const renderOperationalSummary = () => {
-    if (!stats) return <div className="p-8 text-center text-slate-500">Loading metrics...</div>;
+    if (!stats) return <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse"><div className="bg-white p-6 rounded-xl border border-slate-200"><div className="h-3 bg-slate-200 rounded w-1/3 mb-4" /><div className="h-64 bg-slate-200 rounded-xl" /></div><div className="bg-white p-6 rounded-xl border border-slate-200"><div className="h-3 bg-slate-200 rounded w-1/3 mb-4" /><div className="h-64 bg-slate-200 rounded-xl" /></div></div>;
 
     const employeePieData = [
       { name: 'Compliant', value: stats.employees.compliant },
-      { name: 'Pending', value: stats.employees.pending },
-      { name: 'Suspended', value: stats.employees.suspended || 0 }
+      { name: 'Pending', value: stats.employees.pending }
     ];
-    const COLORS = ['#10b981', '#f59e0b', '#ef4444']; // emerald, amber, red
+    const COLORS = ['#10b981', '#f59e0b']; // emerald, amber
 
     const orgBarData = [
       { name: 'Active', count: stats.organizations.active },
-      { name: 'Suspended', count: stats.organizations.suspended },
-      { name: 'Archived', count: stats.organizations.archived || 0 }
+      { name: 'Suspended', count: stats.organizations.suspended }
     ];
 
     return (
@@ -245,12 +240,8 @@ export const Reports = () => {
                 <td className="px-6 py-4 text-slate-900 font-bold">£{stats.financials.revenue.toLocaleString()}</td>
               </tr>
               <tr className="hover:bg-slate-50">
-                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Organisations (Historical)</td>
+                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Organisations</td>
                 <td className="px-6 py-4 text-slate-600">{stats.organizations.total}</td>
-              </tr>
-              <tr className="hover:bg-slate-50">
-                <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Active Organisations</td>
-                <td className="px-6 py-4 text-sky-600 font-semibold">{stats.organizations.active}</td>
               </tr>
               <tr className="hover:bg-slate-50">
                 <td className="px-6 py-4 font-medium text-slate-700 w-1/2">Total Employees (Historical)</td>
@@ -366,7 +357,7 @@ export const Reports = () => {
             className="flex-1 md:flex-none px-4 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-lg transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {isGeneratingCsv ? 'Processing...' : (
-              <><FileDown className="w-4 h-4 text-slate-500" /> Export Ledger (CSV)</>
+              <><svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Export Ledger (CSV)</>
             )}
           </button>
           
@@ -376,7 +367,7 @@ export const Reports = () => {
             className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {isGeneratingPdf ? 'Generating...' : (
-              <><FileDown className="w-4 h-4 text-emerald-200" /> Export Summary (PDF)</>
+              <><svg className="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Export Summary (PDF)</>
             )}
           </button>
         </div>
@@ -419,9 +410,12 @@ export const Reports = () => {
       {/* Tab Content */}
       <div className="min-h-[500px]">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64 text-slate-500 gap-3">
-             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500"></div>
-             Loading report data...
+          <div className="space-y-6 animate-pulse">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-xl border border-slate-200"><div className="h-3 bg-slate-200 rounded w-1/3 mb-4" /><div className="h-64 bg-slate-200 rounded-xl" /></div>
+              <div className="bg-white p-6 rounded-xl border border-slate-200"><div className="h-3 bg-slate-200 rounded w-1/3 mb-4" /><div className="h-64 bg-slate-200 rounded-xl" /></div>
+            </div>
+            <div className="bg-white rounded-xl border border-slate-200 p-6"><div className="h-3 bg-slate-200 rounded w-full mb-3" /><div className="h-3 bg-slate-200 rounded w-5/6 mb-3" /><div className="h-3 bg-slate-200 rounded w-4/6" /></div>
           </div>
         ) : (
           <>

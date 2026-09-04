@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Users, CheckCircle, Clock, Search, Check, Loader2 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
 import { useAuth, useOrganization } from '@clerk/react';
-import PrimaryButton from '../../components/PrimaryButton';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { orgAdminNavigation } from '../../config/navigation';
 import SearchFilterBar from '../../components/SearchFilterBar';
@@ -14,38 +11,6 @@ export const AgreementsTracking = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all');
-  const [isReminding, setIsReminding] = useState(false);
-  const { showToast } = useToast();
-  
-  const handleRemindPending = async () => {
-    if (pendingCount === 0) {
-      showToast('No employees with pending agreements.', 'error');
-      return;
-    }
-    
-    setIsReminding(true);
-    try {
-      const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/employees/remind-pending', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        }
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showToast(`Reminder sent to ${data.count} pending employees.`, 'success');
-      } else {
-        showToast(data.message || 'Failed to send reminders.', 'error');
-      }
-    } catch (err) {
-      showToast('Network error while sending reminders.', 'error');
-    } finally {
-      setIsReminding(false);
-    }
-  };
-
 
   useEffect(() => {
     const fetchAgreements = async () => {
@@ -170,50 +135,63 @@ export const AgreementsTracking = () => {
             <p>Track which employees have reviewed and signed the Shariah master agreement.</p>
           </div>
           <div className="agt-actions">
-            <PrimaryButton 
-              onClick={handleRemindPending} 
-              disabled={pendingCount === 0}
-              isLoading={isReminding}
-              icon={<Send className="w-[16px] h-[16px]" />}
-            >
-              {isReminding ? 'Sending...' : 'Remind pending'}
-            </PrimaryButton>
+            <button className="agt-btn agt-btn-primary"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Remind pending</button>
           </div>
         </div>
 
-        <div className="agt-grid agt-kpis">
-          <div className="agt-card agt-kpi">
-            <div className="agt-row"><span className="agt-label">Total enrolled</span>
-              <span className="agt-ic"><Users className="w-full h-full" /></span></div>
-            <div className="agt-val">{totalCount}</div>
-            <div className="agt-foot">Employees invited to the plan</div>
-          </div>
-          <div className="agt-card agt-kpi">
-            <div className="agt-row"><span className="agt-label">Fully compliant</span>
-              <span className="agt-ic"><CheckCircle className="w-full h-full" /></span></div>
-            <div className="agt-val">{signedCount}</div>
-            <div className="agt-foot">Employees with active agreements</div>
-          </div>
-          <div className="agt-card agt-kpi agt-amber">
-            <div className="agt-row"><span className="agt-label">Pending signature</span>
-              <span className="agt-ic"><Clock className="w-full h-full" /></span></div>
-            <div className="agt-val">{pendingCount}</div>
-            <div className="agt-foot">Awaiting employee action</div>
-          </div>
-        </div>
+        {isLoading ? (
+          <>
+            <div className="agt-grid agt-kpis">
+              {[1,2,3].map(i => (
+                <div key={i} className="agt-card agt-kpi animate-pulse">
+                  <div className="agt-row"><div className="h-3 bg-slate-200 rounded w-1/2" /><div className="w-[34px] h-[34px] rounded-[10px] bg-slate-200" /></div>
+                  <div className="h-8 bg-slate-200 rounded w-1/3" style={{margin:'14px 0 6px'}} />
+                  <div className="h-3 bg-slate-200 rounded w-2/3" />
+                </div>
+              ))}
+            </div>
+            <div className="agt-card agt-meter animate-pulse" style={{ marginBottom: 16 }}>
+              <div className="h-4 bg-slate-200 rounded w-1/4" style={{marginBottom:10}} />
+              <div className="h-2 bg-slate-200 rounded-full w-full" />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="agt-grid agt-kpis">
+              <div className="agt-card agt-kpi">
+                <div className="agt-row"><span className="agt-label">Total enrolled</span>
+                  <span className="agt-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M17 8.5a2.8 2.8 0 010 5.5"/></svg></span></div>
+                <div className="agt-val">{totalCount}</div>
+                <div className="agt-foot">Employees invited to the plan</div>
+              </div>
+              <div className="agt-card agt-kpi">
+                <div className="agt-row"><span className="agt-label">Fully compliant</span>
+                  <span className="agt-ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span></div>
+                <div className="agt-val">{signedCount}</div>
+                <div className="agt-foot">Employees with active agreements</div>
+              </div>
+              <div className="agt-card agt-kpi agt-amber">
+                <div className="agt-row"><span className="agt-label">Pending signature</span>
+                  <span className="agt-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></span></div>
+                <div className="agt-val">{pendingCount}</div>
+                <div className="agt-foot">Awaiting employee action</div>
+              </div>
+            </div>
 
-        <div className="agt-card agt-meter" style={{ marginBottom: 16 }}>
-          <div className="agt-top"><h4>Compliance rate</h4><span className="agt-pct">{pct}%</span></div>
-          <div className="agt-bar"><i style={{ width: `${pct}%` }}></i></div>
-          <small>{signedCount} of {totalCount} employees have signed the active Master Shariah Agreement</small>
-        </div>
+            <div className="agt-card agt-meter" style={{ marginBottom: 16 }}>
+              <div className="agt-top"><h4>Compliance rate</h4><span className="agt-pct">{pct}%</span></div>
+              <div className="agt-bar"><i style={{ width: `${pct}%` }}></i></div>
+              <small>{signedCount} of {totalCount} employees have signed the active Master Shariah Agreement</small>
+            </div>
+          </>
+        )}
 
         <div className="agt-card">
           <div className="agt-card-head">
             <div><h4>Employee audit trail</h4><div className="agt-sub">Signature records for the active agreement version</div></div>
             <div className="agt-tools">
               <div className="agt-search">
-                <Search className="w-[14px] h-[14px]" />
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.2-4.2"/></svg>
                 <input 
                   placeholder="Search name or email" 
                   value={searchQuery}
@@ -234,7 +212,14 @@ export const AgreementsTracking = () => {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan="4" className="agt-empty">Loading tracking data...</td></tr>
+                [1,2,3].map(i => (
+                  <tr key={i} className="animate-pulse">
+                    <td><div className="h-3 bg-slate-200 rounded w-28" /></td>
+                    <td><div className="h-3 bg-slate-200 rounded w-40" /></td>
+                    <td><div className="h-5 bg-slate-200 rounded-full w-16" /></td>
+                    <td><div className="h-3 bg-slate-200 rounded w-20" /></td>
+                  </tr>
+                ))
               ) : filteredEmployees.length === 0 ? (
                 <tr><td colSpan="4" className="agt-empty">No employees match this filter.</td></tr>
               ) : (
@@ -254,9 +239,9 @@ export const AgreementsTracking = () => {
                     <td className="agt-muted">{emp.email || '—'}</td>
                     <td>
                       {emp.agreementStatus === 'signed' ? (
-                        <span className="agt-tag"><CheckCircle className="w-full h-full" />Signed</span>
+                        <span className="agt-tag"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Signed</span>
                       ) : (
-                        <span className="agt-tag agt-warn"><Clock className="w-3 h-3" />Pending</span>
+                        <span className="agt-tag agt-warn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/></svg>Pending</span>
                       )}
                     </td>
                     <td className="agt-mono">

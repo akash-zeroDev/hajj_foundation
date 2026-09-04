@@ -1,5 +1,4 @@
 import { useAuth } from '@clerk/react';
-import { CreditCard, FileText, Mail, MapPin, Building2, Fingerprint,  ArrowLeft, FileDown, TrendingUp, Coins, Check, AlertTriangle, Archive } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SidebarLayout from '../../layouts/SidebarLayout';
@@ -243,9 +242,11 @@ export const OrganisationDetails = () => {
 
   if (isLoading) {
     return (
-      <SidebarLayout navigation={superAdminNavigation} title="Loading Organisation...">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-slate-500">Fetching details...</p>
+      <SidebarLayout navigation={superAdminNavigation} title="Organisation Details">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-slate-200 rounded w-1/3" />
+          <div className="bg-white border border-slate-200 rounded-xl p-6"><div className="h-4 bg-slate-200 rounded w-1/4 mb-4" /><div className="h-3 bg-slate-200 rounded w-full mb-2" /><div className="h-3 bg-slate-200 rounded w-5/6" /></div>
+          <div className="bg-white border border-slate-200 rounded-xl p-6"><div className="h-3 bg-slate-200 rounded w-full mb-3" /><div className="h-3 bg-slate-200 rounded w-full mb-3" /><div className="h-3 bg-slate-200 rounded w-4/6" /></div>
         </div>
       </SidebarLayout>
     );
@@ -272,7 +273,9 @@ export const OrganisationDetails = () => {
         onClick={() => navigate('/superadmin/organisations')}
         className="mb-6 flex items-center text-sm font-medium text-slate-500 hover:text-emerald-700 transition"
       >
-        <ArrowLeft className="w-4 h-4 mr-1" />
+        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
         Back to Organisations
       </button>
 
@@ -305,89 +308,76 @@ export const OrganisationDetails = () => {
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          {/* Financial & Legal Status Card */}
-          <div className="bg-white rounded-[14px] shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3 bg-slate-50/50">
-              <div className="p-1.5 bg-emerald-100 rounded-lg text-emerald-700 shadow-sm border border-emerald-200/50">
-                <FileText className="w-[15px] h-[15px]" />
-              </div>
-              <h3 className="font-bold text-slate-800 text-[14.5px]">Financial & Legal Status</h3>
+          {/* Financials & Legal Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Financial & Legal Status</h3>
             </div>
-            <div className="divide-y divide-slate-100 flex-1 flex flex-col justify-center">
-              <div className="p-5 flex items-center justify-between">
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Agreed Annual Fee</p>
-                  <p className="text-[20px] font-bold text-slate-900 leading-none">£{org.annualFee.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 mb-1">Agreed Annual Fee</p>
+                  <p className="text-lg font-bold text-slate-900">£{org.annualFee.toLocaleString()}</p>
                 </div>
-                <div>{renderBadge(org.annualFeeStatus)}</div>
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Fee Status</p>
+                  {renderBadge(org.annualFeeStatus)}
+                </div>
               </div>
               
-              <div className="p-5 flex items-center justify-between bg-slate-50/30">
+              <div className="border-t border-slate-100 pt-6 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Agreement Status</p>
-                  <div>{renderBadge(org.agreementStatus)}</div>
+                  <p className="text-xs text-slate-500 mb-1">Agreement Status</p>
+                  {renderBadge(org.agreementStatus)}
                 </div>
-                {org.agreementUrl ? (
-                  <a 
-                    href={org.agreementUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm"
-                  >
-                    <FileDown className="w-[14px] h-[14px] text-emerald-600" />
-                    View PDF
-                  </a>
-                ) : (
-                  <p className="text-[12px] text-slate-400 italic">No document</p>
-                )}
+                <div>
+                  <p className="text-xs text-slate-500 mb-2">Signed Document</p>
+                  {org.agreementUrl ? (
+                    <a 
+                      href={org.agreementUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded text-sm font-medium text-emerald-700 bg-white hover:bg-slate-50 transition"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      View PDF
+                    </a>
+                  ) : (
+                    <p className="text-sm text-slate-500 italic">No document available.</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Organisation Details Card */}
-          <div className="bg-white rounded-[14px] shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3 bg-slate-50/50">
-              <div className="p-1.5 bg-blue-100 rounded-lg text-blue-700 shadow-sm border border-blue-200/50">
-                <Building2 className="w-[15px] h-[15px]" />
-              </div>
-              <h3 className="font-bold text-slate-800 text-[14.5px]">Organisation Details</h3>
+          {/* Contact & Location Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Organisation Details</h3>
             </div>
-            <div className="divide-y divide-slate-100">
-              <div className="p-4 flex gap-4 items-center hover:bg-slate-50/50 transition-colors">
-                <div className="w-[34px] h-[34px] rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/60 text-slate-500">
-                  <Fingerprint className="w-[16px] h-[16px]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-[2px]">Organisation ID</p>
-                  <p className="text-[13px] font-mono font-medium text-slate-700 truncate">{org._id}</p>
-                </div>
+            <div className="p-6 space-y-6">
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Organisation ID</p>
+                <p className="text-sm font-mono text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 break-all">{org._id}</p>
               </div>
-              
-              <div className="p-4 flex gap-4 items-center hover:bg-slate-50/50 transition-colors">
-                <div className="w-[34px] h-[34px] rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/60 text-slate-500">
-                  <Mail className="w-[16px] h-[16px]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-[2px]">Admin Contact Email</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-[13px] font-medium text-slate-800 truncate">
-                      {org.adminEmail || <span className="text-slate-400 italic font-normal">Not recorded</span>}
-                    </p>
-                    {org.adminEmail && org.agreementStatus === 'pending' && (
-                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 shrink-0 uppercase tracking-wide">Pending</span>
-                    )}
-                  </div>
-                </div>
+              <div className="border-t border-slate-100 pt-6">
+                <p className="text-xs text-slate-500 mb-1">Admin Contact Email</p>
+                <p className="text-sm font-medium text-slate-800 break-all">
+                  {org.adminEmail ? (
+                    <span className="flex items-center gap-2">
+                      {org.adminEmail}
+                      {org.agreementStatus === 'pending' && (
+                        <span className="text-xs font-normal text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Invite Pending</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 italic">Not recorded</span>
+                  )}
+                </p>
               </div>
-
-              <div className="p-4 flex gap-4 items-start hover:bg-slate-50/50 transition-colors">
-                <div className="w-[34px] h-[34px] rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/60 text-slate-500 mt-0.5">
-                  <MapPin className="w-[16px] h-[16px]" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-[2px]">Registered Address</p>
-                  <p className="text-[13px] font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">{org.registeredAddress}</p>
-                </div>
+              <div className="border-t border-slate-100 pt-6">
+                <p className="text-xs text-slate-500 mb-1">Registered Address</p>
+                <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">{org.registeredAddress}</p>
               </div>
             </div>
           </div>
@@ -424,7 +414,14 @@ export const OrganisationDetails = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoadingEmployees ? (
-                  <tr><td colSpan="4" className="text-center py-8 text-slate-500">Loading employees...</td></tr>
+                  [1,2,3].map(i => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-slate-200 rounded-full" /><div className="h-3 bg-slate-200 rounded w-28" /></div></td>
+                      <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-32" /></td>
+                      <td className="px-6 py-4"><div className="h-5 bg-slate-200 rounded-full w-16" /></td>
+                      <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-20" /></td>
+                    </tr>
+                  ))
                 ) : (employees || []).filter(e => (employeeTab === 'active' ? !e.isRemoved : e.isRemoved)).filter(e => !employeeSearch || (e.publicUserData?.firstName || '').toLowerCase().includes(employeeSearch.toLowerCase()) || (e.publicUserData?.lastName || '').toLowerCase().includes(employeeSearch.toLowerCase()) || (e.publicUserData?.identifier || '').toLowerCase().includes(employeeSearch.toLowerCase())).length === 0 ? (
                   <tr><td col colSpan="4" className="text-center py-8 text-slate-500">No {employeeTab} employees found.</td></tr>
                 ) : (
@@ -488,18 +485,18 @@ export const OrganisationDetails = () => {
                 </div>
                 {org?.annualFeeStatus === 'paid' ? (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Active & Paid
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active & Paid
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                    Pending Payment
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending Payment
                   </span>
                 )}
               </div>
               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Coins className="w-4 h-4 text-emerald-600" />
-                  <span className="text-sm font-medium text-slate-600">Total Employee Funds</span>
+                  <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                  <span className="text-sm font-medium text-slate-600">Total Employee Funds Routed</span>
                 </div>
                 <span className="text-sm font-bold text-emerald-600">£{totalEmployeeFunds.toLocaleString()}</span>
               </div>
@@ -527,7 +524,15 @@ export const OrganisationDetails = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {isLoadingBilling ? (
-                    <tr><td colSpan="5" className="text-center py-8 text-slate-500">Loading ledger...</td></tr>
+                    [1,2,3].map(i => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-20" /></td>
+                        <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-32" /></td>
+                        <td className="px-6 py-4"><div className="h-5 bg-slate-200 rounded-full w-20" /></td>
+                        <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-16" /></td>
+                        <td className="px-6 py-4"><div className="h-5 bg-slate-200 rounded-full w-14" /></td>
+                      </tr>
+                    ))
                   ) : (transactions || []).filter(tx => {
                     if (!billingSearch.trim()) return true;
                     const q = billingSearch.toLowerCase();
@@ -570,15 +575,15 @@ export const OrganisationDetails = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {tx.status === 'succeeded' ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              Paid
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Paid
                             </span>
                           ) : tx.status === 'pending' ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                              Pending
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                              Failed
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Failed
                             </span>
                           )}
                         </td>
@@ -614,7 +619,15 @@ export const OrganisationDetails = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoadingAwards ? (
-                  <tr><td colSpan="5" className="text-center py-8 text-slate-500">Loading awards history...</td></tr>
+                  [1,2].map(i => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-28" /></td>
+                      <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-20" /></td>
+                      <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-16" /></td>
+                      <td className="px-6 py-4"><div className="h-5 bg-slate-200 rounded-full w-20" /></td>
+                      <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-16" /></td>
+                    </tr>
+                  ))
                 ) : (orgDraws || []).length === 0 ? (
                   <tr><td colSpan="5" className="text-center py-8 text-slate-500">No award draws have included employees from this organisation yet.</td></tr>
                 ) : (
@@ -631,7 +644,7 @@ export const OrganisationDetails = () => {
                           </span>
                         ) : draw.status === 'pending_approval' ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                            Pending Approval
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending Approval
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
@@ -811,9 +824,13 @@ export const OrganisationDetails = () => {
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
             <div className={`mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 ${org.isSuspended ? 'bg-emerald-100' : 'bg-red-100'}`}>
               {org.isSuspended ? (
-                <Check className="h-7 w-7 text-emerald-600" />
+                <svg className="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
               ) : (
-                <AlertTriangle className="h-7 w-7 text-red-600" />
+                <svg className="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
               )}
             </div>
             
@@ -857,7 +874,9 @@ export const OrganisationDetails = () => {
           ></div>
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
             <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 bg-orange-100">
-              <Archive className="h-7 w-7 text-orange-600" />
+              <svg className="h-7 w-7 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
             </div>
             
             <h3 className="text-xl font-bold text-slate-900">Archive Organisation?</h3>

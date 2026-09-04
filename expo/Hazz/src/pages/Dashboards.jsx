@@ -779,7 +779,15 @@ export const EmployeeDashboard = () => {
                 <h2>Payment history</h2><span className="sub">Last 12 months</span>
               </div>
               {isLoadingTx ? (
-                <div className="empty"><strong>Loading transactions...</strong></div>
+                <div className="animate-pulse">
+                  {[1,2,3].map(i => (
+                    <div key={i} className="flex items-center gap-3 px-[18px] py-[13px] border-b border-[#e6ecea] last:border-0">
+                      <div className="h-3 bg-slate-200 rounded w-20" />
+                      <div className="h-3 bg-slate-200 rounded w-32" />
+                      <div className="h-3 bg-slate-200 rounded w-14 ml-auto" />
+                    </div>
+                  ))}
+                </div>
               ) : transactions.length > 0 ? (
                 <table>
                   <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
@@ -1557,7 +1565,7 @@ export const SuperAdminDashboard = () => {
           <div className="bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
             <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Quick Actions</h3></div>
             <div className="grid gap-2.5 p-3.5">
-              <button onClick={() => navigate('/superadmin/organisations')} className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-[#0E5C3E] text-white font-semibold text-[13.5px] border border-[#0E5C3E] hover:bg-[#0A3D2A] transition"><Plus size={16} strokeWidth={2} />Onboard Organisation</button>
+              <button onClick={() => navigate('/superadmin/organisations?onboard=true')} className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-[#0E5C3E] text-white font-semibold text-[13.5px] border border-[#0E5C3E] hover:bg-[#0A3D2A] transition"><Plus size={16} strokeWidth={2} />Onboard Organisation</button>
               <button onClick={() => navigate('/superadmin/awards')} className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-white text-[#0B0F0E] font-semibold text-[13.5px] border border-[#D1D5DB] hover:bg-[#F9FAFB] transition">Run Awards Draw</button>
               <button onClick={() => navigate('/superadmin/reports')} className="inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-transparent text-[#2B3330] font-medium text-[13.5px] border-0 hover:underline">Export audit report ↓</button>
             </div>

@@ -83,9 +83,15 @@ export const AuditLogs = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500 font-medium">Retrieving security logs...</td>
-                </tr>
+                [1,2,3,4].map(i => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-28" /></td>
+                    <td className="px-6 py-4"><div className="h-6 bg-slate-200 rounded w-28" /></td>
+                    <td className="px-6 py-4"><div className="h-5 bg-slate-200 rounded-full w-24" /></td>
+                    <td className="px-6 py-4"><div className="h-3 bg-slate-200 rounded w-full" /></td>
+                    <td className="px-6 py-4"><div className="h-5 bg-slate-200 rounded w-20" /></td>
+                  </tr>
+                ))
               ) : logs.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-slate-500 font-medium">No security events recorded yet.</td>

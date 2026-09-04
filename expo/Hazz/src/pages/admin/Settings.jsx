@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Lock } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useAuth, useOrganization } from '@clerk/react';
-import PrimaryButton from '../../components/PrimaryButton';
 import SidebarLayout from '../../layouts/SidebarLayout';
 import { orgAdminNavigation } from '../../config/navigation';
 
@@ -74,7 +72,7 @@ export const Settings = () => {
     }
   };
 
-  if (!orgData) return <SidebarLayout title="Settings" navigation={orgAdminNavigation}><div className="p-8">Loading settings...</div></SidebarLayout>;
+  if (!orgData) return <SidebarLayout title="Settings" navigation={orgAdminNavigation}><div className="max-w-3xl animate-pulse"><div className="h-7 bg-slate-200 rounded w-1/3 mb-2" /><div className="h-3 bg-slate-200 rounded w-1/2 mb-8" /><div className="bg-white border border-slate-200 rounded-xl p-6"><div className="h-4 bg-slate-200 rounded w-1/4 mb-4" /><div className="h-10 bg-slate-200 rounded w-full mb-4" /><div className="h-10 bg-slate-200 rounded w-full" /></div></div></SidebarLayout>;
 
   return (
     <SidebarLayout title="Company Settings" navigation={orgAdminNavigation}>
@@ -87,7 +85,7 @@ export const Settings = () => {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Organisation Profile</h2>
-            {successMessage && <span className="text-emerald-600 text-sm font-medium flex items-center gap-1"><Check className="w-4 h-4" /> {successMessage}</span>}
+            {successMessage && <span className="text-emerald-600 text-sm font-medium flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> {successMessage}</span>}
           </div>
           
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -124,7 +122,7 @@ export const Settings = () => {
             {/* Locked Fields */}
             <div>
               <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-slate-400" />
+                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 Locked Compliance Data
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
@@ -155,12 +153,13 @@ export const Settings = () => {
             </div>
 
             <div className="flex justify-end pt-4">
-              <PrimaryButton
+              <button
                 type="submit"
-                isLoading={isSaving}
+                disabled={isSaving}
+                className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
-              </PrimaryButton>
+              </button>
             </div>
 
           </form>
