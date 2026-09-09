@@ -6,38 +6,93 @@ import CustomSelect from '../../components/CustomSelect';
 import PrimaryButton from '../../components/PrimaryButton';
 import SearchFilterBar from '../../components/SearchFilterBar';
 import { superAdminNavigation } from '../../config/navigation';
+import { useToast } from '../../context/ToastContext';
+
 
 export const OrganisationsList = () => {
   const { getToken } = useAuth(); // OrganisationsList
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [showOnboard, setShowOnboard] = useState(false);
-  const [form, setForm] = useState({ name:'', companyNumber:'', registeredAddress:'', annualFee:'', adminEmail:'' });
+  const [form, setForm] = useState({ name:'', companyNumber:'', registeredAddress:'', annualFee:'', adminEmail:'', adminFirstName:'', adminLastName:'', adminPhone:'' });
   const [agreementFile, setAgreementFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Mapbox Autocomplete State
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     if (new URLSearchParams(location.search).get('onboard') === 'true') setShowOnboard(true);
   }, [location.search]);
 
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (!form.registeredAddress || form.registeredAddress.length < 3) {
+        setAddressSuggestions([]);
+        return;
+      }
+      
+      setIsSearchingAddress(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(form.registeredAddress)}&format=json&addressdetails=1&limit=5`, {
+          headers: { 'Accept-Language': 'en' }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAddressSuggestions(data.map(item => ({
+            id: item.place_id,
+            place_name: item.display_name
+          })));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    };
+
+    if (showSuggestions) {
+      const timeoutId = setTimeout(fetchAddresses, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [form.registeredAddress, showSuggestions]);
+
   const handleOnboard = async (e) => {
     e.preventDefault();
+    if (!agreementFile) {
+      showToast('Agreement PDF is required.', 'error');
+      return;
+    }
+    
+    // Validate international phone format (e.g. +44...)
+    const phoneRegex = /^\+[1-9]\d{6,14}$/;
+    if (!phoneRegex.test(form.adminPhone.replace(/[\s-]/g, ''))) {
+      showToast("Please enter a valid international phone number starting with a '+' and the country code (e.g. +44 7700 900077).", "error");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const fd = new FormData();
-      fd.append('name', form.name);
+      fd.append('orgName', form.name);
       fd.append('companyNumber', form.companyNumber);
-      fd.append('registeredAddress', form.registeredAddress);
+      fd.append('address', form.registeredAddress);
       fd.append('annualFee', form.annualFee);
       fd.append('adminEmail', form.adminEmail);
+      fd.append('adminFirstName', form.adminFirstName);
+      fd.append('adminLastName', form.adminLastName);
+      fd.append('adminPhone', form.adminPhone);
       if (agreementFile) fd.append('agreementFile', agreementFile);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/onboard`, { method:'POST', headers:{ Authorization:`Bearer ${await getToken()}` }, body: fd });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`}/api/organisations/onboard`, { method:'POST', headers:{ Authorization:`Bearer ${await getToken()}` }, body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed');
       setShowOnboard(false);
       navigate('/superadmin/organisations', { replace:true });
       fetchOrganisations();
-    } catch (err) { alert(err.message); } finally { setIsSubmitting(false); }
+    } catch (err) { showToast(err.message, 'error'); } finally { setIsSubmitting(false); }
   };
   const [organisations, setOrganisations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +133,7 @@ export const OrganisationsList = () => {
         ...(suspensionFilter !== 'all' && { isSuspended: suspensionFilter === 'suspended' ? 'true' : 'false' })
       });
 
-      const res = await fetch(`http://localhost:5000/api/organisations?${params.toString()}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations?${params.toString()}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed');
       setOrganisations(data.organisations || []);
@@ -146,16 +201,63 @@ export const OrganisationsList = () => {
                   <input placeholder="£123" required type="number" value={form.annualFee} onChange={e=>setForm({...form,annualFee:e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E5C3E] focus:ring-2 focus:ring-[#0E5C3E]/10" />
                 </div>
               </div>
-              <div className="grid gap-1">
+              <div className="grid gap-1 relative">
                 <label className="text-[12.5px] font-semibold text-[#2B3330]">Registered address</label>
-                <input placeholder="City or address" required value={form.registeredAddress} onChange={e=>setForm({...form,registeredAddress:e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E5C3E] focus:ring-2 focus:ring-[#0E5C3E]/10" />
+                <input 
+                  placeholder="Start typing an address..." 
+                  required 
+                  value={form.registeredAddress} 
+                  onChange={e => {
+                    setForm({...form, registeredAddress: e.target.value});
+                    setShowSuggestions(true);
+                  }} 
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E5C3E] focus:ring-2 focus:ring-[#0E5C3E]/10" 
+                />
+                
+                {showSuggestions && (addressSuggestions.length > 0 || isSearchingAddress) && (
+                  <div className="absolute z-10 w-full top-[100%] left-0 mt-1 bg-white border border-[#E5E7EB] rounded-lg shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+                    {isSearchingAddress ? (
+                      <div className="px-4 py-3 text-[13px] text-slate-500 text-center animate-pulse">Loading addresses...</div>
+                    ) : (
+                      addressSuggestions.map((suggestion) => (
+                        <div 
+                          key={suggestion.id}
+                          className="px-4 py-2.5 text-[13px] text-slate-700 hover:bg-[#F3F4F6] cursor-pointer border-b last:border-b-0 border-slate-100 transition-colors"
+                          onClick={() => {
+                            setForm({...form, registeredAddress: suggestion.place_name});
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {suggestion.place_name}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-1">
+                  <label className="text-[12.5px] font-semibold text-[#2B3330]">Admin first name</label>
+                  <input placeholder="First name" required value={form.adminFirstName} onChange={e=>setForm({...form,adminFirstName:e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E5C3E] focus:ring-2 focus:ring-[#0E5C3E]/10" />
+                </div>
+                <div className="grid gap-1">
+                  <label className="text-[12.5px] font-semibold text-[#2B3330]">Admin last name</label>
+                  <input placeholder="Last name" required value={form.adminLastName} onChange={e=>setForm({...form,adminLastName:e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E5C3E] focus:ring-2 focus:ring-[#0E5C3E]/10" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-1">
+                  <label className="text-[12.5px] font-semibold text-[#2B3330]">Admin email</label>
+                  <input placeholder="admin@organisation.org" required type="email" value={form.adminEmail} onChange={e=>setForm({...form,adminEmail:e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E5C3E] focus:ring-2 focus:ring-[#0E5C3E]/10" />
+                </div>
+                <div className="grid gap-1">
+                  <label className="text-[12.5px] font-semibold text-[#2B3330]">Admin phone</label>
+                  <input type="tel" placeholder="+44 7700 900077" required value={form.adminPhone} onChange={e=>setForm({...form,adminPhone:e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E5C3E] focus:ring-2 focus:ring-[#0E5C3E]/10" />
+                </div>
               </div>
               <div className="grid gap-1">
-                <label className="text-[12.5px] font-semibold text-[#2B3330]">Admin email</label>
-                <input placeholder="admin@organisation.org" required type="email" value={form.adminEmail} onChange={e=>setForm({...form,adminEmail:e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#0E5C3E] focus:ring-2 focus:ring-[#0E5C3E]/10" />
-              </div>
-              <div className="grid gap-1">
-                <label className="text-[12.5px] font-semibold text-[#2B3330]">Agreement PDF <span className="font-normal text-[#9CA3AF]">(optional)</span></label>
+                <label className="text-[12.5px] font-semibold text-[#2B3330]">Agreement PDF</label>
                 <label className="flex items-center gap-3 w-full border border-dashed border-[#D1D5DB] rounded-lg px-3 py-3 text-[13px] text-[#6B7280] hover:border-[#0E5C3E] hover:bg-[#F9FAFB] cursor-pointer">
                   <span className="px-2.5 py-1 rounded-md bg-[#F3F4F6] border border-[#E5E7EB] text-[12px] font-semibold text-[#2B3330] shrink-0">Choose file</span>
                   <span className="truncate">{agreementFile ? agreementFile.name : 'No file chosen'}</span>

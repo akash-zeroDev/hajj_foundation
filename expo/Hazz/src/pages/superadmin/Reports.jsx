@@ -32,9 +32,9 @@ export const Reports = () => {
         const headers = { Authorization: `Bearer ${token}` };
 
         const [statsRes, ledgerRes, auditRes] = await Promise.all([
-          fetch('http://localhost:5000/api/reports/operational-stats', { headers }),
-          fetch('http://localhost:5000/api/reports/ledger-export', { headers }),
-          fetch('http://localhost:5000/api/audit-logs', { headers })
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reports/operational-stats`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reports/ledger-export`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/audit-logs`, { headers })
         ]);
 
         if (statsRes.ok) {
@@ -62,7 +62,7 @@ export const Reports = () => {
   const trackDownload = async (action, details) => {
     try {
       const token = await getToken();
-      await fetch('http://localhost:5000/api/audit-logs/track', {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/audit-logs/track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action, details })

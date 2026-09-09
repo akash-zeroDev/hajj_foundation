@@ -89,6 +89,9 @@ exports.completeOnboarding = async (req, res) => {
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee not found' });
     }
+    
+    // Populate the document before returning so the frontend can render the fileUrl immediately
+    const populatedEmployee = await Employee.findById(employee._id).populate('signedDocumentId');
 
     // Send notification to Org Admin
     await NotificationService.notifyOrgAdmins({
@@ -101,7 +104,7 @@ exports.completeOnboarding = async (req, res) => {
       actionUrl: `/admin/employees`
     });
 
-    res.status(200).json({ success: true, data: employee });
+    res.status(200).json({ success: true, data: populatedEmployee });
   } catch (error) {
     console.error('Error completing onboarding:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -199,25 +202,8 @@ exports.updateBankSettings = async (req, res) => {
       employee.bankDetails = bankDetails;
     }
     
-    // Simulate activation & debit (Success only)
-    if (autoPayEnabled) {
-      employee.subscriptionStatus = 'active';
-      
-      // Create a successful transaction
-      await Transaction.create({
-        amount: employee.monthlyContribution,
-        currency: 'GBP',
-        type: 'employee_contribution',
-        status: 'succeeded',
-        payerId: employee._id,
-        payerModel: 'Employee',
-        orgId: employee.organisationId,
-        stripeSessionId: 'simulated_success_' + Date.now()
-      });
-      employee.balance = (employee.balance || 0) + employee.monthlyContribution;
-    } else {
-      employee.subscriptionStatus = 'pending';
-    }
+    // We only update the preference flag here. 
+    // Actual subscription status and balance are managed strictly by Stripe Checkouts and Webhooks.
 
     await employee.save();
     res.status(200).json({ success: true, data: employee });
@@ -246,7 +232,7 @@ exports.inviteEmployee = async (req, res) => {
       organizationId: orgId,
       emailAddress,
       role: role || 'org:member',
-      redirectUrl: 'http://localhost:5173/dashboard'
+      
     });
 
     res.status(200).json({ success: true, data: invitation });

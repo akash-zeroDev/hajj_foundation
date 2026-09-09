@@ -15,8 +15,8 @@ export const PaymentsList = () => {
       try {
         const token = await getToken();
         const [txRes, statsRes] = await Promise.all([
-          fetch('http://localhost:5000/api/financials/transactions', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('http://localhost:5000/api/financials/stats', { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/financials/transactions`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/financials/stats`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
         if (txRes.ok) {

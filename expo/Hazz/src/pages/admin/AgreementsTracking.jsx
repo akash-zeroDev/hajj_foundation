@@ -18,7 +18,7 @@ export const AgreementsTracking = () => {
       try {
         setIsLoading(true);
         const token = await getToken();
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const apiUrl = import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`;
         const res = await fetch(`${apiUrl}/api/organisations/clerk/${organization.id}/employee-agreements`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -134,9 +134,9 @@ export const AgreementsTracking = () => {
             <h3>Master Agreements</h3>
             <p>Track which employees have reviewed and signed the Shariah master agreement.</p>
           </div>
-          <div className="agt-actions">
+          {/* <div className="agt-actions">
             <button className="agt-btn agt-btn-primary"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Remind pending</button>
-          </div>
+          </div> */}
         </div>
 
         {isLoading ? (

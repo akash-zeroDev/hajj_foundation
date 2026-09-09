@@ -22,7 +22,7 @@ export const Settings = () => {
       if (!organization?.id) return;
       try {
         const token = await getToken();
-        const res = await fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/clerk/${organization.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -50,7 +50,7 @@ export const Settings = () => {
     setSuccessMessage('');
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/clerk/${organization.id}`, {
         method: 'PUT',
         headers: { 
           Authorization: `Bearer ${token}`,

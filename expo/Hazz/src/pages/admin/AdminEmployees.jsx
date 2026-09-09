@@ -42,7 +42,7 @@ export const AdminEmployees = () => {
     setIsFetchingProfile(true);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/employees/clerk/${clerkId}/admin`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/employees/clerk/${clerkId}/admin`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -113,7 +113,7 @@ export const AdminEmployees = () => {
     if (!selectedMember) return;
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/financials/org-transactions/${org.id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/financials/org-transactions/${org.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -180,13 +180,13 @@ export const AdminEmployees = () => {
     try {
       await organization.removeMember(confirmRemoveTarget);
       // Also tell backend to soft delete
-      await fetch(`http://localhost:5000/api/organisations/${organization.id}/employees/${confirmRemoveTarget}/remove`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/${organization.id}/employees/${confirmRemoveTarget}/remove`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${await getToken()}` }
       });
       // Fetch fresh merged members
       let activeMembers = await organization.getMemberships();
-      const dbRes = await fetch(`http://localhost:5000/api/organisations/clerk/${organization.id}/employee-agreements`, { headers: { Authorization: `Bearer ${await getToken()}` } });
+      const dbRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/clerk/${organization.id}/employee-agreements`, { headers: { Authorization: `Bearer ${await getToken()}` } });
       if (dbRes.ok) {
           const dbData = await dbRes.json();
           const allDb = dbData.data || [];

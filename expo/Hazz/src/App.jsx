@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Show, RedirectToSignIn, RedirectToSignUp, useUser, useOrganization } from '@clerk/react';
+import { Show, RedirectToSignIn, RedirectToSignUp, useUser, useOrganization, useClerk } from '@clerk/react';
+import { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import { EmployeeDashboard, AdminDashboard, SuperAdminDashboard, Unauthorized } from './pages/Dashboards';
@@ -24,11 +25,23 @@ const ProtectedRoute = ({ children }) => {
   
   // If there's a ticket, DO NOT aggressively redirect. 
   // Let Clerk's internal JS detect the ticket and handle the Hosted UI handoff natively!
+  const clerk = useClerk();
+  
   if (hasTicket) {
+    useEffect(() => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isSignUp = searchParams.get('__clerk_status') === 'sign_up';
+      const ticket = searchParams.get('__clerk_ticket');
+      
+      const targetUrl = isSignUp ? clerk.buildSignUpUrl() : clerk.buildSignInUrl();
+      // Forward the ticket manually to the Hosted UI so it can prefill the email!
+      window.location.href = `${targetUrl}?__clerk_ticket=${ticket}`;
+    }, [clerk]);
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-700 mb-4"></div>
-        <p className="text-slate-500 font-medium animate-pulse">Processing your invitation...</p>
+        <p className="text-slate-500 font-medium animate-pulse">Redirecting securely...</p>
       </div>
     );
   }

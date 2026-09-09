@@ -27,7 +27,7 @@ export const BankAccounts = () => {
     try {
       setIsLoading(true);
       const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/banks', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/banks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -59,7 +59,7 @@ export const BankAccounts = () => {
     setIsSaving(true);
     try {
       const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/banks/update', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/banks/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

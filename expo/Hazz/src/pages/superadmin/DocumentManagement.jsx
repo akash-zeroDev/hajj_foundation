@@ -23,7 +23,7 @@ const DocumentManagement = () => {
     setIsLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/documents', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/documents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -63,7 +63,7 @@ const DocumentManagement = () => {
       formData.append('agreementFile', file);
       formData.append('forceResign', forceResign);
 
-      const res = await fetch('http://localhost:5000/api/documents/upload', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/documents/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData

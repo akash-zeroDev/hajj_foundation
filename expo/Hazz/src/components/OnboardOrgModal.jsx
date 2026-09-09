@@ -42,7 +42,7 @@ export const OnboardOrgModal = ({ isOpen, onClose }) => {
       Object.keys(formData).forEach(k => fd.append(k, formData[k]));
       if (file) fd.append('agreementFile', file);
 
-      const res = await fetch('http://localhost:5000/api/organisations/onboard', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/onboard`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: fd

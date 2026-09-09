@@ -28,7 +28,7 @@ exports.uploadDocument = async (req, res) => {
       return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { 
-            resource_type: 'image', 
+            resource_type: 'raw', 
             folder: 'hajj_agreements',
             public_id: `hajj_master_agreement_${Date.now()}.pdf`
           },

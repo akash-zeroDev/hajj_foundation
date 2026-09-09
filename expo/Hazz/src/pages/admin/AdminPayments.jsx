@@ -23,7 +23,7 @@ export const AdminPayments = () => {
         // Actually, I'll pass clerkOrgId in query. Let's adjust backend in a moment if needed. 
         // Our controller uses `req.params.orgId`. Let's just use `organization.id` and I'll patch the controller to find by clerkId.
         
-        const res = await fetch(`http://localhost:5000/api/financials/org-transactions/${organization.id}`, { 
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/financials/org-transactions/${organization.id}`, { 
           headers: { Authorization: `Bearer ${token}` } 
         });
 

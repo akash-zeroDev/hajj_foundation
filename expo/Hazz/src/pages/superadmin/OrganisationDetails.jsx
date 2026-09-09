@@ -49,7 +49,7 @@ export const OrganisationDetails = () => {
       const fetchBilling = async () => {
         setIsLoadingBilling(true);
         try {
-          const res = await fetch(`http://localhost:5000/api/financials/org-transactions/${org.clerkOrganizationId}`, {
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/financials/org-transactions/${org.clerkOrganizationId}`, {
             headers: { Authorization: `Bearer ${await getToken()}` }
           });
           if (res.ok) {
@@ -78,7 +78,7 @@ export const OrganisationDetails = () => {
       const fetchAwards = async () => {
         setIsLoadingAwards(true);
         try {
-          const res = await fetch('http://localhost:5000/api/awards', {
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/awards`, {
             headers: { Authorization: `Bearer ${await getToken()}` }
           });
           if (res.ok) {
@@ -106,7 +106,7 @@ export const OrganisationDetails = () => {
   useEffect(() => {
     const fetchOrg = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/organisations/${id}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/${id}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
         if (!res.ok) throw new Error('Not found');
         const data = await res.json();
         setOrg(data);
@@ -132,13 +132,13 @@ export const OrganisationDetails = () => {
         setIsLoadingEmployees(true);
         try {
           const token = await getToken();
-          const res = await fetch(`http://localhost:5000/api/organisations/${id}/employees`, { headers: { Authorization: `Bearer ${token}` } });
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/${id}/employees`, { headers: { Authorization: `Bearer ${token}` } });
           if (!res.ok) throw new Error('Failed to fetch active employees');
           const data = await res.json();
           let activeEmployees = Array.isArray(data) ? data : [];
           
           if (org?.clerkOrganizationId) {
-             const dbRes = await fetch(`http://localhost:5000/api/organisations/clerk/${org.clerkOrganizationId}/employee-agreements`, { headers: { Authorization: `Bearer ${token}` } });
+             const dbRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/clerk/${org.clerkOrganizationId}/employee-agreements`, { headers: { Authorization: `Bearer ${token}` } });
              if (dbRes.ok) {
                  const dbData = await dbRes.json();
                  const allDb = dbData.data || [];
@@ -172,7 +172,7 @@ export const OrganisationDetails = () => {
 
   const confirmArchive = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/organisations/${id}/archive`, { headers: { Authorization: `Bearer ${await getToken()}` },
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/${id}/archive`, { headers: { Authorization: `Bearer ${await getToken()}` },
         method: 'PATCH'
       });
       if (res.ok) {
@@ -191,7 +191,7 @@ export const OrganisationDetails = () => {
 
   const confirmToggleSuspension = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/organisations/${id}/suspend`, { headers: { Authorization: `Bearer ${await getToken()}` },
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/${id}/suspend`, { headers: { Authorization: `Bearer ${await getToken()}` },
         method: 'PATCH'
       });
       if (res.ok) {
@@ -208,7 +208,7 @@ export const OrganisationDetails = () => {
   const handleSaveEdit = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/organisations/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organisations/${id}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(editFormData)

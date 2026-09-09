@@ -23,7 +23,7 @@ export const AwardsManagement = () => {
     try {
       setIsLoading(true);
       const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/awards', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/awards`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -47,7 +47,7 @@ export const AwardsManagement = () => {
     setIsDrawing(true);
     try {
       const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/awards/run-draw', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/awards/run-draw`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export const AwardsManagement = () => {
     setConfirmModal({ isOpen: false, action: "", drawId: null });
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/awards/${action}-draw/${drawId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/awards/${action}-draw/${drawId}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });

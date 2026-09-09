@@ -12,7 +12,7 @@ export const EmployeeSettings = () => {
       try {
         const token = await getToken();
         // Fallback to fetching by clerkId since /me doesn't exist
-        const res = await fetch(`http://localhost:5000/api/employees/clerk/${userId}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/employees/clerk/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

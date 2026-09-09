@@ -25,7 +25,7 @@ export const UsersList = () => {
   const fetchUsers = async () => {
     try {
       const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/users', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/users`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to fetch users');
       
@@ -51,7 +51,7 @@ export const UsersList = () => {
     setTempPassword(null);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/users/${activeUser.id}/reset-password`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/users/${activeUser.id}/reset-password`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -77,7 +77,7 @@ export const UsersList = () => {
     setIsDeleting(true);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/users/${activeUser.id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/users/${activeUser.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -99,7 +99,7 @@ export const UsersList = () => {
     setIsSuspending(true);
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5000/api/users/${activeUser.id}/toggle-suspend`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/users/${activeUser.id}/toggle-suspend`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -134,7 +134,7 @@ export const UsersList = () => {
       setIsFetchingProfile(true);
       setEmployeeProfile(null);
       const token = await getToken();
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`;
       const res = await fetch(`${apiUrl}/api/employees/clerk/${user.id}/admin`, {
         headers: { Authorization: `Bearer ${token}` }
       });

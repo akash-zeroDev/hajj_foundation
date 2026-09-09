@@ -19,7 +19,7 @@ const uploadToCloudinary = (fileBuffer) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: 'hajj_agreements',
-        resource_type: 'image', 
+        resource_type: 'raw', 
         public_id: `agreement_${Date.now()}.pdf`
       },
       (error, result) => {
@@ -35,11 +35,11 @@ exports.onboardOrganisation = async (req, res) => {
   try {
     const { orgName, companyNumber, address, adminFirstName, adminLastName, adminEmail, adminPhone, annualFee } = req.body;
     
-    let agreementUrl = '';
-    if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file.buffer);
-      agreementUrl = uploadResult.secure_url;
+    if (!req.file) {
+      return res.status(400).json({ message: 'Agreement PDF is required' });
     }
+    const uploadResult = await uploadToCloudinary(req.file.buffer);
+    const agreementUrl = uploadResult.secure_url;
 
     const clerkOrg = await clerk.organizations.createOrganization({
       name: orgName,
@@ -50,7 +50,7 @@ exports.onboardOrganisation = async (req, res) => {
       organizationId: clerkOrg.id,
       emailAddress: adminEmail,
       role: 'org:admin',
-      redirectUrl: 'http://localhost:5173/dashboard',
+      
       publicMetadata: {
         firstName: adminFirstName,
         lastName: adminLastName,
@@ -81,7 +81,11 @@ exports.onboardOrganisation = async (req, res) => {
 
   } catch (error) {
     console.error('Error onboarding organisation:', error);
-    res.status(500).json({ message: error.message || 'Internal server error during onboarding' });
+    let errMsg = error.message;
+    if (error.errors && error.errors.length > 0) {
+      errMsg = error.errors[0].longMessage || error.errors[0].message;
+    }
+    res.status(500).json({ message: errMsg || 'Internal server error during onboarding' });
   }
 };
 
@@ -307,6 +311,13 @@ exports.getOrganisationByClerkId = async (req, res) => {
 
     const pendingAgreements = await Employee.countDocuments({ organisationId: org._id, agreementStatus: 'pending', isRemoved: { $ne: true } });
     const recentEmployees = await Employee.find({ organisationId: org._id, isRemoved: { $ne: true } }).sort({ createdAt: -1 }).limit(4);
+    const activeDirectDebits = await Employee.countDocuments({ organisationId: org._id, autoPayEnabled: true, isRemoved: { $ne: true } });
+    const pastDueCount = await Employee.countDocuments({ organisationId: org._id, subscriptionStatus: 'past_due', isRemoved: { $ne: true } });
+    
+    let collectionHealth = 'On track';
+    if (pastDueCount > 0) {
+      collectionHealth = `${pastDueCount} past due`;
+    }
 
     const orgObj = org.toObject();
     orgObj.dashboardStats = {
@@ -315,7 +326,9 @@ exports.getOrganisationByClerkId = async (req, res) => {
       hajjJourneysWon,
       pendingAgreements,
       recentEmployees,
-      activityGraphData
+      activityGraphData,
+      activeDirectDebits,
+      collectionHealth
     };
 
     res.status(200).json(orgObj);

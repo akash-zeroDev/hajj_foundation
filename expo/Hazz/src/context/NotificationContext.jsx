@@ -15,7 +15,7 @@ export const NotificationProvider = ({ children }) => {
     if (!isSignedIn) return;
     try {
       const token = await getToken();
-      const res = await fetch('http://localhost:5000/api/notifications/unread', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/notifications/unread`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -40,7 +40,7 @@ export const NotificationProvider = ({ children }) => {
   const markAsRead = async (notificationIds) => {
     try {
       const token = await getToken();
-      await fetch('http://localhost:5000/api/notifications/mark-read', {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/notifications/mark-read`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

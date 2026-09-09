@@ -172,42 +172,45 @@ exports.verifyEmployeeSubscription = async (req, res) => {
     // For subscriptions, status 'complete' means they successfully set it up and paid the first invoice (if applicable)
     if (session.status === 'complete') {
       const employeeId = session.metadata.employeeId;
-      const employee = await Employee.findById(employeeId);
       
-      if (employee && employee.subscriptionStatus !== 'active') {
-        employee.subscriptionStatus = 'active';
-        employee.stripeCustomerId = session.customer;
-        employee.stripeSubscriptionId = session.subscription;
-        
-        // Since they are charged immediately, we manually simulate the first successful webhook balance update
-        // (In a full production app, you strictly rely on webhook 'invoice.paid' to do this to avoid race conditions)
-        employee.balance = (employee.balance || 0) + employee.monthlyContribution;
-        
-        await employee.save();
-      }
+      const employee = await Employee.findById(employeeId);
+      if (!employee) return res.status(404).json({ message: 'Employee not found' });
 
-      // Log the transaction if it doesn't already exist
-      const existingTx = await Transaction.findOne({ stripeSessionId: session_id });
-      if (!existingTx) {
+      // Atomically update only if not already active to avoid race conditions (e.g. React StrictMode double-fire)
+      const updatedEmployee = await Employee.findOneAndUpdate(
+        { _id: employeeId, subscriptionStatus: { $ne: 'active' } },
+        {
+          $set: {
+            subscriptionStatus: 'active',
+            stripeCustomerId: session.customer,
+            stripeSubscriptionId: session.subscription
+          },
+          $inc: { balance: employee.monthlyContribution }
+        },
+        { new: true }
+      );
+
+      if (updatedEmployee) {
+        // Only log transaction and notify if we actually performed the atomic update
         await Transaction.create({
-          amount: employee.monthlyContribution,
+          amount: updatedEmployee.monthlyContribution,
           currency: 'GBP',
           type: 'employee_contribution',
           status: 'succeeded',
           stripeSessionId: session_id,
-          payerId: employee._id,
+          payerId: updatedEmployee._id,
           payerModel: 'Employee',
-          orgId: employee.organisationId
+          orgId: updatedEmployee.organisationId
         });
 
         // Send notification to Org Admin
         await NotificationService.notifyOrgAdmins({
-          orgId: employee.organisationId,
-          senderId: employee.clerkUserId,
-          senderName: `${employee.firstName} ${employee.lastName}`,
+          orgId: updatedEmployee.organisationId,
+          senderId: updatedEmployee.clerkUserId,
+          senderName: `${updatedEmployee.firstName} ${updatedEmployee.lastName}`,
           type: 'EMPLOYEE_SUBSCRIPTION_ACTIVATED',
           title: 'Employee Auto-Pay Activated',
-          message: `${employee.firstName} ${employee.lastName} has activated their £${employee.monthlyContribution} monthly auto-pay.`,
+          message: `${updatedEmployee.firstName} ${updatedEmployee.lastName} has activated their £${updatedEmployee.monthlyContribution} monthly auto-pay.`,
           actionUrl: `/admin/payments`
         });
       }
