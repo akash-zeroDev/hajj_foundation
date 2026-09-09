@@ -31,8 +31,8 @@ export const UsersList = () => {
       if (!res.ok) throw new Error(data.message || 'Failed to fetch users');
       
       const allUsers = Array.isArray(data) ? data : (data.data || []);
-      // Filter out 'Independent / Unassigned' users for the superadmin view
-      const activeUsers = allUsers.filter(u => u.injectedOrgName);
+      // Only show real users (those with an email address) - this excludes Clerk system/org machine accounts
+      const activeUsers = allUsers.filter(u => u.emailAddresses && u.emailAddresses.length > 0);
       setUsers(activeUsers);
 
     } catch (error) {

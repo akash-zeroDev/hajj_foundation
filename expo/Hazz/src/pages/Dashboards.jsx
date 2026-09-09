@@ -134,11 +134,24 @@ export const AdminDashboard = () => {
   if (orgData?.agreementStatus === 'pending') {
     return (
       <SidebarLayout navigation={orgAdminNavigation} title="Employer Dashboard">
-        <div className="min-h-[calc(100vh-70px)] bg-[#f4f7f6] flex flex-col p-4 sm:p-8">
-          <div className="mx-auto max-w-3xl w-full text-center">
-            <h1 className="text-[28px] font-extrabold text-[#0e1a16] tracking-tight mb-2">Welcome to Hajj Savings</h1>
-            <p className="text-[15px] text-[#5c6b65] mb-8">Before managing your employees, you must review and accept your organisation's financial agreement.</p>
-            <button onClick={handleAcceptAgreement} disabled={isAccepting} className="btn-primary" style={{ background: '#0E5C3E', color: 'white', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', opacity: isAccepting ? 0.7 : 1 }}>
+        <div className="min-h-[calc(100vh-70px)] bg-[#f4f7f6] flex flex-col p-4 sm:p-8 items-center justify-center">
+          <div className="mx-auto max-w-4xl w-full flex flex-col items-center">
+            <div className="text-center mb-6">
+              <h1 className="text-[28px] font-extrabold text-[#0e1a16] tracking-tight mb-2">Welcome to Hajj Savings</h1>
+              <p className="text-[15px] text-[#5c6b65]">Before managing your employees, you must review and accept your organisation's financial agreement.</p>
+            </div>
+            
+            {orgData?.agreementUrl && (
+              <div className="w-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8 h-[500px]">
+                <iframe 
+                  src={`${orgData.agreementUrl}#toolbar=0`} 
+                  className="w-full h-full" 
+                  title="Master Agreement"
+                />
+              </div>
+            )}
+            
+            <button onClick={handleAcceptAgreement} disabled={isAccepting} className="font-semibold text-[14px] px-8 py-3 rounded-xl inline-flex items-center justify-center gap-2 bg-[#0E5C3E] text-white hover:bg-[#0b4830] transition-colors disabled:opacity-50">
               {isAccepting ? 'Accepting...' : 'Accept Agreement →'}
             </button>
           </div>
