@@ -31,8 +31,8 @@ export const UsersList = () => {
       if (!res.ok) throw new Error(data.message || 'Failed to fetch users');
       
       const allUsers = Array.isArray(data) ? data : (data.data || []);
-      // Only show real users (those with an email address) - this excludes Clerk system/org machine accounts
-      const activeUsers = allUsers.filter(u => u.emailAddresses && u.emailAddresses.length > 0);
+      // Only show employees (org:member). Excludes employers (org:admin) and superadmins (no org role)
+      const activeUsers = allUsers.filter(u => u.injectedOrgRole === 'org:member');
       setUsers(activeUsers);
 
     } catch (error) {

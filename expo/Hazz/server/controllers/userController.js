@@ -14,6 +14,7 @@ exports.getAllUsers = async (req, res) => {
     const rawOrgs = Array.isArray(orgs) ? orgs : (orgs.data || []);
     
     const userOrgMap = {};
+    const userOrgRoleMap = {};
     for (const org of rawOrgs) {
       try {
         const mems = await clerk.organizations.getOrganizationMembershipList({ organizationId: org.id });
@@ -21,6 +22,7 @@ exports.getAllUsers = async (req, res) => {
         rawMems.forEach(m => {
           if (m.publicUserData && m.publicUserData.userId) {
             userOrgMap[m.publicUserData.userId] = org.name;
+            userOrgRoleMap[m.publicUserData.userId] = m.role; // 'org:admin' or 'org:member'
           }
         });
       } catch (err) {
@@ -28,12 +30,12 @@ exports.getAllUsers = async (req, res) => {
       }
     }
 
-    // Convert users to plain objects and inject the org name
+    // Convert users to plain objects and inject the org name + role
     const enrichedUsers = rawUsers.map(u => {
       // clerk users are class instances, converting to plain object so we can append properties easily
       const plainUser = { ...u, hasImage: u.hasImage };
-      // Fallback to our map
       plainUser.injectedOrgName = userOrgMap[u.id] || null;
+      plainUser.injectedOrgRole = userOrgRoleMap[u.id] || null; // null = no org (superadmin, etc.)
       return plainUser;
     });
 
