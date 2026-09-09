@@ -80,7 +80,9 @@ function Eyebrow({ children, tone = "green" }) {
   );
 }
 
-function ArrowLink({ href, children, variant = "green" }) {
+
+
+function ArrowLink({ href, children, variant = "green", isInternal = false }) {
   const styles = {
     solid: "bg-olive text-ivory hover:bg-olive-deep",
     ivory: "bg-ivory text-green-deep hover:bg-stone",
@@ -89,11 +91,11 @@ function ArrowLink({ href, children, variant = "green" }) {
     outline: "border border-current text-current hover:border-green-muted hover:text-green-muted",
     ghost: "px-0 py-2 text-current hover:text-green",
   };
-  return (
-    <a
-      href={href}
-      className={`group inline-flex items-center gap-3 px-7 py-4 text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${styles[variant]}`}
-    >
+  
+  const className = `group inline-flex items-center gap-3 px-7 py-4 text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${styles[variant]}`;
+  
+  const content = (
+    <>
       {children}
       <span
         aria-hidden
@@ -101,9 +103,16 @@ function ArrowLink({ href, children, variant = "green" }) {
       >
         &#8594;
       </span>
-    </a>
+    </>
   );
+
+  if (href.startsWith('/')) {
+    return <Link to={href} className={className}>{content}</Link>;
+  }
+
+  return <a href={href} className={className}>{content}</a>;
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Content                                                             */
@@ -963,7 +972,7 @@ function FinalCTA({ dashboardLink }) {
               viewport={{ once: true }}
               transition={{ duration: 0.9, delay: 0.35, ease: EASE }}
             >
-              <ArrowLink href="#top" variant="ivory">
+              <ArrowLink href={dashboardLink} variant="ivory">
                 Begin Your Journey
               </ArrowLink>
 
