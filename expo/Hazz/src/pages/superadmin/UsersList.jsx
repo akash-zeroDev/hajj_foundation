@@ -111,7 +111,7 @@ export const UsersList = () => {
         showToast(`User successfully ${action}.`, 'success');
         
         // Update local state to reflect change without full refetch
-        const updatedUser = { ...activeUser, banned: data.banned };
+        const updatedUser = { ...activeUser, publicMetadata: { ...(activeUser.publicMetadata || {}), isSuspended: data.banned } };
         setActiveUser(updatedUser);
         setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
       } else {
