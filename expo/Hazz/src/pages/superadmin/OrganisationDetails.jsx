@@ -426,7 +426,7 @@ export const OrganisationDetails = () => {
                   <tr><td col colSpan="4" className="text-center py-8 text-slate-500">No {employeeTab} employees found.</td></tr>
                 ) : (
                   (employees || []).filter(e => (employeeTab === 'active' ? !e.isRemoved : e.isRemoved)).filter(e => !employeeSearch || (e.publicUserData?.firstName || '').toLowerCase().includes(employeeSearch.toLowerCase()) || (e.publicUserData?.lastName || '').toLowerCase().includes(employeeSearch.toLowerCase()) || (e.publicUserData?.identifier || '').toLowerCase().includes(employeeSearch.toLowerCase())).map((member) => (
-                    <tr key={member.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => { setActiveMember(member); setSelectedMember(member); }}>
+                    <tr key={member.id} className={`${member.role === 'org:admin' ? 'opacity-60 cursor-default' : 'hover:bg-slate-50 cursor-pointer'}`} onClick={() => { if (member.role !== 'org:admin') { setActiveMember(member); setSelectedMember(member); } }}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {member.publicUserData.hasImage ? (
