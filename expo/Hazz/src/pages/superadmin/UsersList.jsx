@@ -1,3 +1,4 @@
+import EmployeeProfileSidecar from '../../components/EmployeeProfileSidecar';
 import { useAuth } from '@clerk/react';
 import React, { useState, useEffect } from 'react';
 import SidebarLayout from '../../layouts/SidebarLayout';
