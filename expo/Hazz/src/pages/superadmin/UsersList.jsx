@@ -260,171 +260,30 @@ export const UsersList = () => {
         </table>
       </div>
 
-      {/* Sidecar Overlay */}
-      <>
-        <div 
-          className={`fixed inset-0 bg-[#09100d]/50 backdrop-blur-[2px] z-[60] transition-opacity duration-[250ms] ease-in-out ${selectedUser ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-          onClick={handleCloseSidecard}
-        />
-        
-        {/* Sidecar Panel */}
-        <aside 
-          className={`fixed top-0 right-0 h-screen w-[440px] max-w-[94vw] z-[70] bg-[#fbfdfc] border-l border-[#e8edeb] flex flex-col transform transition-transform duration-[320ms] ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[-30px_0_60px_-30px_rgba(14,26,22,.4)] ${selectedUser ? 'translate-x-0' : 'translate-x-full'}`}
-          role="dialog" 
-        >
-          {activeUser && (
-            <>
-              {/* Premium Green Header */}
-              <div className="p-[8px_16px_10px] text-white bg-emerald-900 shrink-0">
-                <div className="flex items-center gap-[10px]">
-                  <span className="text-[10px] tracking-[0.14em] uppercase text-white/50 font-bold">User Profile</span>
-                  <button 
-                    className="ml-auto w-[24px] h-[24px] rounded-[6px] border border-white/20 bg-white/10 text-[#e3ede9] grid place-items-center cursor-pointer hover:bg-white/20 hover:text-white transition-colors"
-                    onClick={handleCloseSidecard}
-                    aria-label="Close"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-[12px] h-[12px] stroke-current stroke-[2] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
-                  </button>
+
+      <EmployeeProfileSidecar 
+        isOpen={!!selectedUser}
+        onClose={handleCloseSidecard}
+        activeMember={activeUser}
+        employeeProfile={employeeProfile}
+        isFetchingProfile={isFetchingProfile}
+        customFooter={
+          <>
+            {tempPassword && (
+              <div className="px-5 py-4 bg-emerald-50 border-t border-emerald-100 flex flex-col gap-2 shrink-0">
+                <div className="flex items-center gap-2 text-emerald-800 text-[13px] font-medium">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  Temporary Password Generated
                 </div>
-                <div className="flex items-center gap-[12px] mt-[6px]">
-                  <div className="w-[38px] h-[38px] shrink-0 rounded-[12px] grid place-items-center text-white font-extrabold text-[14px] tracking-[-0.4px] bg-gradient-to-br from-[#17a377] to-[#0a6b50] shadow-[0_6px_16px_-8px_rgba(23,163,119,.9)]">
-                    {activeUser.firstName?.[0] || 'U'}
-                  </div>
-                  <div>
-                    <h3 className="m-0 text-[16px] tracking-[-0.4px] font-bold leading-tight">
-                      {activeUser.firstName || activeUser.lastName ? `${activeUser.firstName || ''} ${activeUser.lastName || ''}`.trim() : (
-                        <span className="italic font-normal">Awaiting setup</span>
-                      )}
-                    </h3>
-                    <a href={`mailto:${activeUser.emailAddresses?.[0]?.emailAddress}`} className="inline-block mt-[1px] text-[#9ff0d2] text-[12px] font-medium no-underline hover:underline">
-                      {activeUser.emailAddresses?.[0]?.emailAddress}
-                    </a>
-                    <div className="flex gap-[6px] mt-[4px] flex-wrap">
-                      <span className={`text-[9.5px] font-semibold px-[7px] py-[2px] rounded-full border ${activeUser.publicMetadata?.isSuspended ? 'bg-white/10 text-red-200 border-white/20' : 'bg-white/10 text-[#dbe8e3] border-white/20'}`}>
-                        {activeUser.publicMetadata?.isSuspended ? 'Suspended' : 'Active'}
-                      </span>
-                    </div>
-                  </div>
+                <div className="bg-white px-3 py-2 rounded-md border border-emerald-200 font-mono text-[14px] font-bold text-center tracking-wider text-emerald-900 select-all">
+                  {tempPassword}
+                </div>
+                <div className="text-[11px] text-emerald-600 text-center leading-tight">
+                  Please copy and share this password securely. It will not be shown again.
                 </div>
               </div>
-
-              {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto p-[18px_20px_24px]">
-                
-                <div className="text-[10.5px] tracking-[0.14em] uppercase text-[#93a19c] font-bold m-[10px_0_9px]">Account details</div>
-                
-                <div className="bg-white border border-[#e8edeb] rounded-[16px] overflow-hidden shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)]">
-                  
-                  <div className="flex items-center gap-[12px] p-[13px_15px] border-b border-[#e8edeb]">
-                    <div>
-                      <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#0e1a16]">Clerk User ID</div>
-                      <div className="text-[11.6px] text-[#93a19c] mt-[2px] font-mono break-all">{activeUser.id}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-[12px] p-[13px_15px]">
-                    <div>
-                      <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#0e1a16]">Last Sign In</div>
-                      <div className="text-[11.8px] text-[#93a19c] mt-[2px]">
-                        {activeUser.lastSignInAt ? new Date(activeUser.lastSignInAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never'}
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                {tempPassword && (
-                  <div className="mt-[20px] bg-[#fdf6e6] border border-[#f2e3c2] rounded-[16px] overflow-hidden shadow-[0_1px_2px_rgba(14,26,22,.04)]">
-                    <div className="p-[13px_15px] border-b border-[#f2e3c2]/50">
-                      <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#6f4a0e]">Temporary Password Generated</div>
-                      <div className="text-[11.8px] text-[#8a5b12] mt-[2px] opacity-80">Share securely. The user must change it upon login.</div>
-                    </div>
-                    <div className="p-[15px] bg-white text-center">
-                       <span className="font-mono text-lg tracking-widest font-bold text-[#6f4a0e]">{tempPassword}</span>
-                    </div>
-                  </div>
-                )}
-              
-              {isFetchingProfile ? (
-                <div className="flex justify-center items-center py-6 mt-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
-                </div>
-              ) : employeeProfile ? (
-                <div className="mt-[24px]">
-                  <div className="text-[10.5px] tracking-[0.14em] uppercase text-[#9ca3af] font-bold m-[10px_0_9px]">Hajj Savings Profile</div>
-                  
-                  <div className="bg-white border border-[#e5e7eb] rounded-[16px] p-[16px_17px] shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)] mb-4">
-                    <div className="flex items-end justify-between gap-[12px]">
-                      <div>
-                        <div className="text-[11px] text-[#9ca3af] font-semibold">Total savings balance</div>
-                        <b className="block mt-[4px] text-[27px] font-extrabold tracking-[-1px] tabular-nums leading-none text-[#111827]">£{(employeeProfile.balance || 0).toFixed(2)}</b>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[11px] text-[#9ca3af] font-semibold">Monthly contribution</div>
-                        <b className="text-[16px] tracking-[-0.4px] text-[#4b5563]">£{(employeeProfile.monthlyContribution || 0).toFixed(2)}</b>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-[10.5px] tracking-[0.14em] uppercase text-[#9ca3af] font-bold m-[20px_0_9px]">Compliance & Status</div>
-                  
-                  <div className="bg-white border border-[#e5e7eb] rounded-[16px] overflow-hidden shadow-[0_1px_2px_rgba(14,26,22,.04),0_8px_24px_-18px_rgba(14,26,22,.35)]">
-                    <div className="flex items-center gap-[12px] p-[13px_15px] border-b border-[#e5e7eb]">
-                      <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#ecfdf5] text-[#059669]">
-                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                      </div>
-                      <div>
-                        <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#111827]">Shariah agreement</div>
-                        <div className="text-[11.8px] text-[#6b7280] mt-[2px]">Master agreement v2</div>
-                      </div>
-                      <div className="ml-auto text-right flex flex-col items-end gap-[4px]">
-                        {employeeProfile.agreementStatus === 'signed' ? (
-                          <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]">Signed</span>
-                        ) : (
-                          <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[#fefce8] text-[#ca8a04] border border-[#fef08a]">Pending</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-[12px] p-[13px_15px] border-b border-[#e5e7eb]">
-                      <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#ecfdf5] text-[#059669]">
-                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><rect x="3" y="6" width="18" height="12" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h3"/></svg>
-                      </div>
-                      <div>
-                        <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#111827]">Subscription</div>
-                        <div className="text-[11.8px] text-[#6b7280] mt-[2px]">Direct debit · Stripe</div>
-                      </div>
-                      <div className="ml-auto text-right flex flex-col items-end gap-[4px]">
-                        {employeeProfile.subscriptionStatus === 'active' ? (
-                          <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]">Active</span>
-                        ) : (
-                          <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[#f3f4f6] text-[#6b7280] border border-[#e5e7eb]">Inactive</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-[12px] p-[13px_15px]">
-                      <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] grid place-items-center bg-[#ecfdf5] text-[#059669]">
-                        <svg viewBox="0 0 24 24" className="w-[15px] h-[15px] stroke-current stroke-[1.8] fill-none"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v6a8 8 0 01-16 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 20h6M12 18v2"/></svg>
-                      </div>
-                      <div>
-                        <div className="text-[13.4px] font-semibold tracking-[-0.1px] text-[#111827]">Hajj award</div>
-                        <div className="text-[11.8px] text-[#6b7280] mt-[2px]">Monthly draw eligibility</div>
-                      </div>
-                      <div className="ml-auto text-right flex flex-col items-end gap-[4px]">
-                        <span className="text-[11px] font-bold px-[10px] py-[4px] rounded-full whitespace-nowrap bg-[#f3f4f6] text-[#6b7280] border border-[#e5e7eb]">
-                          {employeeProfile.awardStatus ? employeeProfile.awardStatus.charAt(0).toUpperCase() + employeeProfile.awardStatus.slice(1) : 'None'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-              </div>
-
-              
-              
-              {/* Action Footer */}
+            )}
+            {/* Action Footer */}
               <div className="p-[13px_20px] border-t border-[#e8edeb] bg-white grid grid-cols-3 gap-[9px] shrink-0">
                 <button 
                   onClick={handleResetPassword}
@@ -463,12 +322,10 @@ export const UsersList = () => {
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
-            </>
-          )}
-        </aside>
-      </>
-
+          </>
+        }
+      />
     
-</SidebarLayout>
+    </SidebarLayout>
   );
 };
