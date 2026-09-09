@@ -10,7 +10,8 @@ const EmployeeProfileSidecar = ({
   isFetchingProfile,
   onRemove,
   onDownloadStatement,
-  isRemoving = false
+  isRemoving = false,
+  customFooter
 }) => {
   const { showToast } = useToast();
   
@@ -196,7 +197,9 @@ const EmployeeProfileSidecar = ({
           )}
         </div>
 
-        {(onRemove || onDownloadStatement) && !activeMember.isRemoved && (
+        {customFooter ? (
+          customFooter
+        ) : (onRemove || onDownloadStatement) && !activeMember.isRemoved ? (
           <div className="p-[20px_24px_24px] bg-white grid gap-[10px] shrink-0 border-t border-slate-100">
             {onDownloadStatement && (
               <button 
@@ -223,7 +226,7 @@ const EmployeeProfileSidecar = ({
               </button>
             )}
           </div>
-        )}
+        ) : null}
       </aside>
     </>
   );
