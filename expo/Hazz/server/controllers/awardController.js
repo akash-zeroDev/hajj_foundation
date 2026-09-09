@@ -12,12 +12,13 @@ exports.runDraw = async (req, res) => {
       return res.status(400).json({ message: 'Valid draw name and number of winners required.' });
     }
 
-    // Eligibility Logic: Active subscription, and hasn't won before
-    // We assume balance > 0 is implied if they are active, but we can explicitly check it.
+    // Eligibility Logic: Active subscription, balance > 0, not removed, not suspended
     const eligibleEmployees = await Employee.find({
       subscriptionStatus: 'active',
       awardStatus: 'none',
-      balance: { $gt: 0 }
+      balance: { $gt: 0 },
+      isRemoved: { $ne: true },
+      isSuspended: { $ne: true }
     });
 
     if (eligibleEmployees.length < numberOfWinners) {

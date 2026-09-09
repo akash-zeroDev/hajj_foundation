@@ -83,6 +83,12 @@ exports.toggleSuspend = async (req, res) => {
         }
     });
 
+    // Sync suspension status to MongoDB Employee record so draw system can filter correctly
+    await Employee.updateMany(
+      { clerkUserId: id },
+      { $set: { isSuspended: !isCurrentlySuspended } }
+    );
+
     res.status(200).json({ success: true, banned: updatedUser.publicMetadata.isSuspended });
   } catch (error) {
     console.error('Error toggling suspend:', error);

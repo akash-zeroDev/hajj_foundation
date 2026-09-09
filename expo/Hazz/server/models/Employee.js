@@ -44,6 +44,7 @@ const employeeSchema = new mongoose.Schema({
   
   autoPayEnabled: { type: Boolean, default: false },
   isRemoved: { type: Boolean, default: false },
+ isSuspended: { type: Boolean, default: false },
   bankDetails: {
     accountName: String,
     accountNumber: String,
