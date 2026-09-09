@@ -273,8 +273,8 @@ export const OrganisationsList = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
-        <div className="p-3 border-b border-slate-200 bg-slate-50/50 flex flex-nowrap gap-3 items-center overflow-x-auto scrollbar-none">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 relative">
+        <div className="p-3 border-b border-slate-200 bg-slate-50/50 flex flex-nowrap gap-3 items-center overflow-x-auto scrollbar-none relative z-10">
           <div className="relative w-[220px] shrink-0">
             <input 
               type="text" 
@@ -340,7 +340,7 @@ export const OrganisationsList = () => {
           </div>
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 text-sm text-slate-500 bg-white">
