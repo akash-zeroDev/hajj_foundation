@@ -7,7 +7,8 @@ exports.getSuperAdminOverview = async (req, res) => {
   try {
     // 1. Core Metrics
     const totalOrganisations = await Organisation.countDocuments({ isArchived: { $ne: true }, isSuspended: { $ne: true } });
-    const totalEmployees = await Employee.countDocuments({ isRemoved: { $ne: true } });
+    // Only count employees who have actually signed up (accepted invite & created Clerk account)
+    const totalEmployees = await Employee.countDocuments({ isRemoved: { $ne: true }, clerkUserId: { $exists: true, $ne: '' } });
     
     // Aggregate Total Savings Pool (Match AUM from Employee balances)
     const savingsResult = await Employee.aggregate([
@@ -103,7 +104,7 @@ exports.getSuperAdminOverview = async (req, res) => {
 
     const orgSigned = await Organisation.countDocuments({ agreementStatus: 'signed' });
     const orgPendingAgreement = await Organisation.countDocuments({ agreementStatus: 'pending' });
-    const empActive = await Employee.countDocuments({ isRemoved: { $ne: true } });
+    const empActive = await Employee.countDocuments({ isRemoved: { $ne: true }, clerkUserId: { $exists: true, $ne: '' } });
     const empSigned = await Employee.countDocuments({ agreementStatus: 'signed', isRemoved: { $ne: true } });
     const empPending = await Employee.countDocuments({ agreementStatus: 'pending', isRemoved: { $ne: true } });
     const subActive = await Employee.countDocuments({ subscriptionStatus: 'active', isRemoved: { $ne: true } });
