@@ -43,8 +43,8 @@ exports.createAnnualFeeCheckout = async (req, res) => {
       ],
       mode: 'payment',
     
-      success_url: `http://localhost:5173/admin?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:5173/admin?payment=cancelled`,
+      success_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/admin?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/admin?payment=cancelled`,
       metadata: {
         orgId: org._id.toString(),
         type: 'annual_fee'
@@ -147,8 +147,8 @@ exports.createEmployeeSubscription = async (req, res) => {
         },
       ],
       mode: 'subscription',
-      success_url: `http://localhost:5173/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:5173/dashboard?payment=cancelled`,
+      success_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard?payment=cancelled`,
       metadata: {
         employeeId: employee._id.toString(),
         type: 'employee_subscription'
@@ -236,7 +236,7 @@ exports.createCustomerPortal = async (req, res) => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: employee.stripeCustomerId,
-      return_url: 'http://localhost:5173/dashboard',
+      return_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard`,
     });
 
     res.json({ url: session.url });
