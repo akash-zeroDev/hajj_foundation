@@ -29,6 +29,7 @@ export const EmployeeDashboard = () => {
   const [autoPayEnabled, setAutoPayEnabled] = useState(false);
   const [bankDetails, setBankDetails] = useState({ accountName: '', accountNumber: '', sortCode: '' });
   const [isSavingBank, setIsSavingBank] = useState(false);
+  const [showAwardBanner, setShowAwardBanner] = useState(true);
   
   useEffect(() => {
     if (employeeData) {
@@ -423,8 +424,6 @@ export const EmployeeDashboard = () => {
       </div>
     );
   }
-
-  const [showAwardBanner, setShowAwardBanner] = useState(true);
 
   return (
     <div className="flex h-screen overflow-hidden text-slate-800 bg-[#F4F7F6] font-sans">
