@@ -198,12 +198,12 @@ export const AdminDashboard = () => {
           <span className="text-[10.5px] font-semibold tracking-[0.1em] uppercase text-[#6B7280]">Annual fee</span>
           <span className="font-mono font-semibold text-[14px]">£{orgData?.annualFee || 0}</span>
           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FEF3C7] border border-[#EAB308] text-[#92400E]">
-            {orgData?.feeStatus === 'paid' ? 'Paid' : 'Pending'}
+            {orgData?.annualFeeStatus === 'paid' ? 'Paid' : 'Pending'}
           </span>
           <span className="text-[#9CA3AF] text-[12.5px]">
-            {orgData?.feeStatus === 'paid' ? 'Valid for 12 months' : 'due to keep award eligibility'}
+            {orgData?.annualFeeStatus === 'paid' ? 'Valid for 12 months' : 'due to keep award eligibility'}
           </span>
-          {orgData?.feeStatus !== 'paid' && (
+          {orgData?.annualFeeStatus !== 'paid' && (
             <button onClick={handlePayAnnualFee} className="ml-auto text-[12.5px] font-[650] text-[#0E5C3E] bg-transparent border-0 cursor-pointer hover:underline whitespace-nowrap">Pay now →</button>
           )}
         </div>
@@ -266,7 +266,7 @@ export const AdminDashboard = () => {
               <h3 className="m-0 text-[13px] font-[650] tracking-[-0.01em]">Needs attention</h3>
               <span className="ml-auto text-[12px] text-[#9CA3AF]">Alerts</span>
             </div>
-            {orgData?.feeStatus !== 'paid' && (
+            {orgData?.annualFeeStatus !== 'paid' && (
               <div className="flex gap-3 items-start p-[13px_18px] border-b border-[#EEF0F3] text-[13px]">
                 <span className="font-mono text-[11px] text-[#9CA3AF] pt-[2px] min-w-[18px]">01</span>
                 <div>
@@ -286,7 +286,7 @@ export const AdminDashboard = () => {
                 <button onClick={() => navigate('/admin/agreements')} className="ml-auto self-center text-[12.5px] font-semibold text-[#0E5C3E] bg-transparent border-0 cursor-pointer hover:underline whitespace-nowrap">View</button>
               </div>
             )}
-            {orgData?.feeStatus === 'paid' && stats.pendingAgreements === 0 && (
+            {orgData?.annualFeeStatus === 'paid' && stats.pendingAgreements === 0 && (
                <div className="p-5 text-center text-[13px] text-[#6B7280]">All good! No pending actions.</div>
             )}
           </div>
