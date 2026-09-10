@@ -424,6 +424,8 @@ export const EmployeeDashboard = () => {
     );
   }
 
+  const [showAwardBanner, setShowAwardBanner] = useState(true);
+
   return (
     <div className="flex h-screen overflow-hidden text-slate-800 bg-[#F4F7F6] font-sans">
       <aside className="w-[260px] bg-[#0B0F0E] flex flex-col shrink-0">
@@ -488,6 +490,28 @@ export const EmployeeDashboard = () => {
           
           {activeTab === 'overview' && (
             <>
+              {employeeData?.awardStatus === 'won' && showAwardBanner && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 mb-8 rounded-xl bg-gradient-to-r from-[#0E5C3E] to-[#147a52] text-white shadow-md relative overflow-hidden">
+                  <div className="absolute -right-10 -top-10 text-white/10 pointer-events-none">
+                    <svg className="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  </div>
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                      <span className="text-3xl">🏆</span>
+                    </div>
+                    <div>
+                      <h3 className="text-[18px] font-bold">Congratulations! You've Won!</h3>
+                      <p className="text-white/90 text-[14px] mt-1 max-w-lg leading-relaxed">
+                        You were selected for Hajj in a recent Awards Draw. We will contact you soon with details on how to claim your award.
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowAwardBanner(false)} className="absolute top-4 right-4 z-10 p-2 hover:bg-white/20 rounded-full transition text-white/80 hover:text-white" aria-label="Close">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white rounded-xl border border-[#E5E7EB] p-5 shadow-sm flex flex-col relative overflow-hidden">
                   <div className="text-[11.5px] font-bold tracking-widest text-slate-400 uppercase mb-3">Total Savings</div>
