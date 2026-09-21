@@ -6,41 +6,25 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        olive: {
-          DEFAULT: '#333333',
-          deep: '#18241f',
-          muted: '#69877b'
-        },
-        ivory: '#f6f4ec',
-        stone: '#eeebe4',
-        brass: '#d8aa54',
-        charcoal: '#1a1f1d',
-        green: {
-          DEFAULT: '#286142',
-          deep: '#1c422e',
-          muted: '#4ab498',
-          forest: '#0e2c1e',
-          pale: '#e3f3ef'
-        },
-        emerald: {
-          50: '#e3f3ef',
-          100: '#cbf0e6',
-          200: '#a1e3d1',
-          300: '#6dceb5',
-          400: '#4ab498',
-          500: '#286142',
-          600: '#1c7a60',
-          700: '#1c422e',
-          800: '#135041',
-          900: '#0e2c1e',
-        }
-      },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
-        serif: ['"Playfair Display"', 'serif'],
+        sans: ['"Nunito Sans"', 'Arial', 'sans-serif'],
+        serif: ['"Lora"', 'Georgia', 'serif'],
       },
+      colors: {
+        noir: {
+          DEFAULT: "#1a1a1a",
+          rich: "#0f0f0f",
+        },
+        gold: {
+          DEFAULT: "#C19F5C",
+          light: "#DDBE7B",
+          muted: "#6A5630",
+        },
+        ivory: {
+          DEFAULT: "#F4F0E6",
+          muted: "#C2BEB4",
+        }
+      }
     },
   },
   plugins: [],

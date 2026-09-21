@@ -5,7 +5,7 @@ const Navbar = () => {
   const { user } = useUser();
 
   return (
-    <nav className="bg-emerald-700 text-white shadow-md">
+    <nav className="bg-[var(--gold)] text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <div className="flex-shrink-0">
@@ -34,7 +34,7 @@ const Navbar = () => {
                   <button className="text-emerald-50 hover:text-white font-medium transition">Sign In</button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button className="bg-white text-emerald-700 hover:bg-emerald-50 px-5 py-2 rounded-md font-semibold transition shadow-sm">
+                  <button className="bg-white text-[var(--gold)] hover:bg-[var(--gold)]/10 px-5 py-2 rounded-md font-semibold transition shadow-sm">
                     Sign Up
                   </button>
                 </SignUpButton>

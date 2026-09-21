@@ -173,7 +173,7 @@ export const Reports = () => {
       { name: 'Compliant', value: stats.employees.compliant },
       { name: 'Pending', value: stats.employees.pending }
     ];
-    const COLORS = ['#10b981', '#f59e0b']; // emerald, amber
+    const COLORS = ['#C19F5C', '#f59e0b']; // emerald, amber
 
     const orgBarData = [
       { name: 'Active', count: stats.organizations.active },
@@ -290,7 +290,7 @@ export const Reports = () => {
                     <td className="px-6 py-4 font-bold text-slate-900">£{tx.amount?.toLocaleString() || 0}</td>
                     <td className="px-6 py-4">
                       {tx.status === 'succeeded' ? (
-                         <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">Paid</span>
+                         <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-[var(--gold)]/20 text-[var(--gold)]">Paid</span>
                       ) : (
                          <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">{tx.status}</span>
                       )}
@@ -364,10 +364,10 @@ export const Reports = () => {
           <button
             onClick={downloadPDF}
             disabled={isGeneratingPdf || isLoading || !stats}
-            className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            className="flex-1 md:flex-none px-4 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold)] text-white font-bold rounded-lg transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {isGeneratingPdf ? 'Generating...' : (
-              <><svg className="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Export Summary (PDF)</>
+              <><svg className="w-4 h-4 text-[var(--gold-light)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Export Summary (PDF)</>
             )}
           </button>
         </div>
@@ -379,7 +379,7 @@ export const Reports = () => {
           onClick={() => setActiveTab('summary')}
           className={`flex-1 py-2 px-4 text-sm font-bold rounded-lg transition-all ${
             activeTab === 'summary' 
-              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/50' 
+              ? 'bg-white text-[var(--gold)] shadow-sm border border-slate-200/50' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
           }`}
         >
@@ -389,7 +389,7 @@ export const Reports = () => {
           onClick={() => setActiveTab('ledger')}
           className={`flex-1 py-2 px-4 text-sm font-bold rounded-lg transition-all ${
             activeTab === 'ledger' 
-              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/50' 
+              ? 'bg-white text-[var(--gold)] shadow-sm border border-slate-200/50' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
           }`}
         >
@@ -399,7 +399,7 @@ export const Reports = () => {
           onClick={() => setActiveTab('audit')}
           className={`flex-1 py-2 px-4 text-sm font-bold rounded-lg transition-all ${
             activeTab === 'audit' 
-              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/50' 
+              ? 'bg-white text-[var(--gold)] shadow-sm border border-slate-200/50' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
           }`}
         >

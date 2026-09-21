@@ -11,7 +11,7 @@ const HorizontalTabs = ({ tabs, activeTab, setActiveTab }) => {
             className={`
               whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
               ${activeTab === tab.id
-                ? 'border-emerald-600 text-emerald-700'
+                ? 'border-[var(--gold)] text-[var(--gold)]'
                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }
             `}

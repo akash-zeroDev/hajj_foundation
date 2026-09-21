@@ -85,7 +85,7 @@ export const Settings = () => {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Organisation Profile</h2>
-            {successMessage && <span className="text-emerald-600 text-sm font-medium flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> {successMessage}</span>}
+            {successMessage && <span className="text-[var(--gold)] text-sm font-medium flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> {successMessage}</span>}
           </div>
           
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -100,7 +100,7 @@ export const Settings = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-[var(--gold)] focus:border-[var(--gold)]"
                 />
               </div>
               
@@ -112,7 +112,7 @@ export const Settings = () => {
                   onChange={handleChange}
                   required
                   rows="3"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-[var(--gold)] focus:border-[var(--gold)]"
                 ></textarea>
               </div>
             </div>
@@ -137,7 +137,7 @@ export const Settings = () => {
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-1">Fee Payment Status</label>
                   <div className="px-3 py-2 bg-slate-100 border border-slate-200 rounded-md flex items-center">
-                    <span className={`text-xs font-bold uppercase ${orgData.annualFeeStatus === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    <span className={`text-xs font-bold uppercase ${orgData.annualFeeStatus === 'paid' ? 'text-[var(--gold)]' : 'text-amber-600'}`}>
                       {orgData.annualFeeStatus}
                     </span>
                   </div>
@@ -156,7 +156,7 @@ export const Settings = () => {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
+                className="px-6 py-2.5 bg-[var(--gold)] text-white font-bold rounded-lg hover:bg-[var(--gold)] transition disabled:opacity-50"
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>

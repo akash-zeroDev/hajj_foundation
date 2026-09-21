@@ -321,7 +321,7 @@ export const EmployeeDashboard = () => {
   }, []);
 
   if (isLoading || !userLoaded || !orgLoaded) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6]"><div className="w-8 h-8 border-4 border-[#0E5C3E] border-t-transparent rounded-full animate-spin"></div></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-[#F4F7F6]"><div className="w-8 h-8 border-4 border-[var(--gold)] border-t-transparent rounded-full animate-spin"></div></div>;
   }
 
   if (!employeeData) {
@@ -333,7 +333,7 @@ export const EmployeeDashboard = () => {
           </div>
           <h2 className="text-[20px] font-bold text-[#0B0F0E] mb-2">Account Not Found</h2>
           <p className="text-[14px] text-slate-500 mb-6">We couldn't find an employee record associated with your account. Please contact your employer.</p>
-          <button onClick={() => signOut()} className="w-full py-2.5 bg-[#0E5C3E] text-white font-semibold rounded-lg hover:bg-[#0A3D2A] transition">Sign Out</button>
+          <button onClick={() => signOut()} className="w-full py-2.5 bg-[var(--gold)] text-[var(--noir-rich)] font-semibold rounded-lg hover:bg-[var(--gold-light)] transition">Sign Out</button>
         </div>
       </div>
     );
@@ -363,7 +363,7 @@ export const EmployeeDashboard = () => {
                 )}
                 
                 <div className="mt-6 flex items-start gap-3">
-                  <input type="checkbox" id="agree" required checked={isAgreed} onChange={e => setIsAgreed(e.target.checked)} className="mt-1 w-4 h-4 text-[#0E5C3E] border-slate-300 rounded focus:ring-[#0E5C3E]" />
+                  <input type="checkbox" id="agree" required checked={isAgreed} onChange={e => setIsAgreed(e.target.checked)} className="mt-1 w-4 h-4 text-[var(--gold)] border-slate-300 rounded focus:ring-[var(--gold)]" />
                   <label htmlFor="agree" className="text-[13.5px] text-slate-700">I have read and agree to the terms of the Master Shariah Agreement.</label>
                 </div>
               </div>
@@ -376,15 +376,15 @@ export const EmployeeDashboard = () => {
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="grid gap-1">
                   <label className="text-[12.5px] font-semibold text-[#0B0F0E]">First name</label>
-                  <input required value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[#0E5C3E] focus:ring-1 focus:ring-[#0E5C3E]" />
+                  <input required value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                 </div>
                 <div className="grid gap-1">
                   <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Last name</label>
-                  <input required value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[#0E5C3E] focus:ring-1 focus:ring-[#0E5C3E]" />
+                  <input required value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                 </div>
                 <div className="grid gap-1">
                   <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Phone number</label>
-                  <input type="tel" required placeholder="+44 7700 900077" value={phone} onChange={e => setPhone(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[#0E5C3E] focus:ring-1 focus:ring-[#0E5C3E]" />
+                  <input type="tel" required placeholder="+44 7700 900077" value={phone} onChange={e => setPhone(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                 </div>
               </div>
             </div>
@@ -398,23 +398,23 @@ export const EmployeeDashboard = () => {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold text-[16px]">£</span>
-                    <input type="text" required value={contribution} onChange={e => setContribution(e.target.value.replace(/\D/g, ''))} className="w-48 border border-[#E5E7EB] rounded-lg pl-8 pr-12 py-3 text-[16px] font-bold focus:outline-none focus:border-[#0E5C3E] focus:ring-1 focus:ring-[#0E5C3E]" />
+                    <input type="text" required value={contribution} onChange={e => setContribution(e.target.value.replace(/\D/g, ''))} className="w-48 border border-[#E5E7EB] rounded-lg pl-8 pr-12 py-3 text-[16px] font-bold focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[14px]">/ mo</span>
                   </div>
                   <div className="flex gap-2">
                     {[25, 50, 100, 200].map(val => (
-                      <button key={val} type="button" onClick={() => setContribution(String(val))} className={`px-4 py-3 rounded-lg border font-semibold text-[14px] transition ${Number(contribution) === val ? 'bg-[#ECFDF5] border-[#0E5C3E] text-[#0E5C3E]' : 'bg-white border-[#E5E7EB] text-slate-600 hover:border-[#0E5C3E]'}`}>£{val}</button>
+                      <button key={val} type="button" onClick={() => setContribution(String(val))} className={`px-4 py-3 rounded-lg border font-semibold text-[14px] transition ${Number(contribution) === val ? 'bg-[#ECFDF5] border-[var(--gold)] text-[var(--gold)]' : 'bg-white border-[#E5E7EB] text-slate-600 hover:border-[var(--gold)]'}`}>£{val}</button>
                     ))}
                   </div>
                 </div>
                 
                 <div className="bg-slate-50 border border-[#E5E7EB] rounded-lg p-4 flex gap-3 items-start">
-                  <svg className="w-5 h-5 text-[#0E5C3E] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <svg className="w-5 h-5 text-[var(--gold)] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                   <div className="text-[13px] text-slate-600">Your first collection happens on the 1st of next month. You will receive an email confirmation with your direct-debit reference.</div>
                 </div>
               </div>
               <div className="px-6 py-5 border-t border-[#E5E7EB] bg-slate-50 flex justify-end">
-                <button type="submit" disabled={isAccepting || !isAgreed || Number(contribution) < 10 || !firstName || !lastName || !phone} className="px-6 py-2.5 bg-[#0E5C3E] text-white font-semibold rounded-lg hover:bg-[#0A3D2A] transition disabled:opacity-50">
+                <button type="submit" disabled={isAccepting || !isAgreed || Number(contribution) < 10 || !firstName || !lastName || !phone} className="px-6 py-2.5 bg-[var(--gold)] text-[var(--noir-rich)] font-semibold rounded-lg hover:bg-[var(--gold-light)] transition disabled:opacity-50">
                   {isAccepting ? 'Saving Profile...' : 'Accept & Complete Setup'}
                 </button>
               </div>
@@ -429,17 +429,17 @@ export const EmployeeDashboard = () => {
     <div className="flex h-screen overflow-hidden text-slate-800 bg-[#F4F7F6] font-sans">
       <aside className="w-[260px] bg-[#0B0F0E] flex flex-col shrink-0">
         <div className="p-6 border-b border-white/10 flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#0E5C3E] flex items-center justify-center text-white font-bold text-lg">H</div>
+          <div className="w-8 h-8 rounded bg-[var(--gold)] text-[var(--noir-rich)] flex items-center justify-center text-white font-bold text-lg">H</div>
           <div>
             <div className="text-white font-bold text-[15px] tracking-tight leading-tight">Hajj Savings</div>
-            <div className="text-[#0E5C3E] text-[10px] font-bold tracking-widest uppercase mt-0.5">Employee</div>
+            <div className="text-[var(--gold)] text-[10px] font-bold tracking-widest uppercase mt-0.5">Employee</div>
           </div>
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           <div>
             <div className="text-[11px] font-semibold text-white/40 tracking-widest uppercase mb-2 px-3">Overview</div>
-            <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition ${activeTab==='overview'?'bg-[#0E5C3E] text-white':'text-[#9CA3AF] hover:text-white hover:bg-white/5'}`}>
+            <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition ${activeTab==='overview'?'bg-[var(--gold)] text-[var(--noir-rich)]':'text-[#9CA3AF] hover:text-white hover:bg-white/5'}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
               Dashboard
             </button>
@@ -447,11 +447,11 @@ export const EmployeeDashboard = () => {
           
           <div>
             <div className="text-[11px] font-semibold text-white/40 tracking-widest uppercase mb-2 px-3">Finance</div>
-            <button onClick={() => setActiveTab('transactions')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium mb-1 transition ${activeTab==='transactions'?'bg-[#0E5C3E] text-white':'text-[#9CA3AF] hover:text-white hover:bg-white/5'}`}>
+            <button onClick={() => setActiveTab('transactions')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium mb-1 transition ${activeTab==='transactions'?'bg-[var(--gold)] text-[var(--noir-rich)]':'text-[#9CA3AF] hover:text-white hover:bg-white/5'}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
               My Transactions
             </button>
-            <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition ${activeTab==='settings'?'bg-[#0E5C3E] text-white':'text-[#9CA3AF] hover:text-white hover:bg-white/5'}`}>
+            <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition ${activeTab==='settings'?'bg-[var(--gold)] text-[var(--noir-rich)]':'text-[#9CA3AF] hover:text-white hover:bg-white/5'}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
               Settings & Bank
             </button>
@@ -459,7 +459,7 @@ export const EmployeeDashboard = () => {
           
           <div>
             <div className="text-[11px] font-semibold text-white/40 tracking-widest uppercase mb-2 px-3">Legal</div>
-            <button onClick={() => setActiveTab('documents')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition ${activeTab==='documents'?'bg-[#0E5C3E] text-white':'text-[#9CA3AF] hover:text-white hover:bg-white/5'}`}>
+            <button onClick={() => setActiveTab('documents')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition ${activeTab==='documents'?'bg-[var(--gold)] text-[var(--noir-rich)]':'text-[#9CA3AF] hover:text-white hover:bg-white/5'}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
               Documents
             </button>
@@ -490,7 +490,7 @@ export const EmployeeDashboard = () => {
           {activeTab === 'overview' && (
             <>
               {employeeData?.awardStatus === 'won' && showAwardBanner && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 mb-8 rounded-xl bg-gradient-to-r from-[#0E5C3E] to-[#147a52] text-white shadow-md relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 mb-8 rounded-xl bg-gradient-to-r from-[var(--gold)] to-[var(--gold-light)] text-white shadow-md relative overflow-hidden">
                   <div className="absolute -right-10 -top-10 text-white/10 pointer-events-none">
                     <svg className="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                   </div>
@@ -528,11 +528,11 @@ export const EmployeeDashboard = () => {
                   <div className="text-[13px] text-slate-500 mb-4">Deducted on the 1st of every month</div>
                   <div className="mt-auto">
                     {!employeeData.autoPayEnabled ? (
-                      <button onClick={handleSetupSubscription} disabled={isRedirecting} className="w-full text-center px-4 py-2 bg-[#0E5C3E] text-white font-semibold rounded-lg hover:bg-[#0A3D2A] transition text-[13px]">
+                      <button onClick={handleSetupSubscription} disabled={isRedirecting} className="w-full text-center px-4 py-2 bg-[var(--gold)] text-[var(--noir-rich)] font-semibold rounded-lg hover:bg-[var(--gold-light)] transition text-[13px]">
                         {isRedirecting ? 'Redirecting...' : 'Setup Direct Debit'}
                       </button>
                     ) : (
-                      <div className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#0E5C3E]">
+                      <div className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[var(--gold)]">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Direct Debit Active
                       </div>
@@ -572,7 +572,7 @@ export const EmployeeDashboard = () => {
               <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] overflow-hidden mb-8">
                 <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
                   <h2 className="text-[15px] font-bold text-[#0B0F0E]">Recent Transactions</h2>
-                  <button onClick={() => setActiveTab('transactions')} className="text-[13px] font-semibold text-[#0E5C3E] hover:text-[#0B0F0E] transition flex items-center gap-1">
+                  <button onClick={() => setActiveTab('transactions')} className="text-[13px] font-semibold text-[var(--gold)] hover:text-[#0B0F0E] transition flex items-center gap-1">
                     View All <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                   </button>
                 </div>
@@ -666,27 +666,27 @@ export const EmployeeDashboard = () => {
                 <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#F9FAFB] flex justify-between items-center">
                   <h2 className="text-[15px] font-bold text-[#0B0F0E]">Bank Details & Auto Pay</h2>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <span className={`text-[13px] font-bold ${autoPayEnabled ? 'text-[#0E5C3E]' : 'text-slate-400'}`}>{autoPayEnabled ? 'Auto Pay Active' : 'Auto Pay Disabled'}</span>
-                    <input type="checkbox" checked={autoPayEnabled} onChange={e => setAutoPayEnabled(e.target.checked)} className="w-4 h-4 text-[#0E5C3E] border-slate-300 rounded focus:ring-[#0E5C3E]" />
+                    <span className={`text-[13px] font-bold ${autoPayEnabled ? 'text-[var(--gold)]' : 'text-slate-400'}`}>{autoPayEnabled ? 'Auto Pay Active' : 'Auto Pay Disabled'}</span>
+                    <input type="checkbox" checked={autoPayEnabled} onChange={e => setAutoPayEnabled(e.target.checked)} className="w-4 h-4 text-[var(--gold)] border-slate-300 rounded focus:ring-[var(--gold)]" />
                   </label>
                 </div>
                 <div className={`p-6 transition-opacity ${!autoPayEnabled && 'opacity-50 pointer-events-none'}`}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="grid gap-1">
                       <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Account Name</label>
-                      <input placeholder="e.g. John Doe" value={bankDetails.accountName} onChange={e => setBankDetails({...bankDetails, accountName: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[#0E5C3E] focus:ring-1 focus:ring-[#0E5C3E]" />
+                      <input placeholder="e.g. John Doe" value={bankDetails.accountName} onChange={e => setBankDetails({...bankDetails, accountName: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                     </div>
                     <div className="grid gap-1">
                       <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Sort Code</label>
-                      <input placeholder="12-34-56" value={bankDetails.sortCode} onChange={e => setBankDetails({...bankDetails, sortCode: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[#0E5C3E] focus:ring-1 focus:ring-[#0E5C3E]" />
+                      <input placeholder="12-34-56" value={bankDetails.sortCode} onChange={e => setBankDetails({...bankDetails, sortCode: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                     </div>
                     <div className="grid gap-1">
                       <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Account Number</label>
-                      <input placeholder="12345678" value={bankDetails.accountNumber} onChange={e => setBankDetails({...bankDetails, accountNumber: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[#0E5C3E] focus:ring-1 focus:ring-[#0E5C3E]" />
+                      <input placeholder="12345678" value={bankDetails.accountNumber} onChange={e => setBankDetails({...bankDetails, accountNumber: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                     </div>
                   </div>
                   <div className="mt-6 flex justify-end">
-                    <button onClick={handleSaveBankSettings} disabled={isSavingBank} className="px-6 py-2.5 bg-[#0E5C3E] text-white font-semibold rounded-lg hover:bg-[#0A3D2A] transition disabled:opacity-50">
+                    <button onClick={handleSaveBankSettings} disabled={isSavingBank} className="px-6 py-2.5 bg-[var(--gold)] text-[var(--noir-rich)] font-semibold rounded-lg hover:bg-[var(--gold-light)] transition disabled:opacity-50">
                       {isSavingBank ? 'Saving...' : 'Save Settings'}
                     </button>
                   </div>
@@ -718,7 +718,7 @@ export const EmployeeDashboard = () => {
           {activeTab === 'documents' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-6 flex flex-col">
-                <div className="w-12 h-12 rounded-lg bg-[#ECFDF5] text-[#0E5C3E] flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-lg bg-[#ECFDF5] text-[var(--gold)] flex items-center justify-center mb-4">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                 </div>
                 <h3 className="text-[16px] font-bold text-[#0B0F0E] mb-2">Savings Statement</h3>
@@ -736,7 +736,7 @@ export const EmployeeDashboard = () => {
                 <h3 className="text-[16px] font-bold text-[#0B0F0E] mb-2">My Signed Agreement</h3>
                 <p className="text-[13px] text-slate-500 mb-6 flex-1">View the version of the Shariah Master Agreement you digitally signed.</p>
                 {employeeData?.signedDocumentId?.fileUrl && employeeData?.agreementStatus === 'signed' ? (
-                  <a href={employeeData.signedDocumentId.fileUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackDocumentActivity('VIEWED_SIGNED_CONTRACT', 'Employee viewed their signed agreement')} className="w-full py-2.5 bg-[#0E5C3E] text-white font-semibold rounded-lg hover:bg-[#0A3D2A] transition flex justify-center items-center gap-2 text-[13.5px]">
+                  <a href={employeeData.signedDocumentId.fileUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackDocumentActivity('VIEWED_SIGNED_CONTRACT', 'Employee viewed their signed agreement')} className="w-full py-2.5 bg-[var(--gold)] text-[var(--noir-rich)] font-semibold rounded-lg hover:bg-[var(--gold-light)] transition flex justify-center items-center gap-2 text-[13.5px]">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     View Contract
                   </a>

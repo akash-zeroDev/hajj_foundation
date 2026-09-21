@@ -184,7 +184,7 @@ export const UsersList = () => {
             placeholder="Search users by name or email..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm transition-shadow"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] text-sm shadow-sm transition-shadow"
           />
         </div>
       </div>
@@ -221,7 +221,7 @@ export const UsersList = () => {
                       {user.hasImage ? (
                         <img src={user.imageUrl} alt="" className="w-10 h-10 rounded-full border border-slate-200 object-cover" />
                       ) : (
-                        <div className="w-10 h-10 shrink-0 rounded-full grid place-items-center text-white font-bold text-sm bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-sm border border-emerald-700/50">
+                        <div className="w-10 h-10 shrink-0 rounded-full grid place-items-center text-white font-bold text-sm bg-gradient-to-br bg-[var(--gold)] shadow-sm border border-[var(--gold)]/50">
                           {user.firstName?.[0] || ''}{user.lastName?.[0] || ''}
                           {!user.firstName && !user.lastName && (user.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() || 'U')}
                         </div>
@@ -252,7 +252,7 @@ export const UsersList = () => {
                     {new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-emerald-600 hover:text-emerald-800 text-sm font-medium">View</button>
+                    <button className="text-[var(--gold)] hover:text-[var(--gold)] text-sm font-medium">View</button>
                   </td>
                 </tr>
               ))
@@ -271,15 +271,15 @@ export const UsersList = () => {
         customFooter={
           <>
             {tempPassword && (
-              <div className="px-5 py-4 bg-emerald-50 border-t border-emerald-100 flex flex-col gap-2 shrink-0">
-                <div className="flex items-center gap-2 text-emerald-800 text-[13px] font-medium">
+              <div className="px-5 py-4 bg-[var(--gold)]/10 border-t border-[var(--gold)]/20 flex flex-col gap-2 shrink-0">
+                <div className="flex items-center gap-2 text-[var(--gold)] text-[13px] font-medium">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                   Temporary Password Generated
                 </div>
-                <div className="bg-white px-3 py-2 rounded-md border border-emerald-200 font-mono text-[14px] font-bold text-center tracking-wider text-emerald-900 select-all">
+                <div className="bg-white px-3 py-2 rounded-md border border-[var(--gold)]/30 font-mono text-[14px] font-bold text-center tracking-wider text-[var(--noir)] select-all">
                   {tempPassword}
                 </div>
-                <div className="text-[11px] text-emerald-600 text-center leading-tight">
+                <div className="text-[11px] text-[var(--gold)] text-center leading-tight">
                   Please copy and share this password securely. It will not be shown again.
                 </div>
               </div>

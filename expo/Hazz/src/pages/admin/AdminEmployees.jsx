@@ -230,7 +230,7 @@ export const AdminEmployees = () => {
         </div>
         <button 
           onClick={() => setIsInviteModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 border border-transparent rounded-lg text-sm font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[var(--gold)] border border-transparent rounded-lg text-sm font-bold text-white shadow-sm hover:bg-[var(--gold)] transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
           Invite Employee
@@ -277,7 +277,7 @@ export const AdminEmployees = () => {
                         {member.publicUserData.hasImage ? (
                           <img src={member.publicUserData.imageUrl} alt="" className="w-10 h-10 rounded-full border border-slate-200 object-cover" />
                         ) : (
-                          <div className="w-10 h-10 shrink-0 rounded-full grid place-items-center text-white font-bold text-sm bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-sm border border-emerald-700/50">
+                          <div className="w-10 h-10 shrink-0 rounded-full grid place-items-center text-white font-bold text-sm bg-gradient-to-br bg-[var(--gold)] shadow-sm border border-[var(--gold)]/50">
                             {(member.publicUserData.firstName || member.publicMetadata?.firstName)?.[0] || ''}{(member.publicUserData.lastName || member.publicMetadata?.lastName)?.[0] || ''}
                             {!member.publicUserData.firstName && !member.publicUserData.lastName && !member.publicMetadata?.firstName && !member.publicMetadata?.lastName && (member.publicUserData.identifier?.[0]?.toUpperCase() || 'U')}
                           </div>
@@ -383,7 +383,7 @@ export const AdminEmployees = () => {
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="employee@company.com"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
                 />
                 <p className="text-xs text-slate-500 mt-2">They will receive an email containing a secure link to join the organisation and set up their profile.</p>
               </div>
@@ -398,7 +398,7 @@ export const AdminEmployees = () => {
                 <button 
                   type="submit"
                   disabled={isInviting}
-                  className="px-4 py-2 bg-emerald-600 border border-transparent rounded-lg text-sm font-bold text-white hover:bg-emerald-700 transition disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--gold)] border border-transparent rounded-lg text-sm font-bold text-white hover:bg-[var(--gold)] transition disabled:opacity-50"
                 >
                   {isInviting ? 'Sending...' : 'Send Invitation'}
                 </button>

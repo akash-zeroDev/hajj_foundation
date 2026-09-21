@@ -70,8 +70,8 @@ export const PaymentsList = () => {
           <>
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-emerald-100 rounded-lg">
-                  <CreditCard size={20} strokeWidth={1.7} className="text-emerald-600" />
+                <div className="p-2 bg-[var(--gold)]/20 rounded-lg">
+                  <CreditCard size={20} strokeWidth={1.7} className="text-[var(--gold)]" />
                 </div>
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Company Revenue (Org Fees)</h3>
               </div>
@@ -151,7 +151,7 @@ export const PaymentsList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {tx.status === 'succeeded' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
                           Paid
                         </span>
                       ) : (

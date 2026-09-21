@@ -61,8 +61,8 @@ const EmployeeProfileSidecar = ({
                 {email}
               </a>
               <div className="mt-[6px]">
-                <span className={`text-[10px] font-semibold px-[8px] py-[2px] rounded-full inline-flex items-center gap-[6px] ${isSuspended ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
-                  <span className={`w-[5px] h-[5px] rounded-full ${isSuspended ? 'bg-red-600' : 'bg-emerald-600'}`}></span>
+                <span className={`text-[10px] font-semibold px-[8px] py-[2px] rounded-full inline-flex items-center gap-[6px] ${isSuspended ? 'bg-red-50 text-red-600' : 'bg-[var(--gold)]/10 text-[var(--gold)]'}`}>
+                  <span className={`w-[5px] h-[5px] rounded-full ${isSuspended ? 'bg-red-600' : 'bg-[var(--gold)]'}`}></span>
                   {isSuspended ? 'Suspended' : 'Active'}
                 </span>
               </div>
@@ -81,7 +81,7 @@ const EmployeeProfileSidecar = ({
                 <h4 className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-[12px]">Account Details</h4>
                 <div className="border border-slate-100 rounded-xl bg-white overflow-hidden shadow-sm">
                   <div className="flex items-center gap-[16px] p-[16px] border-b border-slate-100">
-                    <div className="w-[36px] h-[36px] shrink-0 rounded-lg bg-emerald-50/50 flex items-center justify-center text-emerald-700 border border-emerald-100/50">
+                    <div className="w-[36px] h-[36px] shrink-0 rounded-lg bg-[var(--gold)]/10/50 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20/50">
                       <CreditCard className="w-[18px] h-[18px]" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -142,7 +142,7 @@ const EmployeeProfileSidecar = ({
                 <div className="border border-slate-100 rounded-xl bg-white overflow-hidden shadow-sm">
                   
                   <div className="flex items-center gap-[16px] p-[16px] border-b border-slate-100">
-                    <div className="w-[36px] h-[36px] shrink-0 rounded-lg bg-emerald-50/50 flex items-center justify-center text-emerald-700 border border-emerald-100/50">
+                    <div className="w-[36px] h-[36px] shrink-0 rounded-lg bg-[var(--gold)]/10/50 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20/50">
                       <FileText className="w-[18px] h-[18px]" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -151,7 +151,7 @@ const EmployeeProfileSidecar = ({
                     </div>
                     <div className="ml-auto flex items-center">
                       {employeeProfile.agreementStatus === 'signed' ? (
-                        <span className="text-[11px] font-semibold px-[12px] py-[4px] rounded-full bg-white text-emerald-600 border border-emerald-200">Signed</span>
+                        <span className="text-[11px] font-semibold px-[12px] py-[4px] rounded-full bg-white text-[var(--gold)] border border-[var(--gold)]/30">Signed</span>
                       ) : (
                         <span className="text-[11px] font-semibold px-[12px] py-[4px] rounded-full bg-white text-amber-600 border border-amber-200">Pending</span>
                       )}
@@ -159,7 +159,7 @@ const EmployeeProfileSidecar = ({
                   </div>
 
                   <div className="flex items-center gap-[16px] p-[16px] border-b border-slate-100">
-                    <div className="w-[36px] h-[36px] shrink-0 rounded-lg bg-emerald-50/50 flex items-center justify-center text-emerald-700 border border-emerald-100/50">
+                    <div className="w-[36px] h-[36px] shrink-0 rounded-lg bg-[var(--gold)]/10/50 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20/50">
                       <CreditCard className="w-[18px] h-[18px]" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -168,7 +168,7 @@ const EmployeeProfileSidecar = ({
                     </div>
                     <div className="ml-auto flex items-center">
                       {employeeProfile.subscriptionStatus === 'active' ? (
-                        <span className="text-[11px] font-semibold px-[12px] py-[4px] rounded-full bg-white text-emerald-600 border border-emerald-200">Active</span>
+                        <span className="text-[11px] font-semibold px-[12px] py-[4px] rounded-full bg-white text-[var(--gold)] border border-[var(--gold)]/30">Active</span>
                       ) : (
                         <span className="text-[11px] font-semibold px-[12px] py-[4px] rounded-full bg-white text-slate-500 border border-slate-200">Inactive</span>
                       )}

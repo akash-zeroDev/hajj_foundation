@@ -228,8 +228,8 @@ export const OrganisationDetails = () => {
   const renderBadge = (status) => {
     const colors = {
       pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-      paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      signed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      paid: 'bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/30',
+      signed: 'bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/30',
       overdue: 'bg-red-50 text-red-700 border-red-200'
     };
     const activeColor = colors[status] || 'bg-slate-50 text-slate-700 border-slate-200';
@@ -271,7 +271,7 @@ export const OrganisationDetails = () => {
       {/* Back Button */}
       <button 
         onClick={() => navigate('/superadmin/organisations')}
-        className="mb-6 flex items-center text-sm font-medium text-slate-500 hover:text-emerald-700 transition"
+        className="mb-6 flex items-center text-sm font-medium text-slate-500 hover:text-[var(--gold)] transition"
       >
         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -337,7 +337,7 @@ export const OrganisationDetails = () => {
                       href={org.agreementUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded text-sm font-medium text-emerald-700 bg-white hover:bg-slate-50 transition"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded text-sm font-medium text-[var(--gold)] bg-white hover:bg-slate-50 transition"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       View PDF
@@ -432,7 +432,7 @@ export const OrganisationDetails = () => {
                           {member.publicUserData.hasImage ? (
                             <img src={member.publicUserData.imageUrl} alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
                           ) : (
-                            <div className="w-8 h-8 shrink-0 rounded-full grid place-items-center text-white font-bold text-xs bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-sm border border-emerald-700/50">
+                            <div className="w-8 h-8 shrink-0 rounded-full grid place-items-center text-white font-bold text-xs bg-gradient-to-br bg-[var(--gold)] shadow-sm border border-[var(--gold)]/50">
                               {(member.publicUserData.firstName || member.publicMetadata?.firstName)?.[0] || ''}{(member.publicUserData.lastName || member.publicMetadata?.lastName)?.[0] || ''}
                               {!member.publicUserData.firstName && !member.publicUserData.lastName && !member.publicMetadata?.firstName && !member.publicMetadata?.lastName && (member.publicUserData.identifier?.[0]?.toUpperCase() || 'U')}
                             </div>
@@ -484,8 +484,8 @@ export const OrganisationDetails = () => {
                   <span className="text-sm text-slate-500 font-medium">/ year</span>
                 </div>
                 {org?.annualFeeStatus === 'paid' ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active & Paid
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]/100"></span> Active & Paid
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
@@ -495,10 +495,10 @@ export const OrganisationDetails = () => {
               </div>
               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                  <svg className="w-4 h-4 text-[var(--gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
                   <span className="text-sm font-medium text-slate-600">Total Employee Funds Routed</span>
                 </div>
-                <span className="text-sm font-bold text-emerald-600">£{totalEmployeeFunds.toLocaleString()}</span>
+                <span className="text-sm font-bold text-[var(--gold)]">£{totalEmployeeFunds.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -574,8 +574,8 @@ export const OrganisationDetails = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {tx.status === 'succeeded' ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Paid
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]/100"></span> Paid
                             </span>
                           ) : tx.status === 'pending' ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
@@ -639,8 +639,8 @@ export const OrganisationDetails = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {draw.status === 'completed' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Completed
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]/100"></span> Completed
                           </span>
                         ) : draw.status === 'pending_approval' ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
@@ -656,7 +656,7 @@ export const OrganisationDetails = () => {
                         <div className="flex flex-col gap-1">
                           {draw.orgWinners.map((w) => (
                             <div key={w._id} className="flex items-center gap-2">
-                              <div className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-white font-bold text-[10px] bg-gradient-to-br from-emerald-600 to-emerald-800">
+                              <div className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-white font-bold text-[10px] bg-gradient-to-br bg-[var(--gold)]">
                                 {w.firstName?.[0] || ''}{w.lastName?.[0] || ''}
                               </div>
                               <span className="text-sm text-slate-800">{w.firstName} {w.lastName}</span>
@@ -669,8 +669,8 @@ export const OrganisationDetails = () => {
                           {draw.orgWinners.map((w) => (
                             <div key={w._id}>
                               {w.awardStatus === 'claimed' ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Claimed
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]/100"></span> Claimed
                                 </span>
                               ) : w.awardStatus === 'won' ? (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
@@ -710,7 +710,7 @@ export const OrganisationDetails = () => {
                     type="text" 
                     value={editFormData.name || ''} 
                     onChange={e => setEditFormData({...editFormData, name: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] transition"
                   />
                 </div>
                 <div>
@@ -719,7 +719,7 @@ export const OrganisationDetails = () => {
                     type="text" 
                     value={editFormData.companyNumber || ''} 
                     onChange={e => setEditFormData({...editFormData, companyNumber: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] transition"
                   />
                 </div>
                 <div>
@@ -728,7 +728,7 @@ export const OrganisationDetails = () => {
                     type="number" 
                     value={editFormData.annualFee || ''} 
                     onChange={e => setEditFormData({...editFormData, annualFee: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] transition"
                   />
                 </div>
                 <div>
@@ -737,7 +737,7 @@ export const OrganisationDetails = () => {
                     rows="3"
                     value={editFormData.registeredAddress || ''} 
                     onChange={e => setEditFormData({...editFormData, registeredAddress: e.target.value})}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] transition"
                   />
                 </div>
               </div>
@@ -745,7 +745,7 @@ export const OrganisationDetails = () => {
                 <button 
                   onClick={handleSaveEdit}
                   disabled={isSaving}
-                  className="px-5 py-2.5 bg-emerald-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm"
+                  className="px-5 py-2.5 bg-[var(--gold)] border border-transparent rounded-lg text-sm font-medium text-white hover:bg-[var(--gold)] disabled:opacity-50 transition shadow-sm"
                 >
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -772,7 +772,7 @@ export const OrganisationDetails = () => {
                   onClick={handleToggleSuspension}
                   className={`px-4 py-2 border rounded-lg text-sm font-medium transition shrink-0 ${
                     org.isSuspended 
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' 
+                      ? 'bg-[var(--gold)]/10 border-[var(--gold)]/30 text-[var(--gold)] hover:bg-[var(--gold)]/20' 
                       : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
                   }`}
                 >
@@ -822,9 +822,9 @@ export const OrganisationDetails = () => {
           ></div>
           
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center animate-modal-pop">
-            <div className={`mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 ${org.isSuspended ? 'bg-emerald-100' : 'bg-red-100'}`}>
+            <div className={`mx-auto flex items-center justify-center h-14 w-14 rounded-full mb-4 ${org.isSuspended ? 'bg-[var(--gold)]/20' : 'bg-red-100'}`}>
               {org.isSuspended ? (
-                <svg className="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-7 w-7 text-[var(--gold)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               ) : (
@@ -854,7 +854,7 @@ export const OrganisationDetails = () => {
                 onClick={confirmToggleSuspension}
                 className={`flex-1 px-4 py-2.5 border border-transparent rounded-xl text-sm font-bold text-white focus:outline-none focus:ring-2 transition-colors shadow-sm ${
                   org.isSuspended 
-                    ? 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500' 
+                    ? 'bg-[var(--gold)] hover:bg-[var(--gold)] focus:ring-[var(--gold)]' 
                     : 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                 }`}
               >

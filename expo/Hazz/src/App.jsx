@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Show, RedirectToSignIn, RedirectToSignUp, useUser, useOrganization, useClerk } from '@clerk/react';
 import { useEffect } from 'react';
 import Navbar from './components/Navbar';
@@ -72,8 +72,10 @@ const DashboardRouter = () => {
 };
 
 function App() {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
+    <div className={`min-h-screen flex flex-col font-sans ${isHome ? "bg-[var(--noir)]" : "bg-slate-50"}`}>
       {/* 
         We only show the global Navbar if the user is NOT on the superadmin route.
         The SuperAdmin layout has its own sidebar and top header. 

@@ -75,7 +75,7 @@ export default function NotificationDropdown() {
                   e.stopPropagation();
                   markAllAsRead();
                 }}
-                className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                className="text-xs font-medium text-[var(--gold)] hover:text-[var(--gold)] flex items-center gap-1"
               >
                 <Trash2 className="w-3 h-3" /> Clear all
               </button>
@@ -105,7 +105,7 @@ export default function NotificationDropdown() {
                       onClick={() => handleNotificationClick(notif)}
                       className={`
                         w-full text-left p-3 rounded-lg transition-colors cursor-pointer group flex gap-3 overflow-hidden
-                        ${isUnread ? 'bg-emerald-50/50 hover:bg-emerald-50' : 'hover:bg-slate-50'}
+                        ${isUnread ? 'bg-[var(--gold)]/10/50 hover:bg-[var(--gold)]/10' : 'hover:bg-slate-50'}
                       `}
                     >
                       <div className="flex-1 min-w-0">

@@ -118,7 +118,7 @@ export const AwardsManagement = () => {
               value={drawName}
               onChange={(e) => setDrawName(e.target.value)}
               placeholder="e.g. Hajj 2026 Quarter 3"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)]"
             />
           </div>
           <div className="w-full sm:w-48">
@@ -129,7 +129,7 @@ export const AwardsManagement = () => {
               required
               value={numWinners}
               onChange={(e) => setNumWinners(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)]"
             />
           </div>
           <PrimaryButton 
@@ -173,7 +173,7 @@ export const AwardsManagement = () => {
                     </button>
                     <button 
                       onClick={() => handleActionClick(draw._id, 'approve')}
-                      className="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition"
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold)] text-white text-sm font-semibold rounded-lg shadow-sm transition"
                     >
                       Approve Winners
                     </button>
@@ -244,7 +244,7 @@ export const AwardsManagement = () => {
                       className="hover:bg-slate-50 transition-colors cursor-pointer group"
                       onClick={() => setExpandedDrawId(expandedDrawId === draw._id ? null : draw._id)}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900 group-hover:text-emerald-700">
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900 group-hover:text-[var(--gold)]">
                         <div className="flex items-center gap-2">
                           <svg className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedDrawId === draw._id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                           {draw.drawName}
@@ -258,7 +258,7 @@ export const AwardsManagement = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {draw.status === 'completed' ? (
-                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--gold)]/20 text-[var(--gold)]">
                              Approved
                            </span>
                         ) : (
@@ -326,7 +326,7 @@ export const AwardsManagement = () => {
                 </button>
                 <button 
                   onClick={executeAction}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-sm ${confirmModal.action === 'discard' ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'}`}
+                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-sm ${confirmModal.action === 'discard' ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' : 'bg-[var(--gold)] hover:bg-[var(--gold)] shadow-[var(--gold)]/20'}`}
                 >
                   {confirmModal.action === 'discard' ? 'Discard Draw' : 'Approve Winners'}
                 </button>

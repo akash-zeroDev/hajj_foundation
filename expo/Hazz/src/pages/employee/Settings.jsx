@@ -50,7 +50,7 @@ export const EmployeeSettings = () => {
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">Legal Agreement Status</label>
               <div className="px-3 py-2 bg-slate-100 border border-slate-200 rounded-md flex items-center h-[38px]">
-                <span className={`text-xs font-bold uppercase ${employeeData?.agreementStatus === 'signed' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                <span className={`text-xs font-bold uppercase ${employeeData?.agreementStatus === 'signed' ? 'text-[var(--gold)]' : 'text-amber-600'}`}>
                   {employeeData?.agreementStatus || 'Pending'}
                 </span>
               </div>

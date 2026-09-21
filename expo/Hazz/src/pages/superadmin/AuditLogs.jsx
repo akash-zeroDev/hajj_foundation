@@ -37,7 +37,7 @@ export const AuditLogs = () => {
       case 'EXECUTED_DRAW':
         return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">Draw Executed</span>;
       case 'APPROVED_DRAW':
-        return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">Draw Approved</span>;
+        return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--gold)]/20 text-[var(--gold)] border border-[var(--gold)]/30">Draw Approved</span>;
       case 'DISCARDED_DRAW':
         return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800 border border-rose-200">Draw Discarded</span>;
       case 'DOWNLOADED_LEDGER_CSV':
@@ -61,7 +61,7 @@ export const AuditLogs = () => {
           <p className="text-slate-500 mt-1">Immutable ledger of sensitive administrative actions across the platform.</p>
         </div>
         <div className="bg-slate-100 px-4 py-2 rounded-lg border border-slate-200 flex items-center gap-2">
-           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+           <div className="w-2 h-2 rounded-full bg-[var(--gold)]/100 animate-pulse"></div>
            <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">Live Logging Active</span>
         </div>
       </div>

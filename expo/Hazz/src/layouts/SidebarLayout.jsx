@@ -68,14 +68,14 @@ export default function SidebarLayout({ navigation, title, children }) {
 
       {/* Sidebar — exact replica of hajj-sidebar.html */}
       <aside className={`
-        fixed inset-y-0 left-0 z-30 flex flex-col border-r border-[#1A1A1A] bg-[#080808] text-[#A1A1AA] transition-transform duration-200 ease-out
+        fixed inset-y-0 left-0 z-30 flex flex-col border-r border-white/5 bg-noir-rich text-[#C2BEB4] transition-transform duration-200 ease-out
         lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `} style={{ width: '268px' }} aria-label="Primary">
 
         {/* Brand */}
-        <div className="flex flex-col items-center justify-center border-b border-[#171717] px-5 py-5">
-          <div className="text-[16px] font-bold leading-none tracking-[-0.02em] text-white text-center">Hajj Savings</div>
-          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#71717A] text-center">{displayRole}</div>
+        <div className="flex flex-col items-center justify-center border-b border-white/5 px-5 py-5">
+          <div className="text-[16px] font-bold leading-none tracking-[-0.02em] text-[#C19F5C] text-center">Hajj Savings</div>
+          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#C19F5C]/80 text-center">{displayRole}</div>
         </div>
         
         <nav className="flex-1 overflow-y-auto px-3 py-[14px]">
@@ -86,7 +86,7 @@ export default function SidebarLayout({ navigation, title, children }) {
               
               const categoryHeader = item.category && item.category !== currentCategory ? (
                 <div key={`cat-${item.category}`} className="px-[10px] pb-2 pt-[18px] first:pt-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#52525B]">{item.category}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#C19F5C]/70">{item.category}</p>
                 </div>
               ) : null;
               
@@ -101,17 +101,17 @@ export default function SidebarLayout({ navigation, title, children }) {
                     className={`
                       flex w-full items-center gap-[11px] rounded-[7px] px-[10px] py-[9px] text-left text-[13.6px] font-medium leading-none tracking-[-0.01em] transition-colors
                       ${isActive 
-                        ? 'bg-[#0E5C3E] text-white shadow-[inset_0_0_0_1px_#14523D]' 
-                        : 'bg-transparent text-[#A1A1AA] hover:bg-[#122019] hover:text-[#E7F0E8]'
+                        ? 'bg-[#C19F5C]/10 text-[#C19F5C] shadow-[inset_0_0_0_1px_var(--tw-shadow-color)] shadow-[#C19F5C]/20' 
+                        : 'bg-transparent text-[#C2BEB4] hover:bg-[#C19F5C]/10 hover:text-[#F4F0E6]'
                       }
                     `}
                   >
-                    <span className={`shrink-0 opacity-80 ${isActive ? '!opacity-100 !text-[#7BC49E]' : ''}`}>
+                    <span className={`shrink-0 opacity-80 ${isActive ? '!opacity-100 !text-[#C19F5C]' : ''}`}>
                       {ICONS[item.name] || ICONS['Dashboard Overview']}
                     </span>
                     <span className="truncate">{item.name}</span>
                     {item.badge && (
-                      <span className={`ml-auto shrink-0 rounded-full border px-[7px] py-[1px] text-[11px] font-semibold leading-none ${isActive ? 'border-[#1B5A3E] bg-[#0A3D2A] text-[#A7E5C0]' : 'border-[#262626] bg-[#141414] text-[#A1A1AA]'}`}>
+                      <span className={`ml-auto shrink-0 rounded-full border px-[7px] py-[1px] text-[11px] font-semibold leading-none ${isActive ? 'border-[#C19F5C]/30 bg-[#C19F5C]/20 text-[#DDBE7B]' : 'border-white/10 bg-white/5 text-[#C2BEB4]'}`}>
                         {item.badge}
                       </span>
                     )}
@@ -122,15 +122,15 @@ export default function SidebarLayout({ navigation, title, children }) {
           })()}
         </nav>
         
-        <div className="flex items-center gap-[11px] border-t border-[#171717] bg-[#080808] p-[14px]">
+        <div className="flex items-center gap-[11px] border-t border-white/5 bg-noir-rich p-[14px]">
            <div className="shrink-0">
              <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
            </div>
            <div className="flex min-w-0 flex-col leading-none">
-             <strong className="truncate text-[13.5px] font-semibold text-white">
+             <strong className="truncate text-[13.5px] font-semibold text-[#F4F0E6]">
                {user?.firstName || user?.primaryEmailAddress?.emailAddress.split('@')[0] || 'User'}
              </strong>
-             <small className="mt-[2px] text-[12px] capitalize text-[#8EA296]">
+             <small className="mt-[2px] text-[12px] capitalize text-[#C19F5C]/80">
                {displayRole}
              </small>
            </div>

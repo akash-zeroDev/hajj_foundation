@@ -151,7 +151,7 @@ export const AdminDashboard = () => {
               </div>
             )}
             
-            <button onClick={handleAcceptAgreement} disabled={isAccepting} className="font-semibold text-[14px] px-8 py-3 rounded-xl inline-flex items-center justify-center gap-2 bg-[#0E5C3E] text-white hover:bg-[#0b4830] transition-colors disabled:opacity-50">
+            <button onClick={handleAcceptAgreement} disabled={isAccepting} className="font-semibold text-[14px] px-8 py-3 rounded-xl inline-flex items-center justify-center gap-2 bg-[var(--gold)] text-[var(--noir-rich)] hover:bg-[#0b4830] transition-colors disabled:opacity-50">
               {isAccepting ? 'Accepting...' : 'Accept Agreement →'}
             </button>
           </div>
@@ -189,7 +189,7 @@ export const AdminDashboard = () => {
           </div>
           <div className="ml-auto flex gap-2.5 items-center">
             <button className="bg-white border border-[#E5E7EB] text-[#2B3330] rounded-lg px-3.5 py-2.5 text-[13.5px] font-[550] cursor-pointer hover:border-[#D1D5DB]" onClick={() => navigate('/admin/agreements')}>View agreements</button>
-            <button className="bg-[#0E5C3E] text-white border border-[#0E5C3E] rounded-lg px-4 py-2.5 text-[13.5px] font-[650] cursor-pointer hover:bg-[#0A3D2A]" onClick={() => navigate('/admin/employees')}>+ Invite employees</button>
+            <button className="bg-[var(--gold)] text-[var(--noir-rich)] border border-[var(--gold)] rounded-lg px-4 py-2.5 text-[13.5px] font-[650] cursor-pointer hover:bg-[var(--gold-light)]" onClick={() => navigate('/admin/employees')}>+ Invite employees</button>
           </div>
         </div>
 
@@ -204,7 +204,7 @@ export const AdminDashboard = () => {
             {orgData?.annualFeeStatus === 'paid' ? 'Valid for 12 months' : 'due to keep award eligibility'}
           </span>
           {orgData?.annualFeeStatus !== 'paid' && (
-            <button onClick={handlePayAnnualFee} className="ml-auto text-[12.5px] font-[650] text-[#0E5C3E] bg-transparent border-0 cursor-pointer hover:underline whitespace-nowrap">Pay now →</button>
+            <button onClick={handlePayAnnualFee} className="ml-auto text-[12.5px] font-[650] text-[var(--gold)] bg-transparent border-0 cursor-pointer hover:underline whitespace-nowrap">Pay now →</button>
           )}
         </div>
 
@@ -217,7 +217,7 @@ export const AdminDashboard = () => {
               <p className="m-0 text-[13px] text-[#6B7280]">Across <b className="text-[#0B0F0E]">{totalEmp} staff</b> · avg balance <b className="font-mono text-[#0B0F0E]">£{avgMonthly.toFixed(2)}</b></p>
               <div className="h-[1px] bg-[#EEF0F3] mt-4 mb-0"></div>
               <div className="flex items-center gap-2.5 pt-[13px] pb-0.5 text-[12.5px] text-[#6B7280]">
-                <span className="w-[22px] h-[22px] rounded-full bg-[#F9FAFB] border border-[#E5E7EB] grid place-items-center text-[11px] font-bold text-[#0E5C3E] shrink-0">✓</span>
+                <span className="w-[22px] h-[22px] rounded-full bg-[#F9FAFB] border border-[#E5E7EB] grid place-items-center text-[11px] font-bold text-[var(--gold)] shrink-0">✓</span>
                 <span>Monthly Award Draw — <b className="text-[#0B0F0E]">{totalEmp}</b> company tickets · <b className="text-[#0B0F0E]">{stats.hajjJourneysWon || 0}</b> journeys won</span>
                 
               </div>
@@ -250,14 +250,14 @@ export const AdminDashboard = () => {
               <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[120px] block">
                 {[0.5].map(t => <line key={t} x1={pl} x2={W-pr} y1={pt+(H-pt-pb)*t} y2={pt+(H-pt-pb)*t} stroke="#EEF0F3" strokeWidth="1"/>)}
                 <polygon points={area} fill="#EDF3EF"/>
-                <polyline points={line} fill="none" stroke="#0E5C3E" strokeWidth="1.75" strokeLinejoin="round"/>
-                {pts.map((v,i) => <circle key={i} cx={X(i)} cy={Y(v)} r={v>0?3.5:2} fill={v>0?'#0E5C3E':'#D1D5DB'} stroke="#fff" strokeWidth="1.5"><title>{labels[i]}: {v}</title></circle>)}
+                <polyline points={line} fill="none" stroke="var(--gold)" strokeWidth="1.75" strokeLinejoin="round"/>
+                {pts.map((v,i) => <circle key={i} cx={X(i)} cy={Y(v)} r={v>0?3.5:2} fill={v>0?'var(--gold)':'#D1D5DB'} stroke="#fff" strokeWidth="1.5"><title>{labels[i]}: {v}</title></circle>)}
                 {labels.map((m,i) => <text key={i} x={X(i)} y={H-3} textAnchor="middle" fontSize="10.5" fill="#9CA3AF" fontFamily="Inter">{m}</text>)}
               </svg>
             </div>
             <div className="flex justify-between gap-2.5 p-[11px_18px] border-t border-[#EEF0F3] text-[12.5px] text-[#6B7280]">
               <span>All <b>{totalEmp}</b> enrolments visualised</span>
-              <button onClick={() => navigate('/admin/employees')} className="text-[#0E5C3E] font-semibold cursor-pointer hover:underline bg-transparent border-0">Employee list →</button>
+              <button onClick={() => navigate('/admin/employees')} className="text-[var(--gold)] font-semibold cursor-pointer hover:underline bg-transparent border-0">Employee list →</button>
             </div>
           </div>
           
@@ -273,7 +273,7 @@ export const AdminDashboard = () => {
                   <b className="block font-semibold tracking-[-0.01em]">Annual fee pending</b>
                   <small className="block text-[#6B7280] text-[12.5px] mt-[1px]">Eligibility lapses if unpaid.</small>
                 </div>
-                <button onClick={handlePayAnnualFee} className="ml-auto self-center text-[12.5px] font-semibold text-[#0E5C3E] bg-transparent border-0 cursor-pointer hover:underline whitespace-nowrap">Pay</button>
+                <button onClick={handlePayAnnualFee} className="ml-auto self-center text-[12.5px] font-semibold text-[var(--gold)] bg-transparent border-0 cursor-pointer hover:underline whitespace-nowrap">Pay</button>
               </div>
             )}
             {stats.pendingAgreements > 0 && (
@@ -283,7 +283,7 @@ export const AdminDashboard = () => {
                   <b className="block font-semibold tracking-[-0.01em]">Agreements pending</b>
                   <small className="block text-[#6B7280] text-[12.5px] mt-[1px]">{stats.pendingAgreements} staff need to sign.</small>
                 </div>
-                <button onClick={() => navigate('/admin/agreements')} className="ml-auto self-center text-[12.5px] font-semibold text-[#0E5C3E] bg-transparent border-0 cursor-pointer hover:underline whitespace-nowrap">View</button>
+                <button onClick={() => navigate('/admin/agreements')} className="ml-auto self-center text-[12.5px] font-semibold text-[var(--gold)] bg-transparent border-0 cursor-pointer hover:underline whitespace-nowrap">View</button>
               </div>
             )}
             {orgData?.annualFeeStatus === 'paid' && stats.pendingAgreements === 0 && (
@@ -297,7 +297,7 @@ export const AdminDashboard = () => {
             <div className="flex items-baseline gap-2.5 px-[18px] py-[13px] border-b border-[#EEF0F3]">
               <h3 className="m-0 text-[13px] font-[650] tracking-[-0.01em]">Recent employees</h3>
               <span className="text-[12px] text-[#9CA3AF]">latest enrolments</span>
-              <span className="ml-auto"><button onClick={() => navigate('/admin/employees')} className="text-[#0E5C3E] font-semibold cursor-pointer text-[12.5px] bg-transparent border-0 hover:underline">View all →</button></span>
+              <span className="ml-auto"><button onClick={() => navigate('/admin/employees')} className="text-[var(--gold)] font-semibold cursor-pointer text-[12.5px] bg-transparent border-0 hover:underline">View all →</button></span>
             </div>
             <div className="overflow-auto w-full">
               <table className="w-full border-collapse text-[13px]">
@@ -340,7 +340,7 @@ export const AdminDashboard = () => {
             <div className="flex items-baseline gap-2.5 px-[18px] py-[13px] border-b border-[#EEF0F3]">
               <h3 className="m-0 text-[13px] font-[650] tracking-[-0.01em]">Actions</h3>
             </div>
-            <button onClick={handlePayAnnualFee} className="flex items-center gap-3 w-full text-left bg-transparent border-0 border-b border-[#EEF0F3] p-[13px_18px] text-[13.5px] font-[650] cursor-pointer text-[#0A3D2A] hover:bg-[#FAFAF8]">
+            <button onClick={handlePayAnnualFee} className="flex items-center gap-3 w-full text-left bg-transparent border-0 border-b border-[#EEF0F3] p-[13px_18px] text-[13.5px] font-[650] cursor-pointer text-[var(--gold-light)] hover:bg-[#FAFAF8]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-[15px] h-[15px] text-[#9CA3AF]"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>
               Pay annual fee
               <span className="ml-auto text-[#9CA3AF] text-[14px]">→</span>
@@ -445,9 +445,9 @@ export const SuperAdminDashboard = () => {
           <line key={t} x1={padL} x2={W - padR} y1={padT + (H - padT - padB) * t} y2={padT + (H - padT - padB) * t} stroke="#EEF0F3" strokeWidth="1" strokeDasharray="3 4" />
         ))}
         <polygon points={areaPts} fill="#EDF3EF" />
-        <polyline points={pts} fill="none" stroke="#0E5C3E" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={pts} fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {areaData.map((d, i) => (
-          <circle key={i} cx={X(i)} cy={Y(d.v)} r="4" fill="#0E5C3E" stroke="#fff" strokeWidth="1.6" />
+          <circle key={i} cx={X(i)} cy={Y(d.v)} r="4" fill="var(--gold)" stroke="#fff" strokeWidth="1.6" />
         ))}
         {areaData.map((d, i) => (
           <text key={d.m} x={X(i)} y={H - 2} textAnchor="middle" fontSize="11" fill="#9CA3AF">{d.m}</text>
@@ -470,7 +470,7 @@ export const SuperAdminDashboard = () => {
           const labelY = d.a > 0 ? Math.max(12, y(d.a) - 6) : y(d.a) - 6;
           return (
             <g key={d.m}>
-              <rect x={x} y={y(d.a)} width={bw} height={h} rx="4" fill="#0E5C3E" />
+              <rect x={x} y={y(d.a)} width={bw} height={h} rx="4" fill="var(--gold)" />
               <text x={padL + gap * i + gap / 2} y={H - 4} textAnchor="middle" fontSize="11" fill="#9CA3AF">{d.m}</text>
               <text x={padL + gap * i + gap / 2} y={labelY} textAnchor="middle" fontSize="11" fontWeight="600" fill="#0B0F0E">{d.a}</text>
             </g>
@@ -501,7 +501,7 @@ export const SuperAdminDashboard = () => {
         <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-lg border border-[#FDE68A] bg-[#FEF3C7] text-[13px] mb-4">
           <span className="text-[11px] font-bold tracking-wide bg-white border border-[#FDE68A] px-2 py-0.5 rounded-full text-[#92400E]">Action needed</span>
           <span className="text-[#0B0F0E]"><b>{overdue} organisations</b> overdue &gt;14 days · <b>{pendingDraws} draw</b> pending approval · <b>{excluded} orgs</b> excluded from next draw until signed.</span>
-          <button onClick={() => navigate('/superadmin/organisations')} className="ml-auto text-[#0A3D2A] font-semibold underline underline-offset-2 text-[13px] bg-transparent border-0 cursor-pointer">Review →</button>
+          <button onClick={() => navigate('/superadmin/organisations')} className="ml-auto text-[var(--gold-light)] font-semibold underline underline-offset-2 text-[13px] bg-transparent border-0 cursor-pointer">Review →</button>
         </div>
         );
       })()}
@@ -514,7 +514,7 @@ export const SuperAdminDashboard = () => {
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
         {kpis.map(k => (
-          <div key={k.label} className={`bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] p-[16px_14px_14px] relative overflow-hidden ${k.accent ? 'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[#0E5C3E] before:content-[""]' : ''}`}>
+          <div key={k.label} className={`bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] p-[16px_14px_14px] relative overflow-hidden ${k.accent ? 'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[var(--gold)] text-[var(--noir-rich)] before:content-[""]' : ''}`}>
             <div className="flex items-start justify-between gap-2 mb-2">
               <span className="text-[11.5px] font-semibold tracking-[0.02em] uppercase text-[#6B7280]">{k.label}</span>
               <span className="w-7 h-7 rounded-[7px] grid place-items-center bg-[#F9FAFB] border border-[#EEF0F3] text-[#9CA3AF] shrink-0">
@@ -542,7 +542,7 @@ export const SuperAdminDashboard = () => {
           <div className="p-4">
             {loading ? <SkeletonChart h={150} /> : areaData.length===0 ? <div className="py-12 text-center text-[13px] text-[#6B7280]">No contribution data yet — chart will appear after first payroll.</div> : (
               <>
-                <div className="flex items-center gap-2.5 mb-3 text-[12px] text-[#6B7280]"><i className="w-2.5 h-2.5 rounded-sm bg-[#0E5C3E] inline-block" /> Cumulative pool <span className="ml-2 font-semibold text-[#0B0F0E]">{totalAUM}</span><span className="text-[#6B7280]">total AUM</span></div>
+                <div className="flex items-center gap-2.5 mb-3 text-[12px] text-[#6B7280]"><i className="w-2.5 h-2.5 rounded-sm bg-[var(--gold)] text-[var(--noir-rich)] inline-block" /> Cumulative pool <span className="ml-2 font-semibold text-[#0B0F0E]">{totalAUM}</span><span className="text-[#6B7280]">total AUM</span></div>
                 <AreaChartSvg />
               </>
             )}
@@ -561,7 +561,7 @@ export const SuperAdminDashboard = () => {
                 <>
                 <svg viewBox="0 0 42 42" className="w-[116px] h-[116px] -rotate-90">
                   <circle cx="21" cy="21" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="6" />
-                  <circle cx="21" cy="21" r="15.9" fill="none" stroke="#0E5C3E" strokeWidth="6" strokeDasharray={`${pPaid} ${100-pPaid}`} strokeLinecap="round" />
+                  <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--gold)" strokeWidth="6" strokeDasharray={`${pPaid} ${100-pPaid}`} strokeLinecap="round" />
                   <circle cx="21" cy="21" r="15.9" fill="none" stroke="#F59E0B" strokeWidth="6" strokeDasharray={`${pPend} ${100-pPend}`} strokeDashoffset={`-${pPaid}`} strokeLinecap="round" opacity=".95" />
                   <circle cx="21" cy="21" r="15.9" fill="none" stroke="#DC2626" strokeWidth="6" strokeDasharray={`${pOver} ${100-pOver}`} strokeDashoffset={`-${pPaid+pPend}`} strokeLinecap="round" />
                 </svg>
@@ -578,12 +578,12 @@ export const SuperAdminDashboard = () => {
                 <span className="inline-flex items-center text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECDD3] text-[#9F1239]">Overdue {collection.overdue}</span>
               </div>
               <div className="mt-2.5 text-[12.5px] text-[#6B7280]">Outstanding <b className="text-[#0B0F0E] font-mono">£{(collection.outstandingAmount||0).toLocaleString()}</b> · Overdue <b className="text-[#9F1239] font-mono">£{(collection.overdueAmount||0).toLocaleString()}</b></div>
-              <div className="mt-2 h-1.5 bg-[#EEF0F3] rounded-full overflow-hidden flex"><div style={{flex:collection.paid}} className="bg-[#0E5C3E]" /><div style={{flex:collection.pending}} className="bg-[#F59E0B]" /><div style={{flex:collection.overdue}} className="bg-[#DC2626]" /></div>
+              <div className="mt-2 h-1.5 bg-[#EEF0F3] rounded-full overflow-hidden flex"><div style={{flex:collection.paid}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:collection.pending}} className="bg-[#F59E0B]" /><div style={{flex:collection.overdue}} className="bg-[#DC2626]" /></div>
             </div>
           </div>
           <div className="border-t border-[#EEF0F3] p-4">
             <div className="flex justify-between items-center mb-2"><h4 className="m-0 text-[12.5px] font-semibold">Member Subscription Health</h4><span className="text-[12px] text-[#6B7280]">{subscription.total} members</span></div>
-            <div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden flex"><div style={{flex:subscription.active||1}} className="bg-[#0E5C3E]" /><div style={{flex:subscription.pending||1}} className="bg-[#F59E0B]" /><div style={{flex:subscription.pastDue||1}} className="bg-[#DC2626]" /></div>
+            <div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden flex"><div style={{flex:subscription.active||1}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:subscription.pending||1}} className="bg-[#F59E0B]" /><div style={{flex:subscription.pastDue||1}} className="bg-[#DC2626]" /></div>
             <div className="flex gap-2 mt-2 flex-wrap items-center">
               <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">Active {subscription.active}</span>
               <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E]">Pending {subscription.pending}</span>
@@ -598,21 +598,21 @@ export const SuperAdminDashboard = () => {
       <div className="grid grid-cols-12 gap-3.5 mb-3.5">
         <div className="col-span-12 lg:col-span-6 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
           <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Organisation Onboarding</h3><p className="m-0 text-[12px] text-[#6B7280]">New orgs by month</p></div>
-          <div className="p-4">{loading ? <SkeletonChart h={160} /> : barData.length===0 ? <div className="py-12 text-center text-[13px] text-[#6B7280]">No onboarding data yet.</div> : (<><BarChartSvg /><div className="flex gap-2.5 justify-center mt-1.5 text-[11.5px] text-[#6B7280]"><span className="inline-flex items-center gap-1.5"><i className="w-2 h-2 bg-[#0E5C3E] rounded-sm inline-block" />Onboarded</span></div></>)}</div>
+          <div className="p-4">{loading ? <SkeletonChart h={160} /> : barData.length===0 ? <div className="py-12 text-center text-[13px] text-[#6B7280]">No onboarding data yet.</div> : (<><BarChartSvg /><div className="flex gap-2.5 justify-center mt-1.5 text-[11.5px] text-[#6B7280]"><span className="inline-flex items-center gap-1.5"><i className="w-2 h-2 bg-[var(--gold)] text-[var(--noir-rich)] rounded-sm inline-block" />Onboarded</span></div></>)}</div>
         </div>
         <div className="col-span-12 lg:col-span-6 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
           <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Agreement Compliance</h3><p className="m-0 text-[12px] text-[#6B7280]">Signed vs pending — eligibility gate</p></div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-3.5">
-              <div><div className="text-[12px] font-semibold text-[#6B7280]">Organisations</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.orgSigned} / {compliance.orgTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">{compliance.orgTotal? Math.round(compliance.orgSigned/compliance.orgTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.orgSigned||1}} className="bg-[#0E5C3E]" /><div style={{flex:(compliance.orgTotal-compliance.orgSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">{compliance.orgTotal-compliance.orgSigned} pending — excluded from next draw</div></div>
-              <div><div className="text-[12px] font-semibold text-[#6B7280]">Members</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.empSigned} / {compliance.empTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">{compliance.empTotal? Math.round(compliance.empSigned/compliance.empTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.empSigned||1}} className="bg-[#0E5C3E]" /><div style={{flex:(compliance.empTotal-compliance.empSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">If {compliance.orgTotal-compliance.orgSigned} orgs sign → pool <b className="text-[#0B0F0E]">+{eligiblePool}</b> eligible</div></div>
+              <div><div className="text-[12px] font-semibold text-[#6B7280]">Organisations</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.orgSigned} / {compliance.orgTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">{compliance.orgTotal? Math.round(compliance.orgSigned/compliance.orgTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.orgSigned||1}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:(compliance.orgTotal-compliance.orgSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">{compliance.orgTotal-compliance.orgSigned} pending — excluded from next draw</div></div>
+              <div><div className="text-[12px] font-semibold text-[#6B7280]">Members</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.empSigned} / {compliance.empTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">{compliance.empTotal? Math.round(compliance.empSigned/compliance.empTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.empSigned||1}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:(compliance.empTotal-compliance.empSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">If {compliance.orgTotal-compliance.orgSigned} orgs sign → pool <b className="text-[#0B0F0E]">+{eligiblePool}</b> eligible</div></div>
             </div>
             <div className="h-px bg-[#EEF0F3] my-3.5" />
             <div className="flex gap-2 flex-wrap items-center">
               <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">Eligible: {eligiblePool}</span>
               <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E]">Excluded: {compliance.orgTotal - compliance.orgSigned} orgs</span>
               <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#F3F4F6] border border-[#E5E7EB] text-[#6B7280]">Suspended: {compliance.suspended}</span>
-              <button onClick={() => navigate('/superadmin/organisations')} className="ml-auto text-[12.5px] font-semibold text-[#0E5C3E] bg-transparent border-0 cursor-pointer">Review queue →</button>
+              <button onClick={() => navigate('/superadmin/organisations')} className="ml-auto text-[12.5px] font-semibold text-[var(--gold)] bg-transparent border-0 cursor-pointer">Review queue →</button>
             </div>
           </div>
         </div>
@@ -621,7 +621,7 @@ export const SuperAdminDashboard = () => {
       {/* Row 4 — Recent + Quick */}
       <div className="grid grid-cols-12 gap-3.5 mb-3.5">
         <div className="col-span-12 lg:col-span-8 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Recent Organisations</h3><p className="m-0 text-[12px] text-[#6B7280]">Latest onboardings</p><Link to="/superadmin/organisations" className="ml-auto text-[13px] font-semibold text-[#0E5C3E] hover:underline">View all →</Link></div>
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Recent Organisations</h3><p className="m-0 text-[12px] text-[#6B7280]">Latest onboardings</p><Link to="/superadmin/organisations" className="ml-auto text-[13px] font-semibold text-[var(--gold)] hover:underline">View all →</Link></div>
           <div className="overflow-auto">
             <table className="w-full border-collapse text-[13px]">
               <thead><tr className="bg-[#F9FAFB]"><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Organisation</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Company No.</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Annual fee</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Status</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Agreement</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Joined</th></tr></thead>
@@ -648,7 +648,7 @@ export const SuperAdminDashboard = () => {
           <div className="bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
             <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Quick Actions</h3></div>
             <div className="grid gap-2.5 p-3.5">
-              <button onClick={() => navigate('/superadmin/organisations?onboard=true')} className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-[#0E5C3E] text-white font-semibold text-[13.5px] border border-[#0E5C3E] hover:bg-[#0A3D2A] transition"><Plus size={16} strokeWidth={2} />Onboard Organisation</button>
+              <button onClick={() => navigate('/superadmin/organisations?onboard=true')} className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-[var(--gold)] text-[var(--noir-rich)] font-semibold text-[13.5px] border border-[var(--gold)] hover:bg-[var(--gold-light)] transition"><Plus size={16} strokeWidth={2} />Onboard Organisation</button>
               <button onClick={() => navigate('/superadmin/awards')} className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-white text-[#0B0F0E] font-semibold text-[13.5px] border border-[#D1D5DB] hover:bg-[#F9FAFB] transition">Run Awards Draw</button>
               <button onClick={() => navigate('/superadmin/reports')} className="inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-transparent text-[#2B3330] font-medium text-[13.5px] border-0 hover:underline">Export audit report ↓</button>
             </div>
@@ -672,7 +672,7 @@ export const SuperAdminDashboard = () => {
           </div>
         </div>
         <div className="col-span-12 lg:col-span-8 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Live Audit Trail</h3><p className="m-0 text-[12px] text-[#6B7280]">Immutable log — last 4 events</p><Link to="/superadmin/reports" className="ml-auto text-[13px] font-semibold text-[#0E5C3E] hover:underline">View all →</Link></div>
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Live Audit Trail</h3><p className="m-0 text-[12px] text-[#6B7280]">Immutable log — last 4 events</p><Link to="/superadmin/reports" className="ml-auto text-[13px] font-semibold text-[var(--gold)] hover:underline">View all →</Link></div>
           <div className="overflow-auto">
             <table className="w-full border-collapse text-[13px]">
               <thead><tr className="bg-[#F9FAFB]"><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">When</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Actor</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">Event</th><th className="text-left px-3.5 py-2.5 text-[10.5px] font-bold tracking-widest uppercase text-[#9CA3AF] border-b border-[#EEF0F3]">IP</th></tr></thead>
@@ -708,7 +708,7 @@ export const Unauthorized = () => (
       <p className="text-slate-600 mb-8">You do not have the required permissions to view this dashboard.</p>
       <button 
         onClick={() => window.history.back()} 
-        className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 transition"
+        className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[var(--gold)] hover:bg-[var(--gold)] transition"
       >
         Go Back
       </button>

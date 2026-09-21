@@ -94,7 +94,7 @@ export const AdminPayments = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {tx.status === 'succeeded' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
                           Paid
                         </span>
                       ) : tx.status === 'failed' ? (

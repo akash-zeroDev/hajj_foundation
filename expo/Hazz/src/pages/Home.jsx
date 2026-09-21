@@ -1,212 +1,58 @@
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-  
-} from "motion/react";
-import { useEffect, useRef, useState,  } from "react";
-import { useAuth, useUser, Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
-import { Link, useNavigate } from 'react-router-dom';
-import archesImage from "../assets/arches.png";
+import { ArrowRight, Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useUser, Show, SignInButton, SignUpButton, UserButton } from "@clerk/react";
+import { Link, useNavigate } from "react-router-dom";
 import heroImage from "../assets/hero-makkah.png";
 import pilgrimsImage from "../assets/pilgrims.png";
 
 /* ------------------------------------------------------------------ */
-/* Primitives                                                          */
-/* ------------------------------------------------------------------ */
-
-const EASE = [0.22, 1, 0.36, 1] ;
-
-function Reveal({ children, delay = 0, y = 24, className, as = "div" }) {
-  const reduce = useReducedMotion();
-  const M = motion[as];
-  return (
-    <M
-      className={className}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
-      transition={{ duration: 0.9, delay, ease: EASE }}
-    >
-      {children}
-    </M>
-  );
-}
-
-const lineVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.12 } },
-};
-
-const lineChild = {
-  hidden: { opacity: 0, y: "0.42em" },
-  show: { opacity: 1, y: 0, transition: { duration: 1, ease: EASE } },
-};
-
-function Rule({ tone, className = "" }) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.span
-      aria-hidden
-      className={`block h-px origin-left ${tone === "brass" ? "bg-brass" : "bg-green"} ${className}`}
-      initial={reduce ? { opacity: 0 } : { scaleX: 0, opacity: 1 }}
-      whileInView={{ scaleX: 1, opacity: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 1.1, ease: EASE }}
-    />
-  );
-}
-
-function Eyebrow({ children, tone = "green" }) {
-  const color = {
-    brass: "text-brass",
-    ivory: "text-ivory/70",
-    green: "text-green",
-    olive: "text-olive-muted",
-  }[tone];
-  const rule =
-    tone === "ivory"
-      ? "bg-green-muted opacity-90"
-      : tone === "brass"
-        ? "bg-current opacity-60"
-        : "bg-green";
-  return (
-    <span className={`eyebrow inline-flex items-center gap-3 ${color}`}>
-      <span aria-hidden className={`h-px w-6 ${rule}`} />
-      {children}
-    </span>
-  );
-}
-
-
-
-function ArrowLink({ href, children, variant = "green", isInternal = false }) {
-  const styles = {
-    solid: "bg-olive text-ivory hover:bg-olive-deep",
-    ivory: "bg-ivory text-green-deep hover:bg-stone",
-    green: "bg-green text-ivory hover:bg-green-deep",
-    "green-outline": "border border-green/60 text-green hover:border-green hover:bg-green/8",
-    outline: "border border-current text-current hover:border-green-muted hover:text-green-muted",
-    ghost: "px-0 py-2 text-current hover:text-green",
-  };
-  
-  const className = `group inline-flex items-center gap-3 px-7 py-4 text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${styles[variant]}`;
-  
-  const content = (
-    <>
-      {children}
-      <span
-        aria-hidden
-        className="inline-block transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1"
-      >
-        &#8594;
-      </span>
-    </>
-  );
-
-  if (href.startsWith('/')) {
-    return <Link to={href} className={className}>{content}</Link>;
-  }
-
-  return <a href={href} className={className}>{content}</a>;
-}
-
-
-/* ------------------------------------------------------------------ */
-/* Content                                                             */
+/* Data                                                                */
 /* ------------------------------------------------------------------ */
 
 const NAV = [
   { label: "About", href: "#purpose" },
-  { label: "How It Works", href: "#ecosystem" },
-  { label: "For Organisations", href: "#organisations" },
-  { label: "For Employees", href: "#organisations" },
+  { label: "How It Works", href: "#journey" },
+  { label: "Fund Structure", href: "#structure" },
+  { label: "Governance", href: "#governance" },
 ];
-
-const FOOTER_NAV = [...NAV, { label: "Portal Login", href: "#final" }];
-
-const HEADLINE = ["Prepare today", "for a journey", "that matters."];
-const GREEN_LINE = "that matters.";
 
 const STAGES = [
-  { label: "Intention", note: "A decision is made, and recorded." },
-  { label: "Participation", note: "An organisation opens the way." },
-  { label: "Contribution", note: "Amounts are agreed and set aside." },
-  { label: "Progress", note: "Every payment is visible." },
-  { label: "Preparation", note: "The journey becomes reachable." },
+  { label: "Eligibility", note: "Staff, directors and approved long-term volunteers." },
+  { label: "Participation", note: "Contributions continue monthly or annually." },
+  { label: "Contribution", note: "Employer, employee and community support." },
+  { label: "Annual draw", note: "Transparent selection based on fund capacity." },
+  { label: "Sacred journey", note: "Three people supported each year." },
 ];
-
 
 const SIDES = [
-  {
-    title: "Organisation",
-    points: [
-      "Opens participation",
-      "Holds the agreements",
-      "Sees contribution activity",
-      "Keeps orderly records",
-    ],
-  },
-  {
-    title: "Employee",
-    points: [
-      "Sets a contribution",
-      "Builds a payment history",
-      "Reviews their agreement",
-      "Watches progress accumulate",
-    ],
-  },
-];
-
-const PATHWAY = ["Organisation", "Participation", "Employee", "Contribution", "Progress"];
-
-
-const [ORG_BLOCK, EMP_BLOCK] = [
-  {
-    eyebrow: "For organisations",
-    heading: ["Built for", "organisations."],
-    body: "Employers can offer their teams a considered way to prepare, without carrying the administrative weight alone.",
-    items: [
-      "Structured participation",
-      "Clear records",
-      "Employee oversight",
-      "Agreement management",
-    ],
-  },
-  {
-    eyebrow: "For employees",
-    heading: ["Designed", "around people."],
-    body: "Each person keeps their own view of the journey — what they have set aside, what they agreed to, and how far along they are.",
-    items: [
-      "Personal contribution journey",
-      "Accessible records",
-      "Payment visibility",
-      "Preparation progress",
-    ],
-  },
+  { title: "Organisation", points: ["Fixed yearly contribution", "Holds protected records", "Runs the annual draw", "Reports and audits annually"] },
+  { title: "Employee", points: ["Monthly or yearly participation", "Maintains continuous contributions", "Reviews their contribution record", "Remains eligible until selected"] },
 ];
 
 const PRINCIPLES = [
-  {
-    title: "Security",
-    body: "Access is role-based and protected, so records are only visible to those who should see them.",
-  },
-  {
-    title: "Transparency",
-    body: "Contributions, agreements and payment history are stated plainly and kept up to date.",
-  },
-  {
-    title: "Governance",
-    body: "Clear responsibilities between the organisation, the participant and the fund.",
-  },
-  {
-    title: "Accountability",
-    body: "Activity is recorded, so every figure can be traced back to its origin.",
-  },
+  { title: "Protection", body: "Financial and personal records cannot be altered or deleted during any investigation." },
+  { title: "Transparency", body: "The selection process is fully transparent, auditable and reported annually." },
+  { title: "Governance", body: "The Hajj Fund Committee includes the CEO, Directors, Finance and HR." },
+  { title: "Purpose", body: "Every contribution remains strictly reserved for Hajj and cannot be withdrawn for another use." },
 ];
 
+/* ------------------------------------------------------------------ */
+/* Small components                                                    */
+/* ------------------------------------------------------------------ */
+
+function Eyebrow({ children }) {
+  return <div className="eyebrow"><span />{children}</div>;
+}
+
+function ArrowLink({ href, children, solid = false, to = null }) {
+  const cls = solid ? "arrow-link arrow-solid" : "arrow-link arrow-outline";
+  const arrow = <ArrowRight size={15} strokeWidth={1.5} />;
+
+  if (to) {
+    return <Link to={to} className={cls}>{children}{arrow}</Link>;
+  }
+  return <a href={href} className={cls}>{children}{arrow}</a>;
+}
 
 /* ------------------------------------------------------------------ */
 /* Navbar                                                              */
@@ -217,361 +63,145 @@ function Navbar({ dashboardLink }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const update = () => setScrolled(window.scrollY > 30);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
   }, []);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
-
-  const inverted = !scrolled && !open;
-
-  const FOOTER_NAV = [...NAV, { label: "Portal Login", href: dashboardLink }];
 
   return (
     <>
-      <header
-        className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-700 ${
-          scrolled
-            ? "border-b border-olive/10 bg-ivory/85 backdrop-blur-md"
-            : "border-b border-transparent"
-        }`}
-      >
-        <nav
-          aria-label="Primary"
-          className="mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-6 md:px-10"
-        >
-          <a href="#top" className="block leading-none flex items-center gap-3">
-            <div>
-              <span className={`block font-serif text-[1.55rem] font-light tracking-[0.32em] transition-colors duration-700 ${inverted ? "text-ivory" : "text-olive"}`}>
-                HAJJ SAVINGS
-              </span>
-              <span className={`mt-1 block text-[0.5625rem] font-medium uppercase tracking-[0.3em] transition-colors duration-700 ${inverted ? "text-green-pale/80" : "text-green"}`}>
-                Hajj Savings Fund
-              </span>
-            </div>
-          </a>
+      <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
+        <Link to="/" className="wordmark">
+          <b>HAJJ SAVINGS</b>
+          <small>HAJJ SAVINGS FUND</small>
+        </Link>
 
-          <div className="hidden items-center gap-10 lg:flex">
-            <ul className="flex items-center gap-9">
-              {NAV.map((item) => (
-                <li key={item.label}>
-                  <a
-                    href={item.href}
-                    className={`link-rule text-[0.8125rem] tracking-[0.06em] transition-colors duration-500 ${
-                      inverted
-                        ? "text-ivory/85 hover:text-white"
-                        : "text-olive/80 hover:text-green"
-                    }`}
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <span
-              aria-hidden
-              className={`h-5 w-px transition-colors duration-700 ${inverted ? "bg-ivory/25" : "bg-olive/20"}`}
-            />
-            <Show when="signed-in">
-              <div className="flex items-center gap-6">
-                <Link
-                  to={dashboardLink}
-                  className={`inline-flex items-center gap-2 px-5 py-3 text-[0.75rem] uppercase tracking-[0.2em] transition-colors duration-500 ${
-                    inverted
-                      ? "border border-ivory/35 text-ivory hover:bg-ivory hover:text-green-forest"
-                      : "bg-green text-ivory hover:bg-green-deep"
-                  }`}
-                >
-                  Dashboard
-                </Link>
-                <UserButton />
-              </div>
-            </Show>
-            <Show when="signed-out">
-              <div className="flex items-center gap-6">
-                <SignInButton mode="modal">
-                  <button
-                    className={`link-rule text-[0.8125rem] tracking-[0.06em] transition-colors duration-500 ${
-                      inverted
-                        ? "text-ivory/85 hover:text-white"
-                        : "text-olive/80 hover:text-green"
-                    }`}
-                  >
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button
-                    className={`inline-flex items-center gap-2 px-5 py-3 text-[0.75rem] uppercase tracking-[0.2em] transition-colors duration-500 ${
-                      inverted
-                        ? "border border-ivory/35 text-ivory hover:bg-ivory hover:text-green-forest"
-                        : "bg-green text-ivory hover:bg-green-deep"
-                    }`}
-                  >
-                    Sign Up
-                  </button>
-                </SignUpButton>
-              </div>
-            </Show>
-          </div>
+        <nav className="desktop-nav">
+          {NAV.map((item) => (
+            <a key={item.label} href={item.href}>{item.label}</a>
+          ))}
+          <span className="nav-divider" />
 
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            aria-label={open ? "Close menu" : "Open menu"}
-            className="flex h-10 w-10 flex-col items-end justify-center gap-[6px] lg:hidden"
-          >
-            <span
-              className={`h-px transition-all duration-500 ${open ? "w-6 translate-y-[3.5px] rotate-45" : "w-6"} ${
-                inverted ? "bg-ivory" : "bg-olive"
-              }`}
-            />
-            <span
-              className={`h-px transition-all duration-500 ${open ? "w-6 -translate-y-[3.5px] -rotate-45" : "w-4"} ${
-                inverted ? "bg-ivory" : "bg-olive"
-              }`}
-            />
-          </button>
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button>Sign In</button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button className="nav-action">SIGN UP</button>
+            </SignUpButton>
+          </Show>
+
+          <Show when="signed-in">
+            <Link to={dashboardLink} className="nav-action">Dashboard</Link>
+            <UserButton />
+          </Show>
         </nav>
+
+        <button
+          className="menu-button"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <X /> : <Menu />}
+        </button>
       </header>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="fixed inset-0 z-40 bg-ivory px-6 pt-[110px] lg:hidden"
-            initial={{ clipPath: "inset(0 0 100% 0)" }}
-            animate={{ clipPath: "inset(0 0 0% 0)" }}
-            exit={{ clipPath: "inset(0 0 100% 0)" }}
-            transition={{ duration: 0.7, ease: EASE }}
-          >
-            <ul className="flex flex-col gap-1 border-t border-olive/10 pt-8">
-              {FOOTER_NAV.map((item, i) => (
-                <motion.li
-                  key={item.label}
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.18 + i * 0.07, duration: 0.6, ease: EASE }}
-                  className="border-b border-olive/10 py-5"
-                >
-                  {item.href.startsWith('#') ? (
-                    <a
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className="flex items-baseline justify-between font-serif text-3xl font-light text-olive transition-colors duration-500 hover:text-green"
-                    >
-                      {item.label}
-                      <span className="eyebrow text-green">0{i + 1}</span>
-                    </a>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      onClick={() => setOpen(false)}
-                      className="flex items-baseline justify-between font-serif text-3xl font-light text-olive transition-colors duration-500 hover:text-green"
-                    >
-                      {item.label}
-                      <span className="eyebrow text-green">0{i + 1}</span>
-                    </Link>
-                  )}
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className={`mobile-menu ${open ? "is-open" : ""}`}>
+        {NAV.map((item, index) => (
+          <a key={item.label} href={item.href} onClick={() => setOpen(false)}>
+            <span>{item.label}</span>
+            <small>0{index + 1}</small>
+          </a>
+        ))}
+        <Show when="signed-out">
+          <SignInButton mode="modal">
+            <button className="mobile-link" onClick={() => setOpen(false)}>
+              <span>Sign In</span><small>LOGIN</small>
+            </button>
+          </SignInButton>
+          <SignUpButton mode="modal">
+            <button className="mobile-link" onClick={() => setOpen(false)} style={{ color: "var(--gold)" }}>
+              <span>Sign Up</span><small>JOIN</small>
+            </button>
+          </SignUpButton>
+        </Show>
+        <Show when="signed-in">
+          <Link to={dashboardLink} onClick={() => setOpen(false)}>
+            <span>Dashboard</span><small>APP</small>
+          </Link>
+        </Show>
+      </div>
     </>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Hero                                                                */
+/* ------------------------------------------------------------------ */
+
 function Hero({ dashboardLink }) {
-  const ref = useRef(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.03]);
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "6%"]);
-
   return (
-    <section
-      id="top"
-      ref={ref}
-      className="relative flex min-h-[86vh] items-end overflow-hidden bg-olive-deep md:min-h-[96vh]"
-    >
-      <motion.div
-        className="absolute inset-0"
-        style={reduce ? {} : { scale, y }}
-        initial={{ opacity: 0, scale: 1.06 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1.8, ease: EASE }}
-      >
-        <img
-          src={heroImage}
-          alt="Masjid al-Haram in Makkah at dawn, pilgrims gathered around the Kaaba"
-          width={1920}
-          height={1280}
-          className="h-full w-full object-cover object-[62%_center]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-green-forest/[0.92] via-olive-deep/[0.58] to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-green-forest/[0.70] to-transparent" />
-        <div className="absolute inset-0 bg-green-deep/[0.10] mix-blend-multiply" />
-      </motion.div>
-
-      <div className="relative mx-auto w-full max-w-[1440px] px-6 pb-16 pt-36 md:px-10 md:pb-20">
-        <div className="grid grid-cols-12 gap-6">
-          <div className="col-span-12 lg:col-span-7">
-            <motion.p
-              className="eyebrow flex items-center gap-3 text-ivory/70"
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8, ease: EASE }}
-            >
-              <motion.span
-                aria-hidden
-                className="h-px w-8 origin-left bg-ivory"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.7, duration: 0.9, ease: EASE }}
-              />
-              Hajj Savings Fund
-            </motion.p>
-
-            <motion.h1
-              className="display mt-8 text-ivory"
-              variants={lineVariants}
-              initial="hidden"
-              animate="show"
-              transition={{ delayChildren: 0.75 }}
-            >
-              {HEADLINE.map((line) => (
-                <span key={line} className="block overflow-hidden">
-                  <motion.span
-                    variants={lineChild}
-                    className={`block text-[2.85rem] leading-[1.06] sm:text-6xl md:text-7xl lg:text-[5.4rem] ${
-                      line === GREEN_LINE ? "text-green-muted" : ""
-                    }`}
-                  >
-                    {line}
-                  </motion.span>
-                </span>
-              ))}
-            </motion.h1>
-
-            <motion.p
-              className="body-copy mt-9 max-w-xl text-ivory/75"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.5, duration: 0.9, ease: EASE }}
-            >
-              A structured way for organisations and their employees to set aside contributions for
-              Hajj — with clear records, steady progress and quiet confidence.
-            </motion.p>
-
-            <motion.div
-              className="mt-11 flex flex-col gap-4 sm:flex-row sm:items-center"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.8, duration: 0.9, ease: EASE }}
-            >
-              <ArrowLink href={dashboardLink} variant="green" isInternal={true}>
-                Begin Your Journey
-              </ArrowLink>
-              <span className="text-ivory">
-                <ArrowLink href="#journey" variant="outline">
-                  Explore How It Works
-                </ArrowLink>
-              </span>
-            </motion.div>
-          </div>
+    <section className="hero" id="top">
+      <img src={heroImage} alt="The Holy Kaaba at dusk" width={1920} height={1088} />
+      <div className="hero-shade" />
+      <div className="hero-content reveal visible">
+        <Eyebrow>Hajj Savings Fund</Eyebrow>
+        <h1 className="type-rise">
+          <span>Prepare today</span>
+          <span>for a journey</span>
+          <span><em>that matters.</em></span>
+        </h1>
+        <p>A long-term, ethical and Sharia-compliant fund helping employees fulfil the sacred obligation of Hajj.</p>
+        <div className="hero-actions">
+          <ArrowLink href="#purpose" solid>Discover the fund</ArrowLink>
+          <ArrowLink href="#journey">Explore how it works</ArrowLink>
         </div>
-
-        <div className="mt-20 flex items-center gap-5 md:mt-28">
-          <motion.span
-            aria-hidden
-            className="h-px w-24 origin-left bg-brass md:w-40"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 2.1, duration: 1.2, ease: EASE }}
-          />
-          <motion.span
-            className="eyebrow text-ivory/55"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2.4, duration: 0.9 }}
-          >
-            For organisations &amp; employees
-          </motion.span>
-        </div>
+      </div>
+      <div className="hero-foot">
+        <span />
+        <p>For organisations &amp; employees</p>
       </div>
     </section>
   );
 }
-
 
 /* ------------------------------------------------------------------ */
 /* Purpose                                                             */
 /* ------------------------------------------------------------------ */
 
-function PurposeSection() {
+function Purpose() {
   return (
-    <section id="purpose" className="bg-ivory py-28 md:py-44">
-      <div className="mx-auto grid max-w-[1440px] grid-cols-12 gap-y-14 px-6 md:px-10">
-        <div className="col-span-12 lg:col-span-7">
-          <Reveal>
-            <p className="mb-8">
-              <Eyebrow tone="green">The purpose</Eyebrow>
-            </p>
-          </Reveal>
-
-          <Reveal>
-            <h2 className="display text-[2.35rem] text-olive sm:text-[3.4rem] lg:text-[4rem]">
-              Saving for Hajj is more
-              <br />
-              than a <span className="text-green">financial</span> decision.
-              <br />
-              <span className="italic text-olive-muted">
-                It is preparation for something
-                <br />
-                deeply personal.
-              </span>
-            </h2>
-          </Reveal>
-          <div className="mt-10 w-40">
-            <Rule tone="green" />
-          </div>
+    <section className="purpose page-section" id="purpose">
+      <div className="section-grid">
+        <div className="purpose-statement reveal">
+          <Eyebrow>The purpose</Eyebrow>
+          <h2>
+            Saving for Hajj is more<br />
+            than a financial decision.<br />
+            <em>It is preparation for<br />something deeply personal.</em>
+          </h2>
+          <span className="short-rule" />
         </div>
-
-        <div className="col-span-12 lg:col-span-4 lg:col-start-9">
-          <Reveal delay={0.15}>
-            <Eyebrow tone="green">Our purpose</Eyebrow>
-          </Reveal>
-          <Reveal delay={0.25}>
-            <p className="body-copy mt-7 text-charcoal/75">
-              Most people who intend to perform Hajj carry that intention for years. What is often
-              missing is not sincerity, but structure — a steady, visible way to set money aside and
-              know exactly where things stand.
-            </p>
-          </Reveal>
-          <Reveal delay={0.35}>
-            <p className="body-copy mt-6 text-charcoal/75">
-              We give organisations and their people a shared framework for that preparation:
-              agreed contributions, honest records, and progress that can be seen rather than
-              guessed at.
-            </p>
-          </Reveal>
-          <div className="mt-10 w-24">
-            <Rule tone="brass" />
-          </div>
-          <Reveal delay={0.45}>
-            <p className="mt-6 font-serif text-xl font-light italic text-olive-muted">
-              Hajj Savings
-            </p>
-          </Reveal>
+        <div className="purpose-copy reveal">
+          <Eyebrow>About the fund</Eyebrow>
+          <p>
+            The Hajj Savings Fund is a long-term, ethical, and Sharia-compliant initiative
+            established to support employees in fulfilling the sacred obligation of Hajj.
+          </p>
+          <p>
+            Rooted in our commitment to holistic employee welfare, it uses a sustainable
+            employer-employee contribution model designed for fairness, transparency and
+            lasting accessibility.
+          </p>
+          <span className="short-rule" />
+          <em>Service · Integrity · Empowerment</em>
         </div>
       </div>
     </section>
@@ -579,180 +209,113 @@ function PurposeSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Journey timeline                                                    */
+/* Journey                                                             */
 /* ------------------------------------------------------------------ */
 
-function JourneyTimeline() {
-  const ref = useRef(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 75%", "end 55%"] });
-  const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
-  const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
+function Journey() {
   return (
-    <section id="journey" className="geo-veil bg-stone py-28 text-olive md:py-44">
-      <div className="mx-auto max-w-[1440px] px-6 md:px-10">
-        <div className="grid grid-cols-12 gap-y-8">
-          <div className="col-span-12 md:col-span-3">
-            <Reveal>
-              <Eyebrow tone="green">The journey</Eyebrow>
-            </Reveal>
-          </div>
-          <div className="col-span-12 md:col-span-8 md:col-start-5">
-            <Reveal delay={0.1}>
-              <h2 className="display text-[2.25rem] sm:text-[2.9rem] lg:text-[3.5rem]">
-                A clearer path from intention
-                <br className="hidden sm:block" /> to{" "}
-                <span className="text-green">preparation</span>.
-              </h2>
-            </Reveal>
-          </div>
-        </div>
+    <section className="journey patterned page-section" id="journey">
+      <div className="journey-head reveal">
+        <Eyebrow>The journey</Eyebrow>
+        <h2>
+          A clearer path from intention<br />
+          to <em>fulfilment.</em>
+        </h2>
+      </div>
+      <div className="timeline reveal">
+        <div className="timeline-line" />
+        {STAGES.map((stage, index) => (
+          <article key={stage.label} style={{ "--delay": `${index * 110}ms` }}>
+            <i />
+            <span className="stage-number">0{index + 1}</span>
+            <h3>{stage.label}</h3>
+            <p>{stage.note}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-        <div ref={ref} className="relative mt-20 md:mt-32">
-          <div className="pointer-events-none absolute left-0 right-0 top-[3px] hidden md:block">
-            <div className="h-px w-full bg-olive/15" />
-            <motion.div
-              className="h-px w-full origin-left bg-green"
-              style={reduce ? {} : { scaleX }}
-              aria-hidden
-            />
-          </div>
-          <div className="pointer-events-none absolute bottom-6 left-[3px] top-2 w-px bg-olive/15 md:hidden">
-            <motion.div
-              className="h-full w-px origin-top bg-green"
-              style={reduce ? {} : { scaleY }}
-              aria-hidden
-            />
-          </div>
+/* ------------------------------------------------------------------ */
+/* Structure                                                           */
+/* ------------------------------------------------------------------ */
 
-          <ol className="grid grid-cols-1 gap-12 md:grid-cols-5 md:gap-8">
-            {STAGES.map((s, i) => (
-              <motion.li
-                key={s.label}
-                className="group relative pl-9 md:pl-0 md:pt-10"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-15% 0px" }}
-                transition={{ duration: 0.8, delay: i * 0.1, ease: EASE }}
-              >
-                <motion.span
-                  aria-hidden
-                  className="absolute left-0 top-[6px] h-[7px] w-[7px] rounded-full bg-olive/25 md:top-0"
-                  whileInView={{ backgroundColor: "#286142", scale: 1.15 }}
-                  viewport={{ once: true, margin: "-20% 0px -20% 0px" }}
-                  transition={{ duration: 0.6, delay: 0.15 + i * 0.1 }}
-                />
-                <div>
-                  <h3 className="text-[0.9375rem] font-medium uppercase tracking-[0.18em] transition-colors duration-500 group-hover:text-green">
-                    {s.label}
-                  </h3>
-                  <p className="mt-3 max-w-[26ch] text-[1rem] font-light leading-relaxed text-olive-muted">
-                    {s.note}
-                  </p>
-                </div>
-              </motion.li>
+function Structure() {
+  return (
+    <section className="structure page-section" id="structure">
+      <div className="structure-grid">
+        <div className="structure-intro reveal">
+          <Eyebrow>Fund structure</Eyebrow>
+          <h2>
+            Two contributions,<br />
+            one <em>sacred purpose.</em>
+          </h2>
+          <p>
+            The organisation creates the foundation. Each participating employee builds on it.
+            The fund keeps every contribution clear, protected and accountable.
+          </p>
+          <div className="pathway">
+            {["Employer", "Participation", "Employee", "Contribution", "Hajj draw"].map((x) => (
+              <span key={x}>{x}</span>
             ))}
-          </ol>
+          </div>
         </div>
-
+        <div className="roles reveal">
+          {SIDES.map((side) => (
+            <article key={side.title}>
+              <h3>{side.title}</h3>
+              <ul>
+                {side.points.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+          <p className="roles-note">
+            Participation <b>→</b> Contribution <b>→</b> Hajj
+          </p>
+        </div>
       </div>
     </section>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Ecosystem                                                           */
+/* Contribution model                                                  */
 /* ------------------------------------------------------------------ */
 
-function EcosystemSection() {
+function Contribution() {
   return (
-    <section id="ecosystem" className="relative overflow-hidden bg-ivory py-28 md:py-44">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-green/12"
-      />
-
-      <div className="relative mx-auto max-w-[1440px] px-6 md:px-10">
-        <div className="grid grid-cols-12 gap-y-10">
-          <div className="col-span-12 lg:col-span-5">
-            <Reveal>
-              <Eyebrow tone="green">How it works</Eyebrow>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <h2 className="display mt-7 text-[2.25rem] text-olive sm:text-[2.9rem] lg:text-[3.5rem]">
-                Two responsibilities,
-                <br />
-                one <span className="text-green">shared record</span>.
-              </h2>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <p className="body-copy mt-8 max-w-md text-charcoal/70">
-                An organisation makes participation possible. The person makes the commitment. The
-                fund simply keeps the relationship between them clear, documented and easy to
-                follow.
-              </p>
-            </Reveal>
-
-            <ol className="relative mt-14 max-w-xs border-l border-green/25 pl-6">
-              {PATHWAY.map((step, i) => (
-                <Reveal as="li" key={step} delay={0.25 + i * 0.08}>
-                  <span className="relative block py-3">
-                    <span
-                      aria-hidden
-                      className="absolute -left-[27.5px] top-1/2 -translate-y-1/2 h-[7px] w-[7px] rounded-full bg-green"
-                    />
-                    <span
-                      className={`text-[0.875rem] uppercase tracking-[0.18em] ${
-                        i === PATHWAY.length - 1 ? "text-green" : "text-olive/75"
-                      }`}
-
-                    >
-                      {step}
-                    </span>
-                  </span>
-                </Reveal>
-              ))}
-            </ol>
-          </div>
-
-          <div className="col-span-12 lg:col-span-6 lg:col-start-7">
-            <div className="grid grid-cols-1 gap-x-12 gap-y-14 sm:grid-cols-2">
-              {SIDES.map((side, si) => (
-                <div key={side.title}>
-                  <Reveal delay={0.1 + si * 0.1}>
-                    <h3 className="font-serif text-[1.9rem] font-light text-olive">
-                      {side.title}
-                    </h3>
-                  </Reveal>
-                  <div className="my-5 w-full max-w-[180px]">
-                    <Rule tone="green" />
-                  </div>
-                  <ul className="space-y-4">
-                    {side.points.map((p, i) => (
-                      <Reveal as="li" key={p} delay={0.2 + i * 0.07}>
-                        <span className="flex items-center gap-3 text-[1.05rem] font-light text-charcoal/80">
-                          <span
-                            aria-hidden
-                            className="h-[6px] w-[6px] shrink-0 rounded-full bg-green"
-                          />
-                          {p}
-                        </span>
-                      </Reveal>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-
-            <Reveal delay={0.3}>
-              <p className="mt-16 border-t border-green/20 pt-8 font-serif text-2xl font-light italic leading-snug text-olive-muted sm:text-[1.75rem]">
-                Participation <span className="text-green">→</span> Contribution{" "}
-                <span className="text-green">→</span> Progress
-              </p>
-            </Reveal>
-          </div>
+    <section className="contribution patterned" id="model">
+      <div className="contribution-left reveal">
+        <Eyebrow>The model</Eyebrow>
+        <h2>
+          Built to grow,<br />
+          year after year.
+        </h2>
+        <p>
+          A consistent contribution framework creates meaningful annual capacity
+          without compromising fairness.
+        </p>
+        <ul>
+          <li>12 participating organisations</li>
+          <li>$2,000 from each organisation</li>
+          <li>$15,000 employee contribution</li>
+          <li>10% uplift per annum</li>
+        </ul>
+      </div>
+      <div className="model-panel reveal">
+        <span className="model-kicker">Annual fund capacity</span>
+        <strong>$39,000</strong>
+        <div className="sum">
+          <span>$24,000<br /><small>Organisation contributions</small></span>
+          <b>+</b>
+          <span>$15,000<br /><small>Employee contributions</small></span>
+        </div>
+        <div className="model-outcome">
+          <strong>3</strong>
+          <span>people supported<br />every year</span>
         </div>
       </div>
     </section>
@@ -760,282 +323,116 @@ function EcosystemSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Organisations & employees                                           */
+/* Eligibility                                                         */
 /* ------------------------------------------------------------------ */
 
-function OrgBlock({ block, delay = 0 }) {
+function Eligibility() {
+  return (
+    <section className="eligibility patterned">
+      <div className="eligibility-empty" />
+      <div className="eligibility-copy reveal">
+        <Eyebrow>Eligibility &amp; conditions</Eyebrow>
+        <h2>
+          Designed around<br />
+          our people.
+        </h2>
+        <p>
+          The fund remains inclusive while protecting the commitment that makes
+          long-term support possible.
+        </p>
+        <ul>
+          <li>All staff and directors</li>
+          <li>Approved long-term volunteers</li>
+          <li>Departed members who continue contributing</li>
+          <li>Previous winners excluded from future draws</li>
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Governance                                                          */
+/* ------------------------------------------------------------------ */
+
+function GovernanceSection() {
+  return (
+    <section className="governance patterned page-section" id="governance">
+      <div className="governance-head reveal">
+        <Eyebrow>Trust &amp; governance</Eyebrow>
+        <h2>Built around trust.</h2>
+      </div>
+      <div className="principles">
+        {PRINCIPLES.map((p, i) => (
+          <article className={`reveal ${i % 2 === 0 ? "highlight" : ""}`} key={p.title}>
+            <h3>{p.title}</h3>
+            <div>
+              <span />
+              <p>{p.body}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Final CTA + Footer                                                  */
+/* ------------------------------------------------------------------ */
+
+function FinalCall({ dashboardLink }) {
   return (
     <>
-      <Reveal delay={delay}>
-        <Eyebrow tone="ivory">{block.eyebrow}</Eyebrow>
-      </Reveal>
-      <Reveal delay={delay + 0.1}>
-        <h2 className="display mt-7 text-[2.4rem] sm:text-[3.4rem] lg:text-[3.9rem]">
-          {block.heading[0]}
-          <br />
-          {block.heading[1]}
-        </h2>
-      </Reveal>
-      <Reveal delay={delay + 0.2}>
-        <p className="body-copy mt-7 max-w-md text-ivory/65">{block.body}</p>
-      </Reveal>
-      <ul className="mt-10 max-w-md">
-        {block.items.map((item, i) => (
-          <Reveal as="li" key={item} delay={delay + 0.25 + i * 0.07}>
-            <span className="flex items-center gap-4 border-b border-ivory/12 py-4 text-[1.05rem] font-light text-ivory/85 transition-colors duration-500 hover:border-green-muted/60">
-              <span aria-hidden className="h-[6px] w-[6px] shrink-0 rounded-full bg-green-muted" />
-              {item}
-            </span>
-          </Reveal>
-        ))}
-      </ul>
-
-    </>
-  );
-}
-
-function OrganisationEmployeeSection() {
-  return (
-    <section
-      id="organisations"
-      className="geo-veil relative overflow-hidden bg-green-forest py-28 text-ivory md:py-44"
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px bg-green/40 lg:block"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-32 top-32 h-[520px] w-[520px] border border-green/25"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute bottom-0 right-0 h-[380px] w-[60%] bg-gradient-to-tl from-green-deep/70 to-transparent"
-      />
-
-      <div className="relative mx-auto max-w-[1440px] px-6 md:px-10">
-        <div className="grid grid-cols-12 gap-y-16 lg:gap-x-16">
-          <div className="col-span-12 lg:col-span-6">
-            <OrgBlock block={ORG_BLOCK} />
-          </div>
-
-          <div className="col-span-12 lg:col-span-5 lg:col-start-8 lg:pt-24">
-            <Reveal>
-              <div className="relative overflow-hidden">
-                <img
-                  src={archesImage}
-                  alt="Sunlit stone colonnade of a mosque courtyard"
-                  width={1200}
-                  height={1504}
-                  loading="lazy"
-                  className="h-[320px] w-full object-cover object-center transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.03] md:h-[420px]"
-                />
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-green-forest/60 to-transparent"
-                />
-              </div>
-            </Reveal>
-            <div className="mt-10 w-20">
-              <Rule tone="brass" />
-            </div>
-            <div className="mt-8">
-              <OrgBlock block={EMP_BLOCK} delay={0.15} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Contribution statement                                              */
-/* ------------------------------------------------------------------ */
-
-
-/* ------------------------------------------------------------------ */
-/* Trust                                                               */
-/* ------------------------------------------------------------------ */
-
-function TrustSection() {
-  return (
-    <section id="trust" className="geo-veil bg-green-forest py-28 text-ivory md:py-44">
-      <div className="mx-auto max-w-[1440px] px-6 md:px-10">
-        <div className="grid grid-cols-12 gap-y-8">
-          <div className="col-span-12 md:col-span-4">
-            <Reveal>
-              <Eyebrow tone="ivory">Trust &amp; governance</Eyebrow>
-            </Reveal>
-          </div>
-          <div className="col-span-12 md:col-span-7 md:col-start-6">
-            <Reveal delay={0.1}>
-              <h2 className="display text-[2.4rem] sm:text-[3.4rem] lg:text-[3.9rem]">
-                Built around trust.
-              </h2>
-            </Reveal>
-          </div>
-        </div>
-
-        <ul className="mt-16 border-t border-ivory/12 md:mt-24">
-          {PRINCIPLES.map((p, i) => (
-            <Reveal as="li" key={p.title} delay={i * 0.08}>
-              <div className="group grid grid-cols-12 items-start gap-y-5 border-b border-ivory/12 py-10 transition-colors duration-500 hover:bg-green/15 md:gap-x-10 md:py-14">
-                <h3 className="col-span-12 font-serif text-[2.1rem] font-light leading-tight transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-2 md:col-span-5 md:text-[2.6rem]">
-                  {p.title}
-                </h3>
-                <div className="col-span-12 md:col-span-6 md:col-start-7">
-                  <span
-                    aria-hidden
-                    className="mb-5 block h-px w-10 origin-left bg-green-muted transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-[2.6]"
-                  />
-                  <p className="body-copy text-ivory/60 transition-colors duration-500 group-hover:text-ivory/90">
-                    {p.body}
-                  </p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </ul>
-
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Final CTA                                                           */
-/* ------------------------------------------------------------------ */
-
-function FinalCTA({ dashboardLink }) {
-  const reduce = useReducedMotion();
-  return (
-    <section id="final" className="relative overflow-hidden bg-green-forest">
-      <motion.div
-        className="absolute inset-0"
-        initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 1.05 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true, margin: "-20%" }}
-        transition={{ duration: 1.6, ease: EASE }}
-      >
+      <section className="final-cta" id="final">
         <img
           src={pilgrimsImage}
           alt="Pilgrims walking toward a mosque at golden hour"
           width={1920}
           height={1080}
           loading="lazy"
-          className="h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-green-forest/78" />
-        <div className="absolute inset-0 bg-gradient-to-t from-green-deep/70 via-transparent to-green-forest/60" />
-      </motion.div>
-
-      <div className="relative mx-auto max-w-[1440px] px-6 py-32 md:px-10 md:py-52">
-        <div className="grid grid-cols-12">
-          <div className="col-span-12 lg:col-span-8 lg:col-start-3 lg:text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9, ease: EASE }}
-            >
-              <Eyebrow tone="ivory">Begin</Eyebrow>
-            </motion.div>
-
-            <motion.h2
-              className="display mt-8 text-[2.4rem] text-ivory sm:text-6xl lg:text-[4.25rem]"
-              initial={{ opacity: 0, y: 26 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, delay: 0.1, ease: EASE }}
-            >
-              Make the preparation
-              <br />
-              part of the journey.
-            </motion.h2>
-
-            <motion.p
-              className="body-copy mx-auto mt-8 max-w-xl text-ivory/70"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9, delay: 0.25, ease: EASE }}
-            >
-              A structured way for organisations and their people to prepare for Hajj with clarity
-              and confidence.
-            </motion.p>
-
-            <motion.div
-              className="mt-12 flex flex-col gap-4 sm:flex-row sm:items-center lg:justify-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9, delay: 0.35, ease: EASE }}
-            >
-              <ArrowLink href={dashboardLink} variant="ivory">
-                Begin Your Journey
-              </ArrowLink>
-
-              <span className="text-ivory">
-                <ArrowLink href={dashboardLink} variant="outline">
-                  Portal Login
-                </ArrowLink>
-              </span>
-            </motion.div>
+        <div className="final-shade" />
+        <div className="final-copy reveal">
+          <Eyebrow>The opportunity</Eyebrow>
+          <h2>
+            Make the sacred journey<br />
+            part of how we care.
+          </h2>
+          <p>
+            A sustainable programme of welfare, spiritual uplift and lasting
+            organisational loyalty.
+          </p>
+          <div>
+            <ArrowLink href="#purpose" solid>Review the purpose</ArrowLink>
+            <ArrowLink href="#governance">View governance</ArrowLink>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-/* ------------------------------------------------------------------ */
-/* Footer                                                              */
-/* ------------------------------------------------------------------ */
-
-function Footer({ dashboardLink }) {
-  return (
-    <footer className="geo-veil bg-green-forest py-20 text-ivory md:py-28">
-      <div className="mx-auto max-w-[1440px] px-6 md:px-10">
-        <div className="grid grid-cols-12 gap-y-12">
-          <div className="col-span-12 md:col-span-5">
-            <p className="font-serif text-3xl font-light tracking-[0.3em]">HAJJ SAVINGS</p>
-            <p className="mt-3 text-[0.625rem] uppercase tracking-[0.3em] text-ivory/55">
-              Hajj Savings Fund
-            </p>
-            <span aria-hidden className="mt-8 block h-px w-16 bg-green-muted" />
-            <p className="mt-8 max-w-xs text-sm font-light leading-relaxed text-ivory/50">
-              A structured approach to Hajj savings.
-            </p>
+      <footer className="patterned">
+        <div className="footer-main">
+          <div>
+            <Link to="/" className="wordmark footer-mark">
+              <b>HAJJ SAVINGS</b>
+              <small>HAJJ SAVINGS FUND</small>
+            </Link>
+            <span className="short-rule" />
+            <p>A spiritually enriching welfare programme.</p>
           </div>
-
-          {[
-            { title: "Navigate", items: FOOTER_NAV, cls: "md:col-span-4 md:col-start-9" },
-          ].map((group) => (
-            <div key={group.title} className={`col-span-6 ${group.cls}`}>
-              <p className="eyebrow text-ivory/40">{group.title}</p>
-              <ul className="mt-6 space-y-3">
-                {group.items.map((i) => (
-                  <li key={i.label}>
-                    <a
-                      href={i.href}
-                      className="link-rule text-[0.95rem] font-light text-ivory/75 transition-colors duration-500 hover:text-green-muted"
-                    >
-                      {i.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <Eyebrow>Navigate</Eyebrow>
+            {NAV.map((item) => (
+              <a href={item.href} key={item.label}>{item.label}</a>
+            ))}
+          </div>
         </div>
-
-        <div className="mt-20 flex flex-col gap-3 border-t border-ivory/12 pt-8 text-[0.6875rem] uppercase tracking-[0.16em] text-ivory/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} Hajj Savings Fund. All rights reserved.</p>
-          <p>A structured approach to Hajj savings.</p>
+        <div className="footer-bottom">
+          <span>&copy; {new Date().getFullYear()} Hajj Savings Fund. All rights reserved.</span>
+          <span>Service · Integrity · Empowerment</span>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 }
 
@@ -1044,29 +441,43 @@ function Footer({ dashboardLink }) {
 /* ------------------------------------------------------------------ */
 
 export default function LandingPage() {
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
   const navigate = useNavigate();
-  const [dashboardLink, setDashboardLink] = useState('/dashboard');
+  const dashboardLink = "/dashboard";
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [isLoaded, isSignedIn, navigate]);
 
+  // Reveal-on-scroll observer — exactly as the reference does it
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        }),
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <>
+    <main>
       <Navbar dashboardLink={dashboardLink} />
-      <main>
-        <Hero dashboardLink={dashboardLink} />
-        <PurposeSection />
-        <JourneyTimeline />
-        <EcosystemSection />
-        <OrganisationEmployeeSection />
-        <TrustSection />
-        <FinalCTA dashboardLink={dashboardLink} />
-      </main>
-      <Footer dashboardLink={dashboardLink} />
-    </>
+      <Hero dashboardLink={dashboardLink} />
+      <Purpose />
+      <Journey />
+      <Structure />
+      <Contribution />
+      <Eligibility />
+      <GovernanceSection />
+      <FinalCall dashboardLink={dashboardLink} />
+    </main>
   );
 }
