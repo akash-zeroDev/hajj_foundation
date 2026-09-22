@@ -19,10 +19,10 @@ const Navbar = () => {
           <div>
             <Show when="signed-in">
               <div className="flex items-center space-x-6">
-                <span className="text-sm text-emerald-100 hidden md:block">
+                <span className="text-sm text-[var(--gold)]/80 hidden md:block">
                   Welcome, <strong className="text-white">{user?.primaryEmailAddress?.emailAddress}</strong>
                 </span>
-                <Link to="/dashboard" className="text-emerald-50 hover:text-white font-medium transition">
+                <Link to="/dashboard" className="text-[var(--gold)] hover:text-white font-medium transition">
                   Dashboard
                 </Link>
                 <UserButton />
@@ -31,7 +31,7 @@ const Navbar = () => {
             <Show when="signed-out">
               <div className="flex items-center space-x-4">
                 <SignInButton mode="modal">
-                  <button className="text-emerald-50 hover:text-white font-medium transition">Sign In</button>
+                  <button className="text-[var(--gold)] hover:text-white font-medium transition">Sign In</button>
                 </SignInButton>
                 <SignUpButton mode="modal">
                   <button className="bg-white text-[var(--gold)] hover:bg-[var(--gold)]/10 px-5 py-2 rounded-md font-semibold transition shadow-sm">

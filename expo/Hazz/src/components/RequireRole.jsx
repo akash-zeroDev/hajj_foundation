@@ -8,7 +8,7 @@ export const RequireRole = ({ role, children }) => {
   if (!userLoaded || (isSignedIn && !orgLoaded)) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-700"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--gold)]"></div>
       </div>
     );
   }

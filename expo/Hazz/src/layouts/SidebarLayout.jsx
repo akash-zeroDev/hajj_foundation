@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { UserButton, useUser } from '@clerk/react';
+import { UserButton, useUser, useOrganization } from '@clerk/react';
 import {
   LayoutDashboard,
   Building2,
@@ -41,6 +41,7 @@ const ICONS = {
 export default function SidebarLayout({ navigation, title, children }) {
   const location = useLocation();
   const { user } = useUser();
+  const { organization } = useOrganization();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const displayRole = location.pathname.startsWith('/superadmin') 
@@ -75,7 +76,7 @@ export default function SidebarLayout({ navigation, title, children }) {
         {/* Brand */}
         <div className="flex flex-col items-center justify-center border-b border-white/5 px-5 py-5">
           <div className="text-[16px] font-bold leading-none tracking-[-0.02em] text-[#C19F5C] text-center">Hajj Savings</div>
-          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#C19F5C]/80 text-center">{displayRole}</div>
+          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#C19F5C]/80 text-center">{organization?.name ? `${organization.name} • ${displayRole}` : displayRole}</div>
         </div>
         
         <nav className="flex-1 overflow-y-auto px-3 py-[14px]">
@@ -131,7 +132,7 @@ export default function SidebarLayout({ navigation, title, children }) {
                {user?.firstName || user?.primaryEmailAddress?.emailAddress.split('@')[0] || 'User'}
              </strong>
              <small className="mt-[2px] text-[12px] capitalize text-[#C19F5C]/80">
-               {displayRole}
+               {organization?.name ? `${organization.name} • ${displayRole}` : displayRole}
              </small>
            </div>
         </div>

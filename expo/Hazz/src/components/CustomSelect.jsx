@@ -63,7 +63,7 @@ export default function CustomSelect({ value, onChange, options, className = "" 
         ref={triggerRef}
         type="button"
         onClick={handleOpen}
-        className="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-emerald-400 focus:border-[var(--gold)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/20"
+        className="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-[var(--gold-light)] focus:border-[var(--gold)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/20"
       >
         <span className="truncate">{selectedOption.label}</span>
         <motion.svg

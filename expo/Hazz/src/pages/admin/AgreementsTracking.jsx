@@ -75,7 +75,7 @@ export const AgreementsTracking = () => {
         .agt-actions { margin-left: auto; display: flex; gap: 10px; }
         .agt-btn { border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 13.5px; padding: 11px 18px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
         .agt-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
-        .agt-btn-primary { color: #fff; background: linear-gradient(180deg, #17a377, #0b7a5b); box-shadow: 0 10px 22px -12px rgba(11,122,91,.9); }
+        .agt-btn-primary { color: #fff; background: linear-gradient(180deg, var(--gold-light), var(--gold)); box-shadow: 0 10px 22px -12px rgba(11,122,91,.9); }
         .agt-btn-primary:hover { filter: brightness(1.06); }
         .agt-btn-ghost { background: #fff; border: 1px solid #e6ecea; color: #0e1a16; }
         .agt-btn-ghost:hover { background: #f2f6f5; }
@@ -84,7 +84,7 @@ export const AgreementsTracking = () => {
         .agt-kpi { padding: 18px; position: relative; }
         .agt-kpi .agt-row { display: flex; align-items: center; justify-content: space-between; }
         .agt-kpi .agt-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8a9994; font-weight: 700; }
-        .agt-kpi .agt-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(11,122,91,.10); color: #0b7a5b; }
+        .agt-kpi .agt-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(11,122,91,.10); color: var(--gold); }
         .agt-kpi .agt-ic svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 1.8; fill: none; }
         .agt-kpi .agt-val { margin: 14px 0 6px; font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
         .agt-kpi .agt-foot { font-size: 12.5px; color: #5c6b65; }
@@ -92,9 +92,9 @@ export const AgreementsTracking = () => {
         .agt-meter { padding: 18px; }
         .agt-meter .agt-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
         .agt-meter h4 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
-        .agt-meter .agt-pct { margin-left: auto; font-size: 13.5px; font-weight: 700; color: #0b7a5b; }
+        .agt-meter .agt-pct { margin-left: auto; font-size: 13.5px; font-weight: 700; color: var(--gold); }
         .agt-bar { height: 8px; border-radius: 999px; background: #eef2f1; overflow: hidden; }
-        .agt-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #17a377, #0b7a5b); transition: width 1s ease-out; }
+        .agt-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--gold-light), var(--gold)); transition: width 1s ease-out; }
         .agt-meter small { display: block; margin-top: 9px; color: #8a9994; font-size: 12.4px; }
         .agt-card-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #e6ecea; flex-wrap: wrap; }
         .agt-card-head h4 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
@@ -106,21 +106,21 @@ export const AgreementsTracking = () => {
         .agt-seg { display: flex; border: 1px solid #e6ecea; border-radius: 10px; overflow: hidden; background: #fff; }
         .agt-seg button { border: 0; background: #fff; font: inherit; font-size: 12.8px; font-weight: 600; color: #5c6b65; padding: 8px 13px; cursor: pointer; border-left: 1px solid #e6ecea; transition: all 0.2s; }
         .agt-seg button:first-child { border-left: 0; }
-        .agt-seg button.agt-on { background: #0b7a5b; color: #fff; }
+        .agt-seg button.agt-on { background: var(--gold); color: #fff; }
         .agt-table { width: 100%; border-collapse: collapse; }
         .agt-table th, .agt-table td { text-align: left; padding: 13px 18px; font-size: 13.5px; border-bottom: 1px solid #e6ecea; }
         .agt-table th { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #8a9994; font-weight: 700; }
         .agt-table tbody tr:last-child td { border-bottom: 0; }
         .agt-table tbody tr:hover { background: #f7faf9; }
         .agt-who { display: flex; align-items: center; gap: 10px; font-weight: 600; }
-        .agt-mini { width: 28px; height: 28px; flex: 0 0 28px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; color: #fff; font-weight: 700; background: linear-gradient(145deg, #17a377, #0a6b50); }
+        .agt-mini { width: 28px; height: 28px; flex: 0 0 28px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; color: #fff; font-weight: 700; background: linear-gradient(145deg, var(--gold-light), #0a6b50); }
         .agt-mini.agt-mute { background: #e6ecea; color: #8a9994; }
         .agt-muted { color: #8a9994; }
         .agt-mono { font-variant-numeric: tabular-nums; color: #5c6b65; }
-        .agt-tag { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(23,163,119,.14); color: #0b7a5b; display: inline-flex; align-items: center; gap: 6px; }
+        .agt-tag { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(23,163,119,.14); color: var(--gold); display: inline-flex; align-items: center; gap: 6px; }
         .agt-tag svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
         .agt-tag.agt-warn { background: #fdf3e3; color: #c8811f; }
-        .agt-row-act { background: transparent; border: 0; cursor: pointer; color: #0b7a5b; font: inherit; font-size: 12.8px; font-weight: 600; padding: 0; transition: color 0.2s; }
+        .agt-row-act { background: transparent; border: 0; cursor: pointer; color: var(--gold); font: inherit; font-size: 12.8px; font-weight: 600; padding: 0; transition: color 0.2s; }
         .agt-row-act:hover { text-decoration: underline; color: #0a6b50; }
         .agt-empty { padding: 34px 18px; text-align: center; color: #8a9994; font-size: 13.5px; }
         .agt-tfoot { padding: 12px 18px; border-top: 1px solid #e6ecea; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #8a9994; }

@@ -376,15 +376,15 @@ export const EmployeeDashboard = () => {
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="grid gap-1">
                   <label className="text-[12.5px] font-semibold text-[#0B0F0E]">First name</label>
-                  <input required value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
+                  <input required value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] text-[#0B0F0E] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                 </div>
                 <div className="grid gap-1">
                   <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Last name</label>
-                  <input required value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
+                  <input required value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] text-[#0B0F0E] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                 </div>
                 <div className="grid gap-1">
                   <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Phone number</label>
-                  <input type="tel" required placeholder="+44 7700 900077" value={phone} onChange={e => setPhone(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
+                  <input type="tel" required placeholder="+44 7700 900077" value={phone} onChange={e => setPhone(e.target.value)} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] text-[#0B0F0E] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                 </div>
               </div>
             </div>
@@ -398,7 +398,7 @@ export const EmployeeDashboard = () => {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold text-[16px]">£</span>
-                    <input type="text" required value={contribution} onChange={e => setContribution(e.target.value.replace(/\D/g, ''))} className="w-48 border border-[#E5E7EB] rounded-lg pl-8 pr-12 py-3 text-[16px] font-bold focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
+                    <input type="text" required value={contribution} onChange={e => setContribution(e.target.value.replace(/\D/g, ''))} className="w-48 border border-[#E5E7EB] rounded-lg pl-8 pr-12 py-3 text-[16px] font-bold text-[#0B0F0E] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-[14px]">/ mo</span>
                   </div>
                   <div className="flex gap-2">
@@ -516,8 +516,8 @@ export const EmployeeDashboard = () => {
                   <div className="text-[11.5px] font-bold tracking-widest text-slate-400 uppercase mb-3">Total Savings</div>
                   <div className="text-[32px] font-bold text-[#0B0F0E] tracking-tight leading-none mb-2">£{(employeeData?.balance || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
                   <div className="mt-auto pt-3">
-                    <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">
-                      +£{employeeData?.monthlyContribution || 0} this month
+                    <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)]">
+                      +£{employeeData?.autoPayEnabled ? (employeeData?.monthlyContribution || 0) : 0} this month
                     </span>
                   </div>
                 </div>
@@ -540,7 +540,7 @@ export const EmployeeDashboard = () => {
                   </div>
                 </div>
 
-                <div className={`rounded-xl border p-5 shadow-sm flex flex-col relative overflow-hidden ${employeeData?.autoPayEnabled ? 'bg-gradient-to-br from-[#0B0F0E] to-[#1a2e26] border-[#0B0F0E] text-white' : 'bg-slate-50 border-[#E5E7EB] text-slate-800'}`}>
+                <div className={`rounded-xl border p-5 shadow-sm flex flex-col relative overflow-hidden ${employeeData?.autoPayEnabled ? 'bg-gradient-to-br from-[#0B0F0E] to-[var(--noir)] border-[#0B0F0E] text-white' : 'bg-slate-50 border-[#E5E7EB] text-slate-800'}`}>
                   {employeeData?.autoPayEnabled && (
                     <div className="absolute -right-4 -bottom-4 opacity-10">
                       <svg className="w-32 h-32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -597,7 +597,7 @@ export const EmployeeDashboard = () => {
                             <td className="px-6 py-4 text-[13.5px] font-bold text-[#0B0F0E]">£{tx.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                             <td className="px-6 py-4">
                               {tx.status === 'succeeded' ? (
-                                <span className="inline-flex items-center text-[11px] font-bold px-2 py-1 rounded-md bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] uppercase tracking-wider">Paid</span>
+                                <span className="inline-flex items-center text-[11px] font-bold px-2 py-1 rounded-md bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)] uppercase tracking-wider">Paid</span>
                               ) : tx.status === 'failed' ? (
                                 <span className="inline-flex items-center text-[11px] font-bold px-2 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 uppercase tracking-wider">Failed</span>
                               ) : (
@@ -642,7 +642,7 @@ export const EmployeeDashboard = () => {
                             <td className="px-6 py-4 text-[13.5px] font-bold text-[#0B0F0E]">£{tx.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
                             <td className="px-6 py-4">
                               {tx.status === 'succeeded' ? (
-                                <span className="inline-flex items-center text-[11px] font-bold px-2 py-1 rounded-md bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] uppercase tracking-wider">Paid</span>
+                                <span className="inline-flex items-center text-[11px] font-bold px-2 py-1 rounded-md bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)] uppercase tracking-wider">Paid</span>
                               ) : tx.status === 'failed' ? (
                                 <span className="inline-flex items-center text-[11px] font-bold px-2 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 uppercase tracking-wider">Failed</span>
                               ) : (
@@ -674,15 +674,15 @@ export const EmployeeDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="grid gap-1">
                       <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Account Name</label>
-                      <input placeholder="e.g. John Doe" value={bankDetails.accountName} onChange={e => setBankDetails({...bankDetails, accountName: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
+                      <input placeholder="e.g. John Doe" value={bankDetails.accountName} onChange={e => setBankDetails({...bankDetails, accountName: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] text-[#0B0F0E] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                     </div>
                     <div className="grid gap-1">
                       <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Sort Code</label>
-                      <input placeholder="12-34-56" value={bankDetails.sortCode} onChange={e => setBankDetails({...bankDetails, sortCode: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
+                      <input placeholder="12-34-56" value={bankDetails.sortCode} onChange={e => setBankDetails({...bankDetails, sortCode: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] text-[#0B0F0E] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                     </div>
                     <div className="grid gap-1">
                       <label className="text-[12.5px] font-semibold text-[#0B0F0E]">Account Number</label>
-                      <input placeholder="12345678" value={bankDetails.accountNumber} onChange={e => setBankDetails({...bankDetails, accountNumber: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
+                      <input placeholder="12345678" value={bankDetails.accountNumber} onChange={e => setBankDetails({...bankDetails, accountNumber: e.target.value})} className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2.5 text-[13.5px] text-[#0B0F0E] focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]" />
                     </div>
                   </div>
                   <div className="mt-6 flex justify-end">

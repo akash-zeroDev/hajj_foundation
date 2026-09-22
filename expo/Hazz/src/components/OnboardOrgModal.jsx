@@ -75,44 +75,44 @@ export const OnboardOrgModal = ({ isOpen, onClose }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Organisation Name</label>
-              <input required type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-green focus:ring-1 focus:ring-green outline-none" value={formData.orgName} onChange={e => setFormData({...formData, orgName: e.target.value})} />
+              <input required type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] outline-none" value={formData.orgName} onChange={e => setFormData({...formData, orgName: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Company Number</label>
-              <input type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-green focus:ring-1 focus:ring-green outline-none" value={formData.companyNumber} onChange={e => setFormData({...formData, companyNumber: e.target.value})} />
+              <input type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] outline-none" value={formData.companyNumber} onChange={e => setFormData({...formData, companyNumber: e.target.value})} />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-              <input type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-green focus:ring-1 focus:ring-green outline-none" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+              <input type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] outline-none" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Admin First Name</label>
-              <input required type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-green focus:ring-1 focus:ring-green outline-none" value={formData.adminFirstName} onChange={e => setFormData({...formData, adminFirstName: e.target.value})} />
+              <input required type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] outline-none" value={formData.adminFirstName} onChange={e => setFormData({...formData, adminFirstName: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Admin Last Name</label>
-              <input required type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-green focus:ring-1 focus:ring-green outline-none" value={formData.adminLastName} onChange={e => setFormData({...formData, adminLastName: e.target.value})} />
+              <input required type="text" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] outline-none" value={formData.adminLastName} onChange={e => setFormData({...formData, adminLastName: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Admin Email</label>
-              <input required type="email" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-green focus:ring-1 focus:ring-green outline-none" value={formData.adminEmail} onChange={e => setFormData({...formData, adminEmail: e.target.value})} />
+              <input required type="email" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] outline-none" value={formData.adminEmail} onChange={e => setFormData({...formData, adminEmail: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Admin Phone</label>
-              <input type="tel" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-green focus:ring-1 focus:ring-green outline-none" value={formData.adminPhone} onChange={e => setFormData({...formData, adminPhone: e.target.value})} />
+              <input type="tel" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] outline-none" value={formData.adminPhone} onChange={e => setFormData({...formData, adminPhone: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Annual Fee (£)</label>
-              <input required type="number" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-green focus:ring-1 focus:ring-green outline-none" value={formData.annualFee} onChange={e => setFormData({...formData, annualFee: e.target.value})} />
+              <input required type="number" className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] outline-none" value={formData.annualFee} onChange={e => setFormData({...formData, annualFee: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Agreement Document (PDF)</label>
-              <input type="file" accept=".pdf" className="w-full px-4 py-1.5 rounded-lg border border-gray-200 focus:border-green outline-none file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green/10 file:text-green hover:file:bg-green/20" onChange={e => setFile(e.target.files[0])} />
+              <input type="file" accept=".pdf" className="w-full px-4 py-1.5 rounded-lg border border-gray-200 focus:border-[var(--gold)] outline-none file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[var(--gold)]/10 file:text-[var(--gold)] hover:file:bg-[var(--gold)]/20" onChange={e => setFile(e.target.files[0])} />
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button type="button" onClick={() => handleClose(false)} className="px-5 py-2.5 rounded-lg border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="px-5 py-2.5 rounded-lg bg-green text-white font-semibold hover:bg-green-600 transition-colors disabled:opacity-50">
+            <button type="submit" disabled={isSubmitting} className="px-5 py-2.5 rounded-lg bg-[var(--gold)] text-white font-semibold hover:bg-[var(--gold-light)] transition-colors disabled:opacity-50">
               {isSubmitting ? 'Onboarding...' : 'Onboard Organisation'}
             </button>
           </div>

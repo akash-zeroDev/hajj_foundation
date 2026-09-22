@@ -73,7 +73,7 @@ const EmployeeProfileSidecar = ({
         <div className="flex-1 overflow-y-auto bg-white p-[24px]">
           {isFetchingProfile ? (
             <div className="flex items-center justify-center h-full">
-              <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-2 border-[var(--gold)] border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : employeeProfile ? (
             <div className="space-y-[28px]">

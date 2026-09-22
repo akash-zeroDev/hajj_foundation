@@ -124,7 +124,7 @@ export const AdminDashboard = () => {
     return (
       <SidebarLayout navigation={orgAdminNavigation} title="Employer Dashboard">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#17a377]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--gold)]"></div>
         </div>
       </SidebarLayout>
     );
@@ -537,7 +537,7 @@ export const SuperAdminDashboard = () => {
         <div className="col-span-12 lg:col-span-8 bg-white border border-[#E5E7EB] rounded-[10px] shadow-[0_1px_2px_rgba(0,0,0,.05)] overflow-hidden">
           <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-[#EEF0F3]">
             <div><h3 className="m-0 text-[13.5px] font-semibold tracking-[-0.015em] text-[#0B0F0E]">Trust Pool — Cumulative Growth</h3><p className="m-0 text-[12px] text-[#6B7280]">Employee contribution pool (succeeded). Last 6 months.</p></div>
-            <span className="ml-auto inline-flex text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">+£3.2k this month</span>
+            <span className="ml-auto inline-flex text-[11px] font-bold px-2 py-1 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)]">+£3.2k this month</span>
           </div>
           <div className="p-4">
             {loading ? <SkeletonChart h={150} /> : areaData.length===0 ? <div className="py-12 text-center text-[13px] text-[#6B7280]">No contribution data yet — chart will appear after first payroll.</div> : (
@@ -573,7 +573,7 @@ export const SuperAdminDashboard = () => {
             <div className="flex-1">
               <div className="text-[22px] font-bold tracking-tight">{collection.rate}%<span className="text-[12px] font-semibold text-[#6B7280] ml-1.5">collected</span></div>
               <div className="flex flex-wrap gap-2 mt-3">
-                <span className="inline-flex items-center text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">Paid {collection.paid}</span>
+                <span className="inline-flex items-center text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)]">Paid {collection.paid}</span>
                 <span className="inline-flex items-center text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E]">Pending {collection.pending}</span>
                 <span className="inline-flex items-center text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECDD3] text-[#9F1239]">Overdue {collection.overdue}</span>
               </div>
@@ -585,7 +585,7 @@ export const SuperAdminDashboard = () => {
             <div className="flex justify-between items-center mb-2"><h4 className="m-0 text-[12.5px] font-semibold">Member Subscription Health</h4><span className="text-[12px] text-[#6B7280]">{subscription.total} members</span></div>
             <div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden flex"><div style={{flex:subscription.active||1}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:subscription.pending||1}} className="bg-[#F59E0B]" /><div style={{flex:subscription.pastDue||1}} className="bg-[#DC2626]" /></div>
             <div className="flex gap-2 mt-2 flex-wrap items-center">
-              <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">Active {subscription.active}</span>
+              <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)]">Active {subscription.active}</span>
               <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E]">Pending {subscription.pending}</span>
               <span className="text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#FEF2F2] border border-[#FECDD3] text-[#9F1239]">Past due {subscription.pastDue}</span>
               <span className="ml-auto text-[12px] text-[#6B7280]">AutoPay <b className="text-[#0B0F0E]">{subscription.total? Math.round((subscription.autoPayOn/subscription.total)*100):0}%</b></span>
@@ -604,12 +604,12 @@ export const SuperAdminDashboard = () => {
           <div className="px-4 py-3.5 border-b border-[#EEF0F3]"><h3 className="m-0 text-[13.5px] font-semibold">Agreement Compliance</h3><p className="m-0 text-[12px] text-[#6B7280]">Signed vs pending — eligibility gate</p></div>
           <div className="p-4">
             <div className="grid grid-cols-2 gap-3.5">
-              <div><div className="text-[12px] font-semibold text-[#6B7280]">Organisations</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.orgSigned} / {compliance.orgTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">{compliance.orgTotal? Math.round(compliance.orgSigned/compliance.orgTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.orgSigned||1}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:(compliance.orgTotal-compliance.orgSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">{compliance.orgTotal-compliance.orgSigned} pending — excluded from next draw</div></div>
-              <div><div className="text-[12px] font-semibold text-[#6B7280]">Members</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.empSigned} / {compliance.empTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">{compliance.empTotal? Math.round(compliance.empSigned/compliance.empTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.empSigned||1}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:(compliance.empTotal-compliance.empSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">If {compliance.orgTotal-compliance.orgSigned} orgs sign → pool <b className="text-[#0B0F0E]">+{eligiblePool}</b> eligible</div></div>
+              <div><div className="text-[12px] font-semibold text-[#6B7280]">Organisations</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.orgSigned} / {compliance.orgTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)]">{compliance.orgTotal? Math.round(compliance.orgSigned/compliance.orgTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.orgSigned||1}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:(compliance.orgTotal-compliance.orgSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">{compliance.orgTotal-compliance.orgSigned} pending — excluded from next draw</div></div>
+              <div><div className="text-[12px] font-semibold text-[#6B7280]">Members</div><div className="flex items-baseline gap-2 mt-1.5"><span className="text-[24px] font-bold tracking-tight">{compliance.empSigned} / {compliance.empTotal}</span><span className="text-[12px] text-[#6B7280]">signed</span><span className="ml-auto text-[11px] font-bold px-2 py-1 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)]">{compliance.empTotal? Math.round(compliance.empSigned/compliance.empTotal*100):0}%</span></div><div className="h-2 bg-[#EEF0F3] rounded-full overflow-hidden mt-2 flex"><div style={{flex:compliance.empSigned||1}} className="bg-[var(--gold)] text-[var(--noir-rich)]" /><div style={{flex:(compliance.empTotal-compliance.empSigned)||1}} className="bg-[#E5E7EB]" /></div><div className="text-[12px] text-[#6B7280] mt-1.5">If {compliance.orgTotal-compliance.orgSigned} orgs sign → pool <b className="text-[#0B0F0E]">+{eligiblePool}</b> eligible</div></div>
             </div>
             <div className="h-px bg-[#EEF0F3] my-3.5" />
             <div className="flex gap-2 flex-wrap items-center">
-              <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]">Eligible: {eligiblePool}</span>
+              <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/30 text-[var(--gold)]">Eligible: {eligiblePool}</span>
               <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E]">Excluded: {compliance.orgTotal - compliance.orgSigned} orgs</span>
               <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-1 rounded-full bg-[#F3F4F6] border border-[#E5E7EB] text-[#6B7280]">Suspended: {compliance.suspended}</span>
               <button onClick={() => navigate('/superadmin/organisations')} className="ml-auto text-[12.5px] font-semibold text-[var(--gold)] bg-transparent border-0 cursor-pointer">Review queue →</button>
